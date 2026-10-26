@@ -13,7 +13,7 @@ class CreditTransactionSerializer(serializers.ModelSerializer):
     order_number = serializers.CharField(source="reference_order.order_number", read_only=True)
     payment_number = serializers.CharField(source="reference_payment.payment_number", read_only=True)
 
-    balance_before = serializers.DecimalField(source="balance_before", max_digits=12, decimal_places=2, read_only=True)
+    balance_before = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
     allocation = serializers.SerializerMethodField()
 
     class Meta:
