@@ -29,6 +29,12 @@ class Product(TimeStampedUUIDModel):
         default=False,
         help_text="Skip this product column during fast Enter key order entry"
     )
+    box_size = models.CharField(
+        max_length=20,
+        default="NORMAL",
+        choices=[("NORMAL", "Normal"), ("BIG", "Big")],
+        help_text="Input box size on order sheet (NORMAL or BIG)"
+    )
     is_active = models.BooleanField(default=True)
 
     class Meta:

@@ -142,6 +142,14 @@ export const CreateOrderPage: React.FC = () => {
   // Day Opening & Closing Status for current date
   const [dayStatus, setDayStatus] = useState<{ is_opened: boolean; is_closed: boolean; opening_cash?: string } | null>(null);
 
+  // Table Box Size switch: 'AUTO' (follow catalog), 'NORMAL' (all compact), or 'BIG' (all wide)
+  const [tableBoxSize, setTableBoxSize] = useState<'AUTO' | 'NORMAL' | 'BIG'>('AUTO');
+  const isProductBoxBig = (p?: Product | { box_size?: string }) => {
+    if (tableBoxSize === 'BIG') return true;
+    if (tableBoxSize === 'NORMAL') return false;
+    return p?.box_size === 'BIG';
+  };
+
   // Day Opening Modal State (Blocks wholesale entry until opened)
   const [isOpenDayModalOpen, setIsOpenDayModalOpen] = useState(false);
   const [openingCashInput, setOpeningCashInput] = useState('500.00');
@@ -3385,18 +3393,9 @@ export const CreateOrderPage: React.FC = () => {
           <span style={{ fontSize: '0.67rem', opacity: 0.9, fontWeight: 700 }}>({formatCurrency(activeStats.totalBill)})</span>
         </div>
 
-        {/* Dynamic Product Totals Pills */}
+        {/* Dynamic Product Totals Pills - Red & White */}
         {products.length > 0 ? (
-          products.map((p, idx) => {
-            const colors = [
-              { bg: '#fef3c7', text: '#b45309', border: '#fde68a' },
-              { bg: '#e0f2fe', text: '#0369a1', border: '#bae6fd' },
-              { bg: '#f3e8ff', text: '#7e22ce', border: '#e9d5ff' },
-              { bg: '#dcfce7', text: '#15803d', border: '#bbf7d0' },
-              { bg: '#ffedd5', text: '#c2410c', border: '#fed7aa' },
-              { bg: '#ffe4e6', text: '#be123c', border: '#fecdd3' },
-            ];
-            const c = colors[idx % colors.length];
+          products.map((p) => {
             const qty =
               activeStats.productTotals[p.id] ||
               (kubbusProduct && p.id === kubbusProduct.id
@@ -3412,43 +3411,43 @@ export const CreateOrderPage: React.FC = () => {
                   alignItems: 'center',
                   gap: '0.2rem',
                   padding: '0.12rem 0.4rem',
-                  background: c.bg,
-                  color: c.text,
-                  border: `1px solid ${c.border}`,
+                  background: '#ffffff',
+                  color: '#b91c1c',
+                  border: '1px solid #fecaca',
                   borderRadius: '4px',
                   fontWeight: 700,
                 }}
                 title={`${p.name} (₹${parseFloat(p.unit_price).toFixed(2)}/ps)`}
               >
                 <span>{p.name}:</span>
-                <strong>{qty}</strong>
+                <strong style={{ color: '#dc2626' }}>{qty}</strong>
                 <span style={{ fontSize: '0.64rem', opacity: 0.8 }}>ps</span>
               </div>
             );
           })
         ) : (
           <>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem', padding: '0.12rem 0.4rem', background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a', borderRadius: '4px', fontWeight: 700 }}>
-              <span>Kubbus:</span> <strong>{activeStats.totalKubbus}</strong> <span style={{ fontSize: '0.64rem' }}>ps</span>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem', padding: '0.12rem 0.4rem', background: '#ffffff', color: '#b91c1c', border: '1px solid #fecaca', borderRadius: '4px', fontWeight: 700 }}>
+              <span>Kubbus:</span> <strong style={{ color: '#dc2626' }}>{activeStats.totalKubbus}</strong> <span style={{ fontSize: '0.64rem' }}>ps</span>
             </div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem', padding: '0.12rem 0.4rem', background: '#fee2e2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '4px', fontWeight: 700 }}>
-              <span>Romali:</span> <strong>{activeStats.totalRomali}</strong> <span style={{ fontSize: '0.64rem' }}>ps</span>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem', padding: '0.12rem 0.4rem', background: '#ffffff', color: '#b91c1c', border: '1px solid #fecaca', borderRadius: '4px', fontWeight: 700 }}>
+              <span>Romali:</span> <strong style={{ color: '#dc2626' }}>{activeStats.totalRomali}</strong> <span style={{ fontSize: '0.64rem' }}>ps</span>
             </div>
           </>
         )}
 
         {/* Total Pieces */}
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem', padding: '0.12rem 0.4rem', background: '#e0e7ff', color: '#3730a3', borderRadius: '4px', fontWeight: 800 }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem', padding: '0.12rem 0.4rem', background: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5', borderRadius: '4px', fontWeight: 800 }}>
           <span>Total:</span>
-          <strong>{activeStats.totalPieces}</strong>
+          <strong style={{ color: '#dc2626' }}>{activeStats.totalPieces}</strong>
           <span style={{ fontSize: '0.64rem' }}>ps</span>
         </div>
 
         <div style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.45rem', flexShrink: 0 }}>
           {/* Collections Pill */}
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.12rem 0.45rem', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '4px', color: '#065f46', fontWeight: 700 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.12rem 0.45rem', background: '#ffffff', border: '1px solid #fecaca', borderRadius: '4px', color: '#991b1b', fontWeight: 700 }}>
             <span>Collected:</span>
-            <strong style={{ color: '#059669' }}>{formatCurrency(activeStats.totalCash + activeStats.totalGPay)}</strong>
+            <strong style={{ color: '#dc2626' }}>{formatCurrency(activeStats.totalCash + activeStats.totalGPay)}</strong>
             <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
               (Cash: {formatCurrency(activeStats.totalCash)} • GPay: {formatCurrency(activeStats.totalGPay)})
             </span>
@@ -3730,6 +3729,64 @@ export const CreateOrderPage: React.FC = () => {
             <span style={{ fontSize: '0.64rem', opacity: 0.85, background: '#10b981', color: '#fff', padding: '0.04rem 0.22rem', borderRadius: '3px' }}>Filter</span>
           ) : null}
         </button>
+
+        {/* Product Box Size Toggle Switch */}
+        <div
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            background: '#f8fafc',
+            borderRadius: 'var(--radius)',
+            padding: '2px',
+            border: '1px solid #cbd5e1',
+            height: '26px',
+            flex: '0 0 auto',
+            gap: '2px',
+          }}
+          title="Toggle Product box input size on order sheet"
+        >
+          <span style={{ fontSize: '0.67rem', fontWeight: 700, color: '#64748b', padding: '0 0.25rem' }}>
+            Boxes:
+          </span>
+          <button
+            type="button"
+            onClick={() => setTableBoxSize('NORMAL')}
+            style={{
+              height: '20px',
+              padding: '0 0.42rem',
+              borderRadius: '3px',
+              fontSize: '0.68rem',
+              fontWeight: tableBoxSize === 'NORMAL' ? 800 : 600,
+              border: 'none',
+              cursor: 'pointer',
+              background: tableBoxSize === 'NORMAL' ? '#ffffff' : 'transparent',
+              color: tableBoxSize === 'NORMAL' ? '#0f172a' : '#64748b',
+              boxShadow: tableBoxSize === 'NORMAL' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            Normal
+          </button>
+          <button
+            type="button"
+            onClick={() => setTableBoxSize('BIG')}
+            style={{
+              height: '20px',
+              padding: '0 0.42rem',
+              borderRadius: '3px',
+              fontSize: '0.68rem',
+              fontWeight: tableBoxSize === 'BIG' ? 800 : 600,
+              border: 'none',
+              cursor: 'pointer',
+              background: tableBoxSize === 'BIG' ? 'var(--primary)' : 'transparent',
+              color: tableBoxSize === 'BIG' ? '#ffffff' : '#64748b',
+              boxShadow: tableBoxSize === 'BIG' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            Big
+          </button>
+        </div>
 
         {/* Customer/Shop Search Input with Connected WhatsApp Dropdown List & Auto-Selection */}
         <div ref={searchContainerRef} style={{ position: 'relative', flex: '1 1 180px', minWidth: '150px' }}>
@@ -4081,16 +4138,17 @@ export const CreateOrderPage: React.FC = () => {
                 )}
                 <th style={{ width: '38px', minWidth: '36px', textAlign: 'center', padding: '0.35rem 0.25rem' }}>#</th>
                 <th style={{ minWidth: '180px', maxWidth: '240px', padding: '0.35rem 0.55rem' }}>Shop Name</th>
-                <th style={{ minWidth: '110px', padding: '0.35rem 0.55rem' }}>Route & Staff Driver</th>
+                <th style={{ width: '68px', minWidth: '60px', textAlign: 'center', padding: '0.35rem 0.35rem', whiteSpace: 'nowrap' }} title="Route">Route</th>
                 <th style={{ minWidth: '80px', textAlign: 'right', padding: '0.35rem 0.55rem', whiteSpace: 'nowrap' }}>Prev. Due</th>
                 {products.length > 0 ? (
                   products.map((p) => {
                     const isSkipped = p.skip_in_entry || (p.skip_in_entry === undefined && (p.name.toLowerCase().includes('bun') || p.code.toLowerCase().includes('bun')));
+                    const isBig = isProductBoxBig(p);
                     return (
                       <th
                         key={p.id}
-                        style={{ minWidth: '82px', textAlign: 'right', padding: '0.35rem 0.4rem', whiteSpace: 'nowrap' }}
-                        title={`${p.name} (Unit price: ₹${parseFloat(p.unit_price).toFixed(2)})${isSkipped ? ' • Skipped on Enter' : ''}`}
+                        style={{ minWidth: isBig ? '98px' : '82px', textAlign: 'right', padding: '0.35rem 0.4rem', whiteSpace: 'nowrap' }}
+                        title={`${p.name} (Unit price: ₹${parseFloat(p.unit_price).toFixed(2)})${isSkipped ? ' • Skipped on Enter' : ''}${isBig ? ' • Big Box' : ''}`}
                       >
                         {p.name} ({p.packet_size ? p.packet_size : 'ps'})
                       </th>
@@ -4098,12 +4156,12 @@ export const CreateOrderPage: React.FC = () => {
                   })
                 ) : (
                   <>
-                    <th style={{ minWidth: '82px', textAlign: 'right', padding: '0.35rem 0.4rem', whiteSpace: 'nowrap' }}>Kubbus (ps)</th>
-                    <th style={{ minWidth: '82px', textAlign: 'right', padding: '0.35rem 0.4rem', whiteSpace: 'nowrap' }}>Romali (ps)</th>
+                    <th style={{ minWidth: isProductBoxBig({ box_size: 'NORMAL' }) ? '98px' : '82px', textAlign: 'right', padding: '0.35rem 0.4rem', whiteSpace: 'nowrap' }}>Kubbus (ps)</th>
+                    <th style={{ minWidth: isProductBoxBig({ box_size: 'NORMAL' }) ? '98px' : '82px', textAlign: 'right', padding: '0.35rem 0.4rem', whiteSpace: 'nowrap' }}>Romali (ps)</th>
                   </>
                 )}
-                <th style={{ minWidth: '82px', textAlign: 'right', padding: '0.35rem 0.4rem', whiteSpace: 'nowrap' }}>Cash (₹)</th>
-                <th style={{ minWidth: '82px', textAlign: 'right', padding: '0.35rem 0.4rem', whiteSpace: 'nowrap' }}>GPay (₹)</th>
+                <th style={{ minWidth: '102px', textAlign: 'right', padding: '0.35rem 0.4rem', whiteSpace: 'nowrap' }}>Cash (₹)</th>
+                <th style={{ minWidth: '102px', textAlign: 'right', padding: '0.35rem 0.4rem', whiteSpace: 'nowrap' }}>GPay (₹)</th>
                 <th style={{ minWidth: '82px', textAlign: 'right', padding: '0.35rem 0.55rem', whiteSpace: 'nowrap' }}>Bill Total</th>
                 {isOrderDiscountEnabled && (
                   <th style={{ minWidth: '82px', textAlign: 'right', padding: '0.35rem 0.4rem', whiteSpace: 'nowrap' }} title="Discount / Deduction in ₹">Disc (₹)</th>
@@ -4268,15 +4326,15 @@ export const CreateOrderPage: React.FC = () => {
                             : undefined,
                         borderLeft:
                           isDraggedOver
-                            ? '3px solid #4f46e5'
+                            ? '3px solid #dc2626'
                             : isSelected
-                            ? '4px solid #eab308'
+                            ? '4px solid #dc2626'
                             : (isWhatsAppEnabled && activeCustomer?.id === row.customerId)
-                            ? '4px solid #059669'
+                            ? '4px solid #dc2626'
                             : row.orderSource === 'CUSTOMER_LINK'
-                            ? '4px solid #10b981'
+                            ? '4px solid #dc2626'
                             : undefined,
-                        outline: isDraggedOver ? '1px dashed #4f46e5' : undefined,
+                        outline: isDraggedOver ? '1px dashed #dc2626' : undefined,
                       }}
                     >
                       {/* Drag & Move Handle (only in CUSTOM sort mode when editing) */}
@@ -4499,9 +4557,9 @@ export const CreateOrderPage: React.FC = () => {
                                 style={{
                                   fontSize: '0.62rem',
                                   fontWeight: 700,
-                                  background: '#dcfce7',
-                                  color: '#15803d',
-                                  border: '1px solid #86efac',
+                                  background: '#ffffff',
+                                  color: '#dc2626',
+                                  border: '1px solid #fca5a5',
                                   borderRadius: '4px',
                                   padding: '0.05rem 0.35rem',
                                   whiteSpace: 'nowrap',
@@ -4528,17 +4586,17 @@ export const CreateOrderPage: React.FC = () => {
                                 </span>
                               )}
                               {row.orderSource === 'CUSTOMER_LINK' && (
-                                <span style={{ fontSize: '0.6rem', background: '#dcfce7', color: '#15803d', border: '1px solid #86efac', borderRadius: '3px', padding: '0.03rem 0.25rem', fontWeight: 700, whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}>
+                                <span style={{ fontSize: '0.6rem', background: '#ffffff', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '3px', padding: '0.03rem 0.25rem', fontWeight: 700, whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}>
                                   <Smartphone size={9} />
                                   <span>Self-Order{(row.submittedAt || row.createdAt) ? ` ${formatOrderTime(row.submittedAt || row.createdAt)}` : ''}</span>
                                   {!unlockedSelfOrderIds.has(row.rowId) && (
-                                    <button type="button" onClick={(e) => { e.stopPropagation(); setSelfOrderModalRow(row); setSelfOrderPendingField('kubbus'); }} style={{ fontSize: '0.57rem', padding: '0.02rem 0.18rem', background: '#fff', color: '#047857', border: '1px solid #10b981', borderRadius: '2px', cursor: 'pointer', fontWeight: 700, lineHeight: 1 }} title="Edit">Edit</button>
+                                    <button type="button" onClick={(e) => { e.stopPropagation(); setSelfOrderModalRow(row); setSelfOrderPendingField('kubbus'); }} style={{ fontSize: '0.57rem', padding: '0.02rem 0.18rem', background: '#fff', color: '#dc2626', border: '1px solid #dc2626', borderRadius: '2px', cursor: 'pointer', fontWeight: 700, lineHeight: 1 }} title="Edit">Edit</button>
                                   )}
-                                  {unlockedSelfOrderIds.has(row.rowId) && <span style={{ fontSize: '0.57rem', color: '#b45309', fontWeight: 700 }}>Unlocked</span>}
+                                  {unlockedSelfOrderIds.has(row.rowId) && <span style={{ fontSize: '0.57rem', color: '#dc2626', fontWeight: 700 }}>Unlocked</span>}
                                 </span>
                               )}
                               {isWhatsAppEnabled && activeCustomer?.id === row.customerId && (
-                                <span style={{ fontSize: '0.59rem', background: '#dcfce7', color: '#15803d', padding: '0.03rem 0.25rem', borderRadius: '3px', fontWeight: 800, flexShrink: 0, border: '1px solid #86efac', whiteSpace: 'nowrap' }}>💬 WA</span>
+                                <span style={{ fontSize: '0.59rem', background: '#ffffff', color: '#dc2626', padding: '0.03rem 0.25rem', borderRadius: '3px', fontWeight: 800, flexShrink: 0, border: '1px solid #fca5a5', whiteSpace: 'nowrap' }}>💬 WA</span>
                               )}
                               {row.customerOwner && (
                                 <span style={{ fontSize: '0.67rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '90px' }}>{row.customerOwner}</span>
@@ -4548,44 +4606,46 @@ export const CreateOrderPage: React.FC = () => {
                         )}
                       </td>
 
-                      {/* Route & Driver Badge - compact */}
-                      <td style={{ padding: '0.18rem 0.45rem', minWidth: '105px', maxWidth: '140px' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem', minWidth: 0 }}>
+                      {/* Route Badge - compact (first 3 letters + '...' for space saving) */}
+                      <td style={{ padding: '0.18rem 0.25rem', width: '68px', minWidth: '60px', maxWidth: '75px', textAlign: 'center' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.1rem', minWidth: 0 }}>
                           <span
                             className="badge badge-neutral"
                             style={{
-                              fontSize: '0.67rem',
-                              padding: '0.06rem 0.35rem',
-                              alignSelf: 'flex-start',
+                              fontSize: '0.68rem',
+                              fontWeight: 700,
+                              padding: '0.06rem 0.3rem',
+                              letterSpacing: '0.4px',
                               whiteSpace: 'nowrap',
-                              maxWidth: '125px',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
                               display: 'inline-block',
                             }}
-                            title={row.customerRoute || 'No Route'}
+                            title={row.customerRoute ? `Route: ${row.customerRoute}` : 'No Route'}
                           >
-                            {row.customerRoute || 'No Route'}
+                            {row.customerRoute
+                              ? (row.customerRoute.trim().length > 3
+                                  ? `${row.customerRoute.trim().slice(0, 3)}...`
+                                  : row.customerRoute.trim())
+                              : '-'}
                           </span>
                           {isDriverModuleEnabled && row.driverName && (
                             <span
                               style={{
-                                fontSize: '0.63rem',
+                                fontSize: '0.58rem',
                                 color: autoConfirmDriver ? '#047857' : 'var(--text-muted)',
                                 fontWeight: 600,
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: '2px',
                                 whiteSpace: 'nowrap',
-                                maxWidth: '125px',
+                                maxWidth: '65px',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                               }}
                               title={`Driver: ${row.driverName}`}
                             >
-                              <Truck size={10} style={{ flexShrink: 0 }} />
+                              <Truck size={8} style={{ flexShrink: 0 }} />
                               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {row.driverName}
+                                {row.driverName.trim().length > 3 ? `${row.driverName.trim().slice(0, 3)}...` : row.driverName}
                               </span>
                             </span>
                           )}
@@ -4668,15 +4728,17 @@ export const CreateOrderPage: React.FC = () => {
                           const isRomali = Boolean((romaliProduct && prod.id === romaliProduct.id) || prod.name.toLowerCase().startsWith('romali'));
                           const prodLetter = (prod.name || '').trim().charAt(0).toUpperCase() || (isKubbus ? 'K' : isRomali ? 'R' : 'P');
 
-                          const badgeText = isKubbus ? '#b45309' : isRomali ? '#b91c1c' : '#2563eb';
-                          const badgeBg = isKubbus ? 'rgba(245, 158, 11, 0.15)' : isRomali ? 'rgba(239, 68, 68, 0.15)' : 'rgba(37, 99, 235, 0.12)';
-                          const badgeBorder = isKubbus ? 'rgba(245, 158, 11, 0.35)' : isRomali ? 'rgba(239, 68, 68, 0.35)' : 'rgba(37, 99, 235, 0.3)';
+                          const badgeText = '#dc2626';
+                          const badgeBg = '#ffffff';
+                          const badgeBorder = '#fecaca';
 
-                          const activeBorder = isKubbus ? '#f59e0b' : isRomali ? '#dc2626' : 'var(--primary)';
-                          const activeBg = isKubbus ? '#fffbeb' : isRomali ? '#fef2f2' : 'var(--primary-subtle, #f0fdf4)';
+                          const activeBorder = '#dc2626';
+                          const activeBg = '#ffffff';
+
+                          const isBig = isProductBoxBig(prod);
 
                           return (
-                            <td key={prod.id} style={{ textAlign: 'right', padding: '0.12rem 0.35rem', minWidth: '80px' }}>
+                            <td key={prod.id} style={{ textAlign: 'right', padding: isBig ? '0.15rem 0.35rem' : '0.12rem 0.35rem', minWidth: isBig ? '98px' : '80px' }}>
                               <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
                                 <span
                                   aria-hidden="true"
@@ -4689,9 +4751,9 @@ export const CreateOrderPage: React.FC = () => {
                                     display: 'inline-flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    width: '15px',
-                                    height: '17px',
-                                    fontSize: '0.66rem',
+                                    width: isBig ? '17px' : '15px',
+                                    height: isBig ? '20px' : '17px',
+                                    fontSize: isBig ? '0.72rem' : '0.66rem',
                                     fontWeight: 900,
                                     color: badgeText,
                                     backgroundColor: badgeBg,
@@ -4740,13 +4802,14 @@ export const CreateOrderPage: React.FC = () => {
                                   onChange={(e) => handleProductQtyChange(row.rowId, prod.id, e.target.value)}
                                   onKeyDown={(e) => handleKeyDown(e, index, `prod_${prod.id}`)}
                                   style={{
-                                    width: '74px',
-                                    height: '28px',
+                                    width: isBig ? '90px' : '74px',
+                                    height: isBig ? '34px' : '28px',
                                     textAlign: 'right',
                                     fontWeight: 800,
-                                    padding: '0.15rem 0.35rem 0.15rem 22px',
-                                    fontSize: '0.86rem',
+                                    padding: isBig ? '0.2rem 0.4rem 0.2rem 25px' : '0.15rem 0.35rem 0.15rem 22px',
+                                    fontSize: isBig ? '0.96rem' : '0.86rem',
                                     display: 'inline-block',
+                                    borderRadius: isBig ? '6px' : undefined,
                                     cursor: isLocked ? 'pointer' : 'text',
                                     borderColor: cellQty ? activeBorder : undefined,
                                     backgroundColor: isLocked ? '#f9fafb' : cellQty ? activeBg : undefined,
@@ -4766,205 +4829,217 @@ export const CreateOrderPage: React.FC = () => {
                       ) : (
                         <>
                           {/* Fallback Kubbus Input */}
-                          <td style={{ textAlign: 'right', padding: '0.12rem 0.35rem', minWidth: '80px' }}>
-                            <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
-                              <span
-                                aria-hidden="true"
-                                style={{
-                                  position: 'absolute',
-                                  left: '5px',
-                                  top: '50%',
-                                  transform: 'translateY(-50%)',
-                                  zIndex: 2,
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  width: '15px',
-                                  height: '17px',
-                                  fontSize: '0.66rem',
-                                  fontWeight: 900,
-                                  color: '#b45309',
-                                  backgroundColor: 'rgba(245, 158, 11, 0.15)',
-                                  border: '1px solid rgba(245, 158, 11, 0.35)',
-                                  borderRadius: '3px',
-                                  lineHeight: 1,
-                                  pointerEvents: 'none',
-                                  userSelect: 'none',
-                                  boxShadow: '0 0.5px 1px rgba(0,0,0,0.05)',
-                                }}
-                                title="Kubbus (K)"
-                              >
-                                K
-                              </span>
-                              <input
-                                ref={(el) => {
-                                  inputRefs.current[`${index}_kubbus`] = el;
-                                  if (row.customerId) {
-                                    inputRefs.current[`cust_${row.customerId}_kubbus`] = el;
-                                  }
-                                }}
-                                data-col="kubbus"
-                                data-customer-id={row.customerId}
-                                type="number"
-                                min="0"
-                                step="1"
-                                placeholder="0"
-                                className="form-input"
-                                value={row.kubbusQty}
-                                readOnly={
-                                  (row.status === 'LOCKED' && !unlockedSelfOrderIds.has(row.rowId)) ||
-                                  (row.orderSource === 'CUSTOMER_LINK' && !unlockedSelfOrderIds.has(row.rowId))
-                                }
-                                onClick={() => {
-                                  if (row.orderSource === 'CUSTOMER_LINK' && !unlockedSelfOrderIds.has(row.rowId)) {
-                                    setSelfOrderModalRow(row);
-                                    setSelfOrderPendingField('kubbus');
-                                  }
-                                }}
-                                onFocus={(e) => {
-                                  e.target.select();
-                                  if (row.orderSource === 'CUSTOMER_LINK' && !unlockedSelfOrderIds.has(row.rowId)) {
-                                    setSelfOrderModalRow(row);
-                                    setSelfOrderPendingField('kubbus');
-                                    return;
-                                  }
-                                  if (row.customerId) fetchCustomerPricing(row.customerId);
-                                }}
-                                onChange={(e) => handleCellChange(row.rowId, 'kubbusQty', e.target.value)}
-                                onKeyDown={(e) => handleKeyDown(e, index, 'kubbus')}
-                                style={{
-                                  width: '74px',
-                                  height: '28px',
-                                  textAlign: 'right',
-                                  fontWeight: 800,
-                                  padding: '0.15rem 0.35rem 0.15rem 22px',
-                                  fontSize: '0.86rem',
-                                  display: 'inline-block',
-                                  cursor: (
-                                    (row.status === 'LOCKED' && !unlockedSelfOrderIds.has(row.rowId)) ||
-                                    (row.orderSource === 'CUSTOMER_LINK' && !unlockedSelfOrderIds.has(row.rowId))
-                                  ) ? 'pointer' : 'text',
-                                  borderColor: row.kubbusQty ? '#f59e0b' : undefined,
-                                  backgroundColor: (
-                                    (row.status === 'LOCKED' && !unlockedSelfOrderIds.has(row.rowId)) ||
-                                    (row.orderSource === 'CUSTOMER_LINK' && !unlockedSelfOrderIds.has(row.rowId))
-                                  ) ? '#f9fafb' : row.kubbusQty ? '#fffbeb' : undefined,
-                                }}
-                                title={
-                                  (row.orderSource === 'CUSTOMER_LINK' && !unlockedSelfOrderIds.has(row.rowId))
-                                    ? 'Customer Self-Order. Click to unlock and edit.'
-                                    : row.status === 'LOCKED'
-                                    ? 'Order is locked and cannot be edited. Use Reopen to modify.'
-                                    : kubbusProduct
-                                    ? `Kubbus • Rate: ₹${getProductPriceForCustomer(row.customerId, kubbusProduct).toFixed(2)}`
-                                    : 'Kubbus'
-                                }
-                              />
-                            </div>
-                          </td>
+                          {(() => {
+                            const isKubbusBig = isProductBoxBig(kubbusProduct || { box_size: 'NORMAL' });
+                            return (
+                              <td style={{ textAlign: 'right', padding: isKubbusBig ? '0.15rem 0.35rem' : '0.12rem 0.35rem', minWidth: isKubbusBig ? '98px' : '80px' }}>
+                                <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+                                  <span
+                                    aria-hidden="true"
+                                    style={{
+                                      position: 'absolute',
+                                      left: '5px',
+                                      top: '50%',
+                                      transform: 'translateY(-50%)',
+                                      zIndex: 2,
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      width: isKubbusBig ? '17px' : '15px',
+                                      height: isKubbusBig ? '20px' : '17px',
+                                      fontSize: isKubbusBig ? '0.72rem' : '0.66rem',
+                                      fontWeight: 900,
+                                      color: '#dc2626',
+                                      backgroundColor: '#ffffff',
+                                      border: '1px solid #fecaca',
+                                      borderRadius: '3px',
+                                      lineHeight: 1,
+                                      pointerEvents: 'none',
+                                      userSelect: 'none',
+                                      boxShadow: '0 0.5px 1px rgba(0,0,0,0.05)',
+                                    }}
+                                    title="Kubbus (K)"
+                                  >
+                                    K
+                                  </span>
+                                  <input
+                                    ref={(el) => {
+                                      inputRefs.current[`${index}_kubbus`] = el;
+                                      if (row.customerId) {
+                                        inputRefs.current[`cust_${row.customerId}_kubbus`] = el;
+                                      }
+                                    }}
+                                    data-col="kubbus"
+                                    data-customer-id={row.customerId}
+                                    type="number"
+                                    min="0"
+                                    step="1"
+                                    placeholder="0"
+                                    className="form-input"
+                                    value={row.kubbusQty}
+                                    readOnly={
+                                      (row.status === 'LOCKED' && !unlockedSelfOrderIds.has(row.rowId)) ||
+                                      (row.orderSource === 'CUSTOMER_LINK' && !unlockedSelfOrderIds.has(row.rowId))
+                                    }
+                                    onClick={() => {
+                                      if (row.orderSource === 'CUSTOMER_LINK' && !unlockedSelfOrderIds.has(row.rowId)) {
+                                        setSelfOrderModalRow(row);
+                                        setSelfOrderPendingField('kubbus');
+                                      }
+                                    }}
+                                    onFocus={(e) => {
+                                      e.target.select();
+                                      if (row.orderSource === 'CUSTOMER_LINK' && !unlockedSelfOrderIds.has(row.rowId)) {
+                                        setSelfOrderModalRow(row);
+                                        setSelfOrderPendingField('kubbus');
+                                        return;
+                                      }
+                                      if (row.customerId) fetchCustomerPricing(row.customerId);
+                                    }}
+                                    onChange={(e) => handleCellChange(row.rowId, 'kubbusQty', e.target.value)}
+                                    onKeyDown={(e) => handleKeyDown(e, index, 'kubbus')}
+                                    style={{
+                                      width: isKubbusBig ? '90px' : '74px',
+                                      height: isKubbusBig ? '34px' : '28px',
+                                      textAlign: 'right',
+                                      fontWeight: 800,
+                                      padding: isKubbusBig ? '0.2rem 0.4rem 0.2rem 25px' : '0.15rem 0.35rem 0.15rem 22px',
+                                      fontSize: isKubbusBig ? '0.96rem' : '0.86rem',
+                                      display: 'inline-block',
+                                      borderRadius: isKubbusBig ? '6px' : undefined,
+                                      cursor: (
+                                        (row.status === 'LOCKED' && !unlockedSelfOrderIds.has(row.rowId)) ||
+                                        (row.orderSource === 'CUSTOMER_LINK' && !unlockedSelfOrderIds.has(row.rowId))
+                                      ) ? 'pointer' : 'text',
+                                      borderColor: row.kubbusQty ? '#f59e0b' : undefined,
+                                      backgroundColor: (
+                                        (row.status === 'LOCKED' && !unlockedSelfOrderIds.has(row.rowId)) ||
+                                        (row.orderSource === 'CUSTOMER_LINK' && !unlockedSelfOrderIds.has(row.rowId))
+                                      ) ? '#f9fafb' : row.kubbusQty ? '#fffbeb' : undefined,
+                                    }}
+                                    title={
+                                      (row.orderSource === 'CUSTOMER_LINK' && !unlockedSelfOrderIds.has(row.rowId))
+                                        ? 'Customer Self-Order. Click to unlock and edit.'
+                                        : row.status === 'LOCKED'
+                                        ? 'Order is locked and cannot be edited. Use Reopen to modify.'
+                                        : kubbusProduct
+                                        ? `Kubbus • Rate: ₹${getProductPriceForCustomer(row.customerId, kubbusProduct).toFixed(2)}`
+                                        : 'Kubbus'
+                                    }
+                                  />
+                                </div>
+                              </td>
+                            );
+                          })()}
 
                           {/* Fallback Romali Roti Input */}
-                          <td style={{ textAlign: 'right', padding: '0.12rem 0.35rem', minWidth: '80px' }}>
-                            <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
-                              <span
-                                aria-hidden="true"
-                                style={{
-                                  position: 'absolute',
-                                  left: '5px',
-                                  top: '50%',
-                                  transform: 'translateY(-50%)',
-                                  zIndex: 2,
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  width: '15px',
-                                  height: '17px',
-                                  fontSize: '0.66rem',
-                                  fontWeight: 900,
-                                  color: '#b91c1c',
-                                  backgroundColor: 'rgba(239, 68, 68, 0.15)',
-                                  border: '1px solid rgba(239, 68, 68, 0.35)',
-                                  borderRadius: '3px',
-                                  lineHeight: 1,
-                                  pointerEvents: 'none',
-                                  userSelect: 'none',
-                                  boxShadow: '0 0.5px 1px rgba(0,0,0,0.05)',
-                                }}
-                                title="Romali Roti (R)"
-                              >
-                                R
-                              </span>
-                              <input
-                                ref={(el) => {
-                                  inputRefs.current[`${index}_romali`] = el;
-                                  if (row.customerId) {
-                                    inputRefs.current[`cust_${row.customerId}_romali`] = el;
-                                  }
-                                }}
-                                data-col="romali"
-                                data-customer-id={row.customerId}
-                                type="number"
-                                min="0"
-                                step="1"
-                                placeholder="0"
-                                className="form-input"
-                                value={row.romaliQty}
-                                readOnly={
-                                  (row.status === 'LOCKED' && !unlockedSelfOrderIds.has(row.rowId)) ||
-                                  (row.orderSource === 'CUSTOMER_LINK' && !unlockedSelfOrderIds.has(row.rowId))
-                                }
-                                onClick={() => {
-                                  if (row.orderSource === 'CUSTOMER_LINK' && !unlockedSelfOrderIds.has(row.rowId)) {
-                                    setSelfOrderModalRow(row);
-                                    setSelfOrderPendingField('romali');
-                                  }
-                                }}
-                                onFocus={(e) => {
-                                  e.target.select();
-                                  if (row.orderSource === 'CUSTOMER_LINK' && !unlockedSelfOrderIds.has(row.rowId)) {
-                                    setSelfOrderModalRow(row);
-                                    setSelfOrderPendingField('romali');
-                                    return;
-                                  }
-                                  if (row.customerId) fetchCustomerPricing(row.customerId);
-                                }}
-                                onChange={(e) => handleCellChange(row.rowId, 'romaliQty', e.target.value)}
-                                onKeyDown={(e) => handleKeyDown(e, index, 'romali')}
-                                style={{
-                                  width: '74px',
-                                  height: '28px',
-                                  textAlign: 'right',
-                                  fontWeight: 800,
-                                  padding: '0.15rem 0.35rem 0.15rem 22px',
-                                  fontSize: '0.86rem',
-                                  display: 'inline-block',
-                                  cursor: (
-                                    (row.status === 'LOCKED' && !unlockedSelfOrderIds.has(row.rowId)) ||
-                                    (row.orderSource === 'CUSTOMER_LINK' && !unlockedSelfOrderIds.has(row.rowId))
-                                  ) ? 'pointer' : 'text',
-                                  borderColor: row.romaliQty ? '#dc2626' : undefined,
-                                  backgroundColor: (
-                                    (row.status === 'LOCKED' && !unlockedSelfOrderIds.has(row.rowId)) ||
-                                    (row.orderSource === 'CUSTOMER_LINK' && !unlockedSelfOrderIds.has(row.rowId))
-                                  ) ? '#f9fafb' : row.romaliQty ? '#fef2f2' : undefined,
-                                }}
-                                title={
-                                  (row.orderSource === 'CUSTOMER_LINK' && !unlockedSelfOrderIds.has(row.rowId))
-                                    ? 'Customer Self-Order. Click to unlock and edit.'
-                                    : row.status === 'LOCKED'
-                                    ? 'Order is locked and cannot be edited. Use Reopen to modify.'
-                                    : romaliProduct
-                                    ? `Romali • Rate: ₹${getProductPriceForCustomer(row.customerId, romaliProduct).toFixed(2)}`
-                                    : 'Romali'
-                                }
-                              />
-                            </div>
-                          </td>
+                          {(() => {
+                            const isRomaliBig = isProductBoxBig(romaliProduct || { box_size: 'NORMAL' });
+                            return (
+                              <td style={{ textAlign: 'right', padding: isRomaliBig ? '0.15rem 0.35rem' : '0.12rem 0.35rem', minWidth: isRomaliBig ? '98px' : '80px' }}>
+                                <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+                                  <span
+                                    aria-hidden="true"
+                                    style={{
+                                      position: 'absolute',
+                                      left: '5px',
+                                      top: '50%',
+                                      transform: 'translateY(-50%)',
+                                      zIndex: 2,
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      width: isRomaliBig ? '17px' : '15px',
+                                      height: isRomaliBig ? '20px' : '17px',
+                                      fontSize: isRomaliBig ? '0.72rem' : '0.66rem',
+                                      fontWeight: 900,
+                                      color: '#dc2626',
+                                      backgroundColor: '#ffffff',
+                                      border: '1px solid #fecaca',
+                                      borderRadius: '3px',
+                                      lineHeight: 1,
+                                      pointerEvents: 'none',
+                                      userSelect: 'none',
+                                      boxShadow: '0 0.5px 1px rgba(0,0,0,0.05)',
+                                    }}
+                                    title="Romali Roti (R)"
+                                  >
+                                    R
+                                  </span>
+                                  <input
+                                    ref={(el) => {
+                                      inputRefs.current[`${index}_romali`] = el;
+                                      if (row.customerId) {
+                                        inputRefs.current[`cust_${row.customerId}_romali`] = el;
+                                      }
+                                    }}
+                                    data-col="romali"
+                                    data-customer-id={row.customerId}
+                                    type="number"
+                                    min="0"
+                                    step="1"
+                                    placeholder="0"
+                                    className="form-input"
+                                    value={row.romaliQty}
+                                    readOnly={
+                                      (row.status === 'LOCKED' && !unlockedSelfOrderIds.has(row.rowId)) ||
+                                      (row.orderSource === 'CUSTOMER_LINK' && !unlockedSelfOrderIds.has(row.rowId))
+                                    }
+                                    onClick={() => {
+                                      if (row.orderSource === 'CUSTOMER_LINK' && !unlockedSelfOrderIds.has(row.rowId)) {
+                                        setSelfOrderModalRow(row);
+                                        setSelfOrderPendingField('romali');
+                                      }
+                                    }}
+                                    onFocus={(e) => {
+                                      e.target.select();
+                                      if (row.orderSource === 'CUSTOMER_LINK' && !unlockedSelfOrderIds.has(row.rowId)) {
+                                        setSelfOrderModalRow(row);
+                                        setSelfOrderPendingField('romali');
+                                        return;
+                                      }
+                                      if (row.customerId) fetchCustomerPricing(row.customerId);
+                                    }}
+                                    onChange={(e) => handleCellChange(row.rowId, 'romaliQty', e.target.value)}
+                                    onKeyDown={(e) => handleKeyDown(e, index, 'romali')}
+                                    style={{
+                                      width: isRomaliBig ? '90px' : '74px',
+                                      height: isRomaliBig ? '34px' : '28px',
+                                      textAlign: 'right',
+                                      fontWeight: 800,
+                                      padding: isRomaliBig ? '0.2rem 0.4rem 0.2rem 25px' : '0.15rem 0.35rem 0.15rem 22px',
+                                      fontSize: isRomaliBig ? '0.96rem' : '0.86rem',
+                                      display: 'inline-block',
+                                      borderRadius: isRomaliBig ? '6px' : undefined,
+                                      cursor: (
+                                        (row.status === 'LOCKED' && !unlockedSelfOrderIds.has(row.rowId)) ||
+                                        (row.orderSource === 'CUSTOMER_LINK' && !unlockedSelfOrderIds.has(row.rowId))
+                                      ) ? 'pointer' : 'text',
+                                      borderColor: row.romaliQty ? '#dc2626' : undefined,
+                                      backgroundColor: (
+                                        (row.status === 'LOCKED' && !unlockedSelfOrderIds.has(row.rowId)) ||
+                                        (row.orderSource === 'CUSTOMER_LINK' && !unlockedSelfOrderIds.has(row.rowId))
+                                      ) ? '#f9fafb' : row.romaliQty ? '#fef2f2' : undefined,
+                                    }}
+                                    title={
+                                      (row.orderSource === 'CUSTOMER_LINK' && !unlockedSelfOrderIds.has(row.rowId))
+                                        ? 'Customer Self-Order. Click to unlock and edit.'
+                                        : row.status === 'LOCKED'
+                                        ? 'Order is locked and cannot be edited. Use Reopen to modify.'
+                                        : romaliProduct
+                                        ? `Romali • Rate: ₹${getProductPriceForCustomer(row.customerId, romaliProduct).toFixed(2)}`
+                                        : 'Romali'
+                                    }
+                                  />
+                                </div>
+                              </td>
+                            );
+                          })()}
                         </>
                       )}
 
-                      {/* Cash Input */}
-                      <td style={{ textAlign: 'right', padding: '0.12rem 0.35rem', minWidth: '80px' }}>
+                      {/* Cash Input - BIG */}
+                      <td style={{ textAlign: 'right', padding: '0.15rem 0.35rem', minWidth: '102px' }}>
                         <input
                           ref={(el) => {
                             inputRefs.current[`${index}_cash`] = el;
@@ -4987,20 +5062,22 @@ export const CreateOrderPage: React.FC = () => {
                           onChange={(e) => handleCellChange(row.rowId, 'cashAmount', e.target.value)}
                           onKeyDown={(e) => handleKeyDown(e, index, 'cash')}
                           style={{
-                            width: '72px',
-                            height: '28px',
+                            width: '94px',
+                            height: '34px',
                             textAlign: 'right',
                             fontWeight: 800,
-                            padding: '0.15rem 0.35rem',
-                            fontSize: '0.84rem',
+                            padding: '0.2rem 0.45rem',
+                            fontSize: '0.96rem',
                             display: 'inline-block',
-                            borderColor: row.cashAmount ? '#10b981' : undefined,
+                            borderRadius: '6px',
+                            borderColor: row.cashAmount ? '#dc2626' : undefined,
+                            backgroundColor: row.cashAmount ? '#ffffff' : undefined,
                           }}
                         />
                       </td>
 
-                      {/* GPay Input */}
-                      <td style={{ textAlign: 'right', padding: '0.12rem 0.35rem', minWidth: '80px' }}>
+                      {/* GPay Input - BIG */}
+                      <td style={{ textAlign: 'right', padding: '0.15rem 0.35rem', minWidth: '102px' }}>
                         <input
                           ref={(el) => {
                             inputRefs.current[`${index}_gpay`] = el;
@@ -5023,14 +5100,16 @@ export const CreateOrderPage: React.FC = () => {
                           onChange={(e) => handleCellChange(row.rowId, 'gpayAmount', e.target.value)}
                           onKeyDown={(e) => handleKeyDown(e, index, 'gpay')}
                           style={{
-                            width: '72px',
-                            height: '28px',
+                            width: '94px',
+                            height: '34px',
                             textAlign: 'right',
                             fontWeight: 800,
-                            padding: '0.15rem 0.35rem',
-                            fontSize: '0.84rem',
+                            padding: '0.2rem 0.45rem',
+                            fontSize: '0.96rem',
                             display: 'inline-block',
+                            borderRadius: '6px',
                             borderColor: row.gpayAmount ? '#dc2626' : undefined,
+                            backgroundColor: row.gpayAmount ? '#ffffff' : undefined,
                           }}
                         />
                       </td>
@@ -5391,9 +5470,7 @@ export const CreateOrderPage: React.FC = () => {
                     {formatCurrency(filteredStats.totalPrevDue)}
                   </td>
                   {products.length > 0 ? (
-                    products.map((p, idx) => {
-                      const colors = ['#b45309', '#0284c7', '#7c3aed', '#059669', '#ea580c', '#e11d48'];
-                      const colColor = colors[idx % colors.length];
+                    products.map((p) => {
                       const qty =
                         filteredStats.productTotals[p.id] ||
                         (kubbusProduct && p.id === kubbusProduct.id
@@ -5402,14 +5479,14 @@ export const CreateOrderPage: React.FC = () => {
                           ? filteredStats.totalRomali
                           : 0);
                       return (
-                        <td key={p.id} style={{ textAlign: 'right', padding: '0.45rem 0.4rem', fontWeight: 800, color: colColor }}>
+                        <td key={p.id} style={{ textAlign: 'right', padding: '0.45rem 0.4rem', fontWeight: 800, color: '#dc2626' }}>
                           {qty} <span style={{ fontSize: '0.68rem', fontWeight: 600 }}>ps</span>
                         </td>
                       );
                     })
                   ) : (
                     <>
-                      <td style={{ textAlign: 'right', padding: '0.45rem 0.4rem', fontWeight: 800, color: '#b45309' }}>
+                      <td style={{ textAlign: 'right', padding: '0.45rem 0.4rem', fontWeight: 800, color: '#dc2626' }}>
                         {filteredStats.totalKubbus} <span style={{ fontSize: '0.68rem', fontWeight: 600 }}>ps</span>
                       </td>
                       <td style={{ textAlign: 'right', padding: '0.45rem 0.4rem', fontWeight: 800, color: '#dc2626' }}>
@@ -5417,21 +5494,21 @@ export const CreateOrderPage: React.FC = () => {
                       </td>
                     </>
                   )}
-                  <td style={{ textAlign: 'right', padding: '0.45rem 0.4rem', fontWeight: 800, color: '#16a34a' }}>
+                  <td style={{ textAlign: 'right', padding: '0.45rem 0.4rem', fontWeight: 800, color: '#dc2626' }}>
                     {formatCurrency(filteredStats.totalCash)}
                   </td>
-                  <td style={{ textAlign: 'right', padding: '0.45rem 0.4rem', fontWeight: 800, color: '#2563eb' }}>
+                  <td style={{ textAlign: 'right', padding: '0.45rem 0.4rem', fontWeight: 800, color: '#dc2626' }}>
                     {formatCurrency(filteredStats.totalGPay)}
                   </td>
-                  <td style={{ textAlign: 'right', padding: '0.45rem 0.55rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                  <td style={{ textAlign: 'right', padding: '0.45rem 0.55rem', fontWeight: 800, color: '#dc2626' }}>
                     {formatCurrency(filteredStats.totalBill)}
                   </td>
                   {isOrderDiscountEnabled && (
-                    <td style={{ textAlign: 'right', padding: '0.45rem 0.4rem', fontWeight: 800, color: '#d97706' }}>
+                    <td style={{ textAlign: 'right', padding: '0.45rem 0.4rem', fontWeight: 800, color: '#dc2626' }}>
                       {formatCurrency(filteredStats.totalDiscount)}
                     </td>
                   )}
-                  <td style={{ textAlign: 'right', padding: '0.45rem 0.55rem', fontWeight: 800, color: filteredStats.totalDue > 0 ? '#dc2626' : '#16a34a' }}>
+                  <td style={{ textAlign: 'right', padding: '0.45rem 0.55rem', fontWeight: 800, color: '#dc2626' }}>
                     {formatCurrency(filteredStats.totalDue)}
                   </td>
                   <td style={{ padding: '0.45rem 0.4rem' }}></td>
@@ -5555,15 +5632,7 @@ export const CreateOrderPage: React.FC = () => {
                 </span>
 
                 {products.length > 0 ? (
-                  products.map((p, idx) => {
-                    const colors = [
-                      { bg: '#fef3c7', text: '#b45309', border: '#fde68a' },
-                      { bg: '#fee2e2', text: '#dc2626', border: '#fecaca' },
-                      { bg: '#f5f3ff', text: '#7c3aed', border: '#ddd6fe' },
-                      { bg: '#ecfdf5', text: '#059669', border: '#a7f3d0' },
-                      { bg: '#ffedd5', text: '#ea580c', border: '#fed7aa' },
-                    ];
-                    const c = colors[idx % colors.length];
+                  products.map((p) => {
                     const qty =
                       filteredStats.productTotals[p.id] ||
                       (kubbusProduct && p.id === kubbusProduct.id
@@ -5576,9 +5645,9 @@ export const CreateOrderPage: React.FC = () => {
                       <span
                         key={p.id}
                         style={{
-                          background: c.bg,
-                          color: c.text,
-                          border: `1px solid ${c.border}`,
+                          background: '#ffffff',
+                          color: '#b91c1c',
+                          border: '1px solid #fecaca',
                           borderRadius: '5px',
                           padding: '0.2rem 0.5rem',
                           fontSize: '0.74rem',
@@ -5589,7 +5658,7 @@ export const CreateOrderPage: React.FC = () => {
                         }}
                       >
                         <span>{p.name}:</span>
-                        <strong style={{ fontSize: '0.82rem' }}>{qty}</strong>
+                        <strong style={{ fontSize: '0.82rem', color: '#dc2626' }}>{qty}</strong>
                         <span style={{ fontSize: '0.65rem', opacity: 0.85 }}>ps</span>
                       </span>
                     );
@@ -5598,9 +5667,9 @@ export const CreateOrderPage: React.FC = () => {
                   <>
                     <span
                       style={{
-                        background: '#fef3c7',
-                        color: '#b45309',
-                        border: '1px solid #fde68a',
+                        background: '#ffffff',
+                        color: '#b91c1c',
+                        border: '1px solid #fecaca',
                         borderRadius: '5px',
                         padding: '0.2rem 0.5rem',
                         fontSize: '0.74rem',
@@ -5611,13 +5680,13 @@ export const CreateOrderPage: React.FC = () => {
                       }}
                     >
                       <span>Kubbus:</span>
-                      <strong style={{ fontSize: '0.82rem' }}>{filteredStats.totalKubbus}</strong>
+                      <strong style={{ fontSize: '0.82rem', color: '#dc2626' }}>{filteredStats.totalKubbus}</strong>
                       <span style={{ fontSize: '0.65rem', opacity: 0.85 }}>ps</span>
                     </span>
                     <span
                       style={{
-                        background: '#fee2e2',
-                        color: '#dc2626',
+                        background: '#ffffff',
+                        color: '#b91c1c',
                         border: '1px solid #fecaca',
                         borderRadius: '5px',
                         padding: '0.2rem 0.5rem',
@@ -5629,7 +5698,7 @@ export const CreateOrderPage: React.FC = () => {
                       }}
                     >
                       <span>Romali:</span>
-                      <strong style={{ fontSize: '0.82rem' }}>{filteredStats.totalRomali}</strong>
+                      <strong style={{ fontSize: '0.82rem', color: '#dc2626' }}>{filteredStats.totalRomali}</strong>
                       <span style={{ fontSize: '0.65rem', opacity: 0.85 }}>ps</span>
                     </span>
                   </>
@@ -5678,9 +5747,9 @@ export const CreateOrderPage: React.FC = () => {
                 {/* Cash */}
                 <span
                   style={{
-                    background: '#f0fdf4',
-                    color: '#16a34a',
-                    border: '1px solid #bbf7d0',
+                    background: '#ffffff',
+                    color: '#dc2626',
+                    border: '1px solid #fecaca',
                     borderRadius: '5px',
                     padding: '0.2rem 0.5rem',
                     fontSize: '0.74rem',
@@ -5691,15 +5760,15 @@ export const CreateOrderPage: React.FC = () => {
                   }}
                 >
                   <span>💵 Cash:</span>
-                  <strong style={{ fontSize: '0.82rem' }}>{formatCurrency(filteredStats.totalCash)}</strong>
+                  <strong style={{ fontSize: '0.82rem', color: '#dc2626' }}>{formatCurrency(filteredStats.totalCash)}</strong>
                 </span>
 
                 {/* GPay */}
                 <span
                   style={{
-                    background: '#eff6ff',
-                    color: '#2563eb',
-                    border: '1px solid #bfdbfe',
+                    background: '#ffffff',
+                    color: '#dc2626',
+                    border: '1px solid #fecaca',
                     borderRadius: '5px',
                     padding: '0.2rem 0.5rem',
                     fontSize: '0.74rem',
@@ -5710,16 +5779,16 @@ export const CreateOrderPage: React.FC = () => {
                   }}
                 >
                   <span>📱 GPay:</span>
-                  <strong style={{ fontSize: '0.82rem' }}>{formatCurrency(filteredStats.totalGPay)}</strong>
+                  <strong style={{ fontSize: '0.82rem', color: '#dc2626' }}>{formatCurrency(filteredStats.totalGPay)}</strong>
                 </span>
 
                 {/* Discount */}
                 {isOrderDiscountEnabled && filteredStats.totalDiscount > 0 && (
                   <span
                     style={{
-                      background: '#fef3c7',
-                      color: '#b45309',
-                      border: '1px solid #fde68a',
+                      background: '#ffffff',
+                      color: '#dc2626',
+                      border: '1px solid #fecaca',
                       borderRadius: '5px',
                       padding: '0.2rem 0.5rem',
                       fontSize: '0.74rem',
@@ -5731,16 +5800,16 @@ export const CreateOrderPage: React.FC = () => {
                     title="Total Discount / Deductions"
                   >
                     <span>🏷️ Disc:</span>
-                    <strong style={{ fontSize: '0.82rem' }}>{formatCurrency(filteredStats.totalDiscount)}</strong>
+                    <strong style={{ fontSize: '0.82rem', color: '#dc2626' }}>{formatCurrency(filteredStats.totalDiscount)}</strong>
                   </span>
                 )}
 
                 {/* Total Collection */}
                 <span
                   style={{
-                    background: '#ecfdf5',
-                    color: '#065f46',
-                    border: '1.5px solid #10b981',
+                    background: '#fee2e2',
+                    color: '#991b1b',
+                    border: '1.5px solid #fca5a5',
                     borderRadius: '5px',
                     padding: '0.2rem 0.55rem',
                     fontSize: '0.74rem',
@@ -5752,7 +5821,7 @@ export const CreateOrderPage: React.FC = () => {
                   title="Total Cash + GPay Collected"
                 >
                   <span>Total Collected:</span>
-                  <strong style={{ fontSize: '0.84rem' }}>{formatCurrency(filteredStats.totalCash + filteredStats.totalGPay)}</strong>
+                  <strong style={{ fontSize: '0.84rem', color: '#dc2626' }}>{formatCurrency(filteredStats.totalCash + filteredStats.totalGPay)}</strong>
                 </span>
 
                 {/* Total Billed */}

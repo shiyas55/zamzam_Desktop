@@ -18,6 +18,7 @@ export const ProductsPage: React.FC = () => {
   const [packetSize, setPacketSize] = useState('');
   const [orderNumber, setOrderNumber] = useState('1');
   const [skipInEntry, setSkipInEntry] = useState(false);
+  const [boxSize, setBoxSize] = useState<'NORMAL' | 'BIG'>('NORMAL');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,6 +31,7 @@ export const ProductsPage: React.FC = () => {
   const [editPacketSize, setEditPacketSize] = useState('');
   const [editOrderNumber, setEditOrderNumber] = useState('1');
   const [editSkipInEntry, setEditSkipInEntry] = useState(false);
+  const [editBoxSize, setEditBoxSize] = useState<'NORMAL' | 'BIG'>('NORMAL');
   const [editIsActive, setEditIsActive] = useState(true);
   const [isEditingSubmitting, setIsEditingSubmitting] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
@@ -67,6 +69,7 @@ export const ProductsPage: React.FC = () => {
     setEditPacketSize(p.packet_size || '');
     setEditOrderNumber(String(p.order_number ?? 1));
     setEditSkipInEntry(Boolean(p.skip_in_entry));
+    setEditBoxSize(p.box_size === 'BIG' ? 'BIG' : 'NORMAL');
     setEditIsActive(p.is_active !== false);
     setEditError(null);
   };
@@ -89,6 +92,7 @@ export const ProductsPage: React.FC = () => {
         packet_size: packetSize.trim(),
         order_number: parseInt(orderNumber, 10) || (products.length + 1),
         skip_in_entry: skipInEntry,
+        box_size: boxSize,
       });
       setIsAddModalOpen(false);
       setName('');
@@ -98,6 +102,7 @@ export const ProductsPage: React.FC = () => {
       setPacketSize('');
       setOrderNumber(String(products.length + 2));
       setSkipInEntry(false);
+      setBoxSize('NORMAL');
       setFeedback({ type: 'success', message: `Product "${name}" created successfully.` });
       fetchProducts();
     } catch (err: unknown) {
@@ -127,6 +132,7 @@ export const ProductsPage: React.FC = () => {
         packet_size: editPacketSize.trim(),
         order_number: parseInt(editOrderNumber, 10) || 1,
         skip_in_entry: editSkipInEntry,
+        box_size: editBoxSize,
         is_active: editIsActive,
       });
       setEditingProduct(null);
@@ -275,6 +281,15 @@ export const ProductsPage: React.FC = () => {
                     {p.skip_in_entry && (
                       <span className="badge" style={{ fontWeight: 700, background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', fontSize: '0.72rem' }}>
                         Skip on Enter
+                      </span>
+                    )}
+                    {p.box_size === 'BIG' ? (
+                      <span className="badge" style={{ fontWeight: 700, background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', fontSize: '0.72rem' }} title="Displays with large input box on order sheet">
+                        Box: Big
+                      </span>
+                    ) : (
+                      <span className="badge" style={{ fontWeight: 600, background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0', fontSize: '0.72rem' }} title="Displays with normal input box on order sheet">
+                        Box: Normal
                       </span>
                     )}
                   </div>
@@ -493,9 +508,59 @@ export const ProductsPage: React.FC = () => {
                   Skip in Enter key navigation (Fast Order Entry)
                 </label>
               </div>
-              <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'block', marginBottom: '1rem' }}>
+              <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.75rem' }}>
                 When checked, pressing Enter during billing sheet entry will jump past this product column straight to cash/gpay or next shop.
               </span>
+
+              {/* Order Sheet Box Size Switch */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.65rem 0.85rem', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '1rem' }}>
+                <div>
+                  <div style={{ fontSize: '0.86rem', fontWeight: 700, color: '#1e293b' }}>
+                    Order Sheet Box Size
+                  </div>
+                  <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)' }}>
+                    Input box size on order sheet ({boxSize === 'BIG' ? 'Big / Wide box' : 'Normal / Compact box'})
+                  </div>
+                </div>
+                <div style={{ display: 'inline-flex', background: '#e2e8f0', borderRadius: '6px', padding: '2px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setBoxSize('NORMAL')}
+                    style={{
+                      padding: '0.25rem 0.65rem',
+                      fontSize: '0.76rem',
+                      fontWeight: boxSize === 'NORMAL' ? 800 : 500,
+                      background: boxSize === 'NORMAL' ? '#ffffff' : 'transparent',
+                      color: boxSize === 'NORMAL' ? '#0f172a' : '#64748b',
+                      border: 'none',
+                      borderRadius: '5px',
+                      cursor: 'pointer',
+                      boxShadow: boxSize === 'NORMAL' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    Normal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBoxSize('BIG')}
+                    style={{
+                      padding: '0.25rem 0.65rem',
+                      fontSize: '0.76rem',
+                      fontWeight: boxSize === 'BIG' ? 800 : 500,
+                      background: boxSize === 'BIG' ? 'var(--primary)' : 'transparent',
+                      color: boxSize === 'BIG' ? '#ffffff' : '#64748b',
+                      border: 'none',
+                      borderRadius: '5px',
+                      cursor: 'pointer',
+                      boxShadow: boxSize === 'BIG' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    Big
+                  </button>
+                </div>
+              </div>
 
               <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
                 <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setIsAddModalOpen(false)}>
@@ -627,9 +692,59 @@ export const ProductsPage: React.FC = () => {
                   Skip in Enter key navigation (Fast Order Entry)
                 </label>
               </div>
-              <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'block', marginBottom: '1rem' }}>
+              <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.75rem' }}>
                 When checked, pressing Enter during billing sheet entry will jump past this product column straight to cash/gpay or next shop.
               </span>
+
+              {/* Order Sheet Box Size Switch */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.65rem 0.85rem', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '1rem' }}>
+                <div>
+                  <div style={{ fontSize: '0.86rem', fontWeight: 700, color: '#1e293b' }}>
+                    Order Sheet Box Size
+                  </div>
+                  <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)' }}>
+                    Input box size on order sheet ({editBoxSize === 'BIG' ? 'Big / Wide box' : 'Normal / Compact box'})
+                  </div>
+                </div>
+                <div style={{ display: 'inline-flex', background: '#e2e8f0', borderRadius: '6px', padding: '2px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setEditBoxSize('NORMAL')}
+                    style={{
+                      padding: '0.25rem 0.65rem',
+                      fontSize: '0.76rem',
+                      fontWeight: editBoxSize === 'NORMAL' ? 800 : 500,
+                      background: editBoxSize === 'NORMAL' ? '#ffffff' : 'transparent',
+                      color: editBoxSize === 'NORMAL' ? '#0f172a' : '#64748b',
+                      border: 'none',
+                      borderRadius: '5px',
+                      cursor: 'pointer',
+                      boxShadow: editBoxSize === 'NORMAL' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    Normal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditBoxSize('BIG')}
+                    style={{
+                      padding: '0.25rem 0.65rem',
+                      fontSize: '0.76rem',
+                      fontWeight: editBoxSize === 'BIG' ? 800 : 500,
+                      background: editBoxSize === 'BIG' ? 'var(--primary)' : 'transparent',
+                      color: editBoxSize === 'BIG' ? '#ffffff' : '#64748b',
+                      border: 'none',
+                      borderRadius: '5px',
+                      cursor: 'pointer',
+                      boxShadow: editBoxSize === 'BIG' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    Big
+                  </button>
+                </div>
+              </div>
 
               <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
                 <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setEditingProduct(null)}>

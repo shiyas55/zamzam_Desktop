@@ -244,7 +244,7 @@ export const OwnerDashboard: React.FC = () => {
               </span>
             </div>
 
-            {/* 9 KPI Cards as specified in Prompt 3 */}
+            {/* KPI Cards: Orders, Sales, Collection, Last Day Net Collection, Expenses, Net Collection, Credit, Deliveries */}
             <div
               style={{
                 display: 'grid',
@@ -303,71 +303,25 @@ export const OwnerDashboard: React.FC = () => {
                 </div>
               </div>
 
-              {/* 4. Today's Credit */}
+              {/* 4. Last Day Net Collection */}
               <div className="card" style={{ padding: '1.15rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
                   <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
-                    {getPeriodLabel()} Credit
+                    Last Day Net Collection
                   </span>
-                  <div style={{ width: 32, height: 32, borderRadius: '8px', background: '#fef3c7', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Wallet size={16} />
+                  <div style={{ width: 32, height: 32, borderRadius: '8px', background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <History size={16} />
                   </div>
                 </div>
-                <p style={{ fontSize: '1.5rem', fontWeight: 900, color: '#b45309', margin: 0 }}>
-                  {formatCurrency(data.today_credit || '0.00')}
+                <p style={{ fontSize: '1.5rem', fontWeight: 900, color: '#1d4ed8', margin: 0 }}>
+                  {formatCurrency(data.last_day_net_collection || '0.00')}
                 </p>
-                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Net credit extended in period</span>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                  {data.last_day_date ? `Previous day (${data.last_day_date})` : 'Previous day closing net'}
+                </span>
               </div>
 
-              {/* 5. Delivered Orders */}
-              <div className="card" style={{ padding: '1.15rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
-                    Delivered
-                  </span>
-                  <div style={{ width: 32, height: 32, borderRadius: '8px', background: '#ecfdf5', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <CheckCircle2 size={16} />
-                  </div>
-                </div>
-                <p style={{ fontSize: '1.5rem', fontWeight: 900, color: '#047857', margin: 0 }}>
-                  {data.completed_deliveries || 0}
-                </p>
-                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Successfully received</span>
-              </div>
-
-              {/* 6. Pending Deliveries */}
-              <div className="card" style={{ padding: '1.15rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
-                    Pending
-                  </span>
-                  <div style={{ width: 32, height: 32, borderRadius: '8px', background: '#fffbeb', color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Clock size={16} />
-                  </div>
-                </div>
-                <p style={{ fontSize: '1.5rem', fontWeight: 900, color: '#d97706', margin: 0 }}>
-                  {data.pending_deliveries || 0}
-                </p>
-                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Assigned or in-transit</span>
-              </div>
-
-              {/* 7. Not Delivered Orders */}
-              <div className="card" style={{ padding: '1.15rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
-                    Not Delivered
-                  </span>
-                  <div style={{ width: 32, height: 32, borderRadius: '8px', background: '#fee2e2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <XCircle size={16} />
-                  </div>
-                </div>
-                <p style={{ fontSize: '1.5rem', fontWeight: 900, color: '#dc2626', margin: 0 }}>
-                  {data.not_delivered_count || 0}
-                </p>
-                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Shop closed or failed</span>
-              </div>
-
-              {/* 8. Total Expenses */}
+              {/* 5. Total Expenses */}
               <div className="card" style={{ padding: '1.15rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
                   <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
@@ -383,7 +337,7 @@ export const OwnerDashboard: React.FC = () => {
                 <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Shop, maintenance, fuel & route</span>
               </div>
 
-              {/* 9. Net Collection (Highlighted Card) */}
+              {/* 6. Net Collection (Highlighted Card) */}
               <div
                 className="card"
                 style={{
@@ -406,6 +360,70 @@ export const OwnerDashboard: React.FC = () => {
                 <span style={{ fontSize: '0.72rem', color: '#78350f', fontWeight: 600 }}>
                   Collection − Total Expenses
                 </span>
+              </div>
+
+              {/* 7. Today's Credit */}
+              <div className="card" style={{ padding: '1.15rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
+                    {getPeriodLabel()} Credit
+                  </span>
+                  <div style={{ width: 32, height: 32, borderRadius: '8px', background: '#fef3c7', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Wallet size={16} />
+                  </div>
+                </div>
+                <p style={{ fontSize: '1.5rem', fontWeight: 900, color: '#b45309', margin: 0 }}>
+                  {formatCurrency(data.today_credit || '0.00')}
+                </p>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Net credit extended in period</span>
+              </div>
+
+              {/* 8. Delivered Orders */}
+              <div className="card" style={{ padding: '1.15rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
+                    Delivered
+                  </span>
+                  <div style={{ width: 32, height: 32, borderRadius: '8px', background: '#ecfdf5', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <CheckCircle2 size={16} />
+                  </div>
+                </div>
+                <p style={{ fontSize: '1.5rem', fontWeight: 900, color: '#047857', margin: 0 }}>
+                  {data.completed_deliveries || 0}
+                </p>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Successfully received</span>
+              </div>
+
+              {/* 9. Pending Deliveries */}
+              <div className="card" style={{ padding: '1.15rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
+                    Pending
+                  </span>
+                  <div style={{ width: 32, height: 32, borderRadius: '8px', background: '#fffbeb', color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Clock size={16} />
+                  </div>
+                </div>
+                <p style={{ fontSize: '1.5rem', fontWeight: 900, color: '#d97706', margin: 0 }}>
+                  {data.pending_deliveries || 0}
+                </p>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Assigned or in-transit</span>
+              </div>
+
+              {/* 10. Not Delivered Orders */}
+              <div className="card" style={{ padding: '1.15rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
+                    Not Delivered
+                  </span>
+                  <div style={{ width: 32, height: 32, borderRadius: '8px', background: '#fee2e2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <XCircle size={16} />
+                  </div>
+                </div>
+                <p style={{ fontSize: '1.5rem', fontWeight: 900, color: '#dc2626', margin: 0 }}>
+                  {data.not_delivered_count || 0}
+                </p>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Shop closed or failed</span>
               </div>
             </div>
           </div>

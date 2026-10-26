@@ -194,6 +194,7 @@ export interface Product {
   packet_size: string;
   order_number?: number;
   skip_in_entry?: boolean;
+  box_size?: 'NORMAL' | 'BIG';
   is_active: boolean;
   created_at?: string;
 }
@@ -471,6 +472,8 @@ export interface DashboardSummary {
   today_expenses?: string;
   today_credit?: string;
   net_collection?: string;
+  last_day_net_collection?: string;
+  last_day_date?: string;
   total_customers?: number;
   total_receivable?: string;
   credit_exceeded_count?: number;

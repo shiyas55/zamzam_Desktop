@@ -51,6 +51,7 @@ import {
   ArrowDownCircle,
   ArrowUpCircle,
   HelpCircle,
+  Receipt,
 } from 'lucide-react';
 import { RecordShopPaymentModal } from '../../components/RecordShopPaymentModal';
 
@@ -132,6 +133,9 @@ export const StaffUsersPage: React.FC<StaffUsersPageProps> = ({ defaultTab }) =>
   const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
   const [payoutStaffId, setPayoutStaffId] = useState('');
   const [payoutAmount, setPayoutAmount] = useState('');
+  const [payoutCashAmount, setPayoutCashAmount] = useState('');
+  const [payoutGpayAmount, setPayoutGpayAmount] = useState('');
+  const [payoutSplitMode, setPayoutSplitMode] = useState(false);
   const [payoutType, setPayoutType] = useState<StaffPayoutType>('SALARY');
   const [payoutMethod, setPayoutMethod] = useState<StaffPaymentMethod>('CASH');
   const [payoutDate, setPayoutDate] = useState(new Date().toISOString().split('T')[0]);
@@ -490,6 +494,9 @@ export const StaffUsersPage: React.FC<StaffUsersPageProps> = ({ defaultTab }) =>
   const handleOpenPayoutModal = (staffId?: string) => {
     setPayoutStaffId(staffId || (staffList[0]?.id ?? ''));
     setPayoutAmount('');
+    setPayoutCashAmount('');
+    setPayoutGpayAmount('');
+    setPayoutSplitMode(false);
     setPayoutType('SALARY');
     setPayoutMethod('CASH');
     setPayoutDate(new Date().toISOString().split('T')[0]);
@@ -505,6 +512,57 @@ export const StaffUsersPage: React.FC<StaffUsersPageProps> = ({ defaultTab }) =>
       setPayoutError('Please select a staff member.');
       return;
     }
+
+    if (payoutSplitMode) {
+      const cashVal = parseFloat(payoutCashAmount || '0');
+      const gpayVal = parseFloat(payoutGpayAmount || '0');
+      if (cashVal <= 0 && gpayVal <= 0) {
+        setPayoutError('Please enter at least Cash or GPay amount greater than zero.');
+        return;
+      }
+      try {
+        setPayoutSubmitting(true);
+        setPayoutError(null);
+        const promises = [];
+        if (cashVal > 0) {
+          promises.push(
+            staffService.createPayout({
+              staff: payoutStaffId,
+              amount: cashVal.toFixed(2),
+              payout_type: payoutType,
+              payment_method: 'CASH',
+              date: payoutDate,
+              reference: payoutRef.trim() ? `${payoutRef.trim()} (Cash)` : undefined,
+              notes: payoutNotes.trim() ? `${payoutNotes.trim()} [Cash]` : undefined,
+            })
+          );
+        }
+        if (gpayVal > 0) {
+          promises.push(
+            staffService.createPayout({
+              staff: payoutStaffId,
+              amount: gpayVal.toFixed(2),
+              payout_type: payoutType,
+              payment_method: 'GPAY_UPI',
+              date: payoutDate,
+              reference: payoutRef.trim() ? `${payoutRef.trim()} (GPay)` : undefined,
+              notes: payoutNotes.trim() ? `${payoutNotes.trim()} [GPay]` : undefined,
+            })
+          );
+        }
+        await Promise.all(promises);
+        showToast('Cash & GPay payouts recorded and added to Expenses successfully!');
+        setIsPayoutModalOpen(false);
+        fetchPayouts();
+        fetchStaffData();
+      } catch (err: any) {
+        setPayoutError(err.message || 'Failed to record payout');
+      } finally {
+        setPayoutSubmitting(false);
+      }
+      return;
+    }
+
     if (!payoutAmount || parseFloat(payoutAmount) <= 0) {
       setPayoutError('Please enter a valid amount greater than zero.');
       return;
@@ -522,7 +580,7 @@ export const StaffUsersPage: React.FC<StaffUsersPageProps> = ({ defaultTab }) =>
         reference: payoutRef.trim() || undefined,
         notes: payoutNotes.trim() || undefined,
       });
-      showToast('Payout recorded successfully!');
+      showToast('Payout recorded and added to Expenses successfully!');
       setIsPayoutModalOpen(false);
       fetchPayouts();
       fetchStaffData();
@@ -1232,6 +1290,25 @@ export const StaffUsersPage: React.FC<StaffUsersPageProps> = ({ defaultTab }) =>
                 <span>Add Driver</span>
               </button>
 
+              <span
+                style={{
+                  fontSize: '0.72rem',
+                  color: '#047857',
+                  background: '#ecfdf5',
+                  border: '1px solid #a7f3d0',
+                  padding: '4px 8px',
+                  borderRadius: '5px',
+                  fontWeight: 700,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+                title="When attendance is saved, paid cash and gpay amounts are automatically added to operating expenses"
+              >
+                <Receipt size={12} />
+                Paid Cash & GPay added to Expenses
+              </span>
+
               <button
                 type="button"
                 className="btn btn-primary btn-sm"
@@ -1330,9 +1407,10 @@ export const StaffUsersPage: React.FC<StaffUsersPageProps> = ({ defaultTab }) =>
                   {formatCurrency(attendanceStats.netBalance)} due
                 </div>
               </div>
-              <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '4px', display: 'flex', gap: '0.4rem' }}>
+              <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '4px', display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
                 <span>Paid: <strong style={{ color: 'var(--text-primary)' }}>{formatCurrency(attendanceStats.totalPaid)}</strong></span>
                 <span>(Cash: {formatCurrency(attendanceStats.totalCash)}, GPay: {formatCurrency(attendanceStats.totalGPay)})</span>
+                <span style={{ fontSize: '0.62rem', color: '#047857', fontWeight: 700 }}>• In Expenses</span>
               </div>
             </div>
           </div>
@@ -2120,7 +2198,12 @@ export const StaffUsersPage: React.FC<StaffUsersPageProps> = ({ defaultTab }) =>
                           </span>
                         </td>
                         <td>
-                          <span className="badge badge-neutral">{p.payment_method_display || p.payment_method}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
+                            <span className="badge badge-neutral">{p.payment_method_display || p.payment_method}</span>
+                            <span style={{ fontSize: '0.62rem', background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '1px 5px', borderRadius: '4px', fontWeight: 700 }}>
+                              In Expenses
+                            </span>
+                          </div>
                         </td>
                         <td>{p.paid_by_name || '—'}</td>
                         <td style={{ maxWidth: '240px', color: 'var(--text-secondary)' }}>
@@ -2828,37 +2911,130 @@ export const StaffUsersPage: React.FC<StaffUsersPageProps> = ({ defaultTab }) =>
                 </select>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '0.35rem' }}>
-                    Amount (₹) *
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="1"
-                    className="form-input"
-                    placeholder="0.00"
-                    style={{ width: '100%', fontWeight: 800, color: '#dc2626' }}
-                    value={payoutAmount}
-                    onChange={(e) => setPayoutAmount(e.target.value)}
-                    required
-                  />
+              {/* Payment Mode Selector: Single vs Split Cash & GPay */}
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '0.35rem' }}>
+                  Payment Mode
+                </label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setPayoutSplitMode(false)}
+                    style={{
+                      flex: 1,
+                      padding: '0.45rem',
+                      borderRadius: '6px',
+                      fontSize: '0.78rem',
+                      fontWeight: !payoutSplitMode ? 800 : 600,
+                      border: !payoutSplitMode ? '1.5px solid var(--primary)' : '1px solid var(--border)',
+                      background: !payoutSplitMode ? '#fee2e2' : 'var(--bg-main)',
+                      color: !payoutSplitMode ? '#991b1b' : 'var(--text-secondary)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Single (Cash or GPay)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPayoutSplitMode(true);
+                      if (payoutAmount && !payoutCashAmount) setPayoutCashAmount(payoutAmount);
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '0.45rem',
+                      borderRadius: '6px',
+                      fontSize: '0.78rem',
+                      fontWeight: payoutSplitMode ? 800 : 600,
+                      border: payoutSplitMode ? '1.5px solid var(--primary)' : '1px solid var(--border)',
+                      background: payoutSplitMode ? '#fee2e2' : 'var(--bg-main)',
+                      color: payoutSplitMode ? '#991b1b' : 'var(--text-secondary)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Split (Cash + GPay)
+                  </button>
                 </div>
+              </div>
 
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '0.35rem' }}>
-                    Payment Date *
-                  </label>
-                  <input
-                    type="date"
-                    className="form-input"
-                    style={{ width: '100%' }}
-                    value={payoutDate}
-                    onChange={(e) => setPayoutDate(e.target.value)}
-                    required
-                  />
+              {!payoutSplitMode ? (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '0.35rem' }}>
+                      Amount (₹) *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="1"
+                      className="form-input"
+                      placeholder="0.00"
+                      style={{ width: '100%', fontWeight: 800, color: '#dc2626' }}
+                      value={payoutAmount}
+                      onChange={(e) => setPayoutAmount(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '0.35rem' }}>
+                      Payment Method
+                    </label>
+                    <select
+                      className="form-select"
+                      style={{ width: '100%' }}
+                      value={payoutMethod}
+                      onChange={(e) => setPayoutMethod(e.target.value as StaffPaymentMethod)}
+                    >
+                      <option value="CASH">Cash in Hand</option>
+                      <option value="GPAY_UPI">GPay / UPI Transfer</option>
+                    </select>
+                  </div>
                 </div>
+              ) : (
+                <div style={{ marginBottom: '1rem', padding: '0.75rem', background: 'var(--bg-main)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, marginBottom: '0.3rem' }}>
+                        💵 Cash Paid (₹)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        className="form-input"
+                        placeholder="0.00"
+                        style={{ width: '100%', fontWeight: 800 }}
+                        value={payoutCashAmount}
+                        onChange={(e) => setPayoutCashAmount(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, marginBottom: '0.3rem' }}>
+                        📱 GPay Paid (₹)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        className="form-input"
+                        placeholder="0.00"
+                        style={{ width: '100%', fontWeight: 800 }}
+                        value={payoutGpayAmount}
+                        onChange={(e) => setPayoutGpayAmount(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div style={{ marginTop: '0.5rem', textAlign: 'right', fontSize: '0.82rem', fontWeight: 800 }}>
+                    Total Payout: <span style={{ color: '#dc2626' }}>₹{(parseFloat(payoutCashAmount || '0') + parseFloat(payoutGpayAmount || '0')).toFixed(2)}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Auto-sync to Expenses reassurance badge */}
+              <div style={{ padding: '0.45rem 0.65rem', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '6px', fontSize: '0.74rem', color: '#065f46', display: 'flex', alignItems: 'center', gap: '0.35rem', fontWeight: 600, marginBottom: '1rem' }}>
+                <Receipt size={14} style={{ color: '#059669', flexShrink: 0 }} />
+                <span>Paid amounts are automatically added to <strong>Operating Expenses</strong> (Category: Daily Wages).</span>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
@@ -2881,17 +3057,16 @@ export const StaffUsersPage: React.FC<StaffUsersPageProps> = ({ defaultTab }) =>
 
                 <div>
                   <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '0.35rem' }}>
-                    Payment Method
+                    Payment Date *
                   </label>
-                  <select
-                    className="form-select"
+                  <input
+                    type="date"
+                    className="form-input"
                     style={{ width: '100%' }}
-                    value={payoutMethod}
-                    onChange={(e) => setPayoutMethod(e.target.value as StaffPaymentMethod)}
-                  >
-                    <option value="CASH">Cash in Hand</option>
-                    <option value="GPAY_UPI">GPay / UPI Transfer</option>
-                  </select>
+                    value={payoutDate}
+                    onChange={(e) => setPayoutDate(e.target.value)}
+                    required
+                  />
                 </div>
               </div>
 

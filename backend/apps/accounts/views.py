@@ -777,5 +777,16 @@ class StaffPayoutViewSet(viewsets.ModelViewSet):
         return qs.order_by("-date", "-created_at")
 
     def perform_create(self, serializer):
-        serializer.save(paid_by=self.request.user)
+        payout = serializer.save(paid_by=self.request.user)
+        try:
+            payout.sync_to_expense()
+        except Exception:
+            pass
+
+    def perform_update(self, serializer):
+        payout = serializer.save()
+        try:
+            payout.sync_to_expense()
+        except Exception:
+            pass
 

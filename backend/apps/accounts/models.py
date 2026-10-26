@@ -377,3 +377,59 @@ class StaffPayout(TimeStampedUUIDModel):
 
     def __str__(self):
         return f"{self.staff.full_name} - ₹{self.amount} ({self.get_payout_type_display()} on {self.date})"
+
+    def sync_to_expense(self):
+        """
+        Sync this staff wage / payout to Operating Expenses (DriverExpense).
+        """
+        from apps.routes.models import Driver, DriverExpense
+        from decimal import Decimal
+
+        if self.amount <= Decimal("0.00"):
+            DriverExpense.objects.filter(receipt_reference=f"STAFF-PAYOUT-{self.id}").delete()
+            return None
+
+        driver_instance = None
+        if hasattr(self.staff, "driver_profile") and self.staff.driver_profile:
+            driver_instance = self.staff.driver_profile
+        elif self.staff.user:
+            driver_instance = Driver.objects.filter(user=self.staff.user).first()
+
+        method_label = "Cash" if self.payment_method == self.PaymentMethod.CASH else "GPay/UPI"
+        type_label = self.get_payout_type_display()
+        expense_notes = f"{type_label} - {self.staff.full_name} via {method_label}"
+        if self.notes:
+            expense_notes += f" ({self.notes})"
+
+        expense, _ = DriverExpense.objects.update_or_create(
+            receipt_reference=f"STAFF-PAYOUT-{self.id}",
+            defaults={
+                "driver": driver_instance,
+                "category": DriverExpense.Category.SALARY_WAGES,
+                "amount": self.amount,
+                "date": self.date,
+                "notes": expense_notes,
+                "created_by": self.paid_by,
+            }
+        )
+        return expense
+
+    def delete_from_expense(self):
+        from apps.routes.models import DriverExpense
+        DriverExpense.objects.filter(receipt_reference=f"STAFF-PAYOUT-{self.id}").delete()
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        try:
+            self.sync_to_expense()
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning("Failed to auto-sync StaffPayout to DriverExpense: %s", e)
+
+    def delete(self, *args, **kwargs):
+        try:
+            self.delete_from_expense()
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning("Failed to delete synced DriverExpense: %s", e)
+        return super().delete(*args, **kwargs)

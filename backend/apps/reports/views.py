@@ -157,6 +157,20 @@ class DashboardSummaryView(APIView):
         # Net Collection = Collection - Driver Expenses
         net_collection = total_collected - period_expenses
 
+        # Last Day Net Collection (previous calendar day relative to start_date)
+        from apps.reports.models import DailyClosing
+        last_day = start_date - datetime.timedelta(days=1)
+        last_day_closing = DailyClosing.objects.filter(date=last_day, is_closed=True).first()
+        if last_day_closing and last_day_closing.net_collection is not None:
+            last_day_net_collection = last_day_closing.net_collection
+        else:
+            ld_payments = Payment.objects.filter(received_at__date=last_day, status=Payment.Status.COMPLETED)
+            ld_cash = ld_payments.filter(payment_method=Payment.Method.CASH).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+            ld_upi = ld_payments.filter(payment_method=Payment.Method.GPAY_UPI).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+            ld_collected = ld_cash + ld_upi
+            ld_expenses = DriverExpense.objects.filter(date=last_day).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+            last_day_net_collection = ld_collected - ld_expenses
+
         # Period Credit = Sales - Collections (Net Credit Extended)
         period_credit = max(Decimal("0.00"), period_sales - total_collected)
 
@@ -211,6 +225,8 @@ class DashboardSummaryView(APIView):
             "today_expenses": period_expenses,
             "today_credit": period_credit,
             "net_collection": net_collection,
+            "last_day_net_collection": last_day_net_collection,
+            "last_day_date": str(last_day),
             "total_customers": total_customers,
             "total_receivable": total_receivable,
             "credit_exceeded_count": credit_exceeded_count,

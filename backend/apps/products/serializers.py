@@ -13,6 +13,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "packet_size",
             "order_number",
             "skip_in_entry",
+            "box_size",
             "is_active",
             "created_at",
             "updated_at",
