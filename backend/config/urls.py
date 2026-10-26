@@ -64,11 +64,22 @@ def serve_spa(request, path=""):
     if path:
         target_file = (dist_dir / path).resolve()
         if str(target_file).startswith(str(dist_dir.resolve())) and target_file.is_file():
-            return FileResponse(open(target_file, "rb"))
+            response = FileResponse(open(target_file, "rb"))
+            if path in ["sw.js", "version.json", "manifest.json"] or path.endswith(".html"):
+                response["Cache-Control"] = "no-cache, no-store, must-revalidate"
+                response["Pragma"] = "no-cache"
+                response["Expires"] = "0"
+            elif "assets/" in path:
+                response["Cache-Control"] = "public, max-age=31536000, immutable"
+            return response
 
     index_file = dist_dir / "index.html"
     if index_file.exists():
-        return FileResponse(open(index_file, "rb"))
+        response = FileResponse(open(index_file, "rb"))
+        response["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response["Pragma"] = "no-cache"
+        response["Expires"] = "0"
+        return response
 
     return HttpResponse("<h1>Zamzam Foods API</h1><p>Visit <a href='/api/v1/'>/api/v1/</a></p>")
 

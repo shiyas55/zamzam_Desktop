@@ -1,7 +1,7 @@
-// Zamzam Foods PWA Service Worker (v3.3.0)
+// Zamzam Foods PWA Service Worker (v3.4.0)
 // Network-First with Offline App Shell Cache
 
-const CACHE_NAME = 'zamzam-foods-shell-v3.3.0';
+const CACHE_NAME = 'zamzam-foods-shell-v3.4.0';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',

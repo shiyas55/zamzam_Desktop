@@ -1,4 +1,4 @@
-﻿# Python virtual environments
+# Python virtual environments
 .venv/
 venv/
 __pycache__/
@@ -23,7 +23,6 @@ whatsapp-bridge/.wwebjs_cache/
 
 # Frontend dependencies and generated files
 frontend/node_modules/
-frontend/dist/
 
 # Logs and temporary files
 *.log

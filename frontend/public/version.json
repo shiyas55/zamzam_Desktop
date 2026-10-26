@@ -1,7 +1,7 @@
 {
-  "version": "3.3.0",
-  "buildTimestamp": "2026-10-26T00:27:00.000Z",
-  "lastWebsiteUpdate": "October 26, 2026, 12:27 AM IST",
+  "version": "3.4.0",
+  "buildTimestamp": "2026-10-26T15:35:00.000Z",
+  "lastWebsiteUpdate": "October 26, 2026, 03:35 PM IST",
   "environment": "production",
-  "releaseNotes": "Zero-latency wholesale order entry, automated silent background backend & WhatsApp bridge service, PostgreSQL migration assistant, and LAN multi-client PC support."
+  "releaseNotes": "Wholesale sheet product box size toggle, red & white theme, route abbreviation, staff wages auto-sync to expenses, and dashboard KPI card reordering."
 }

@@ -1,0 +1,1 @@
+var e={shopName:`ZAMZAM FOODS`,fullName:`Zamzam Foods Wholesale`,tagline:`Wholesale Kubbus & Romali Distribution`,initials:`Z`,phone:`+91 98470 12345`,routes:[`Pandikkad`,`Perundurai`,`Melattur`]};export{e as t};
