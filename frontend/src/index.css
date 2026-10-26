@@ -1,0 +1,1467 @@
+:root {
+  /* Zamzam Foods - Professional Crimson Red & White Theme */
+  --brand-green: #047857;
+  --brand-green-hover: #065f46;
+  --brand-green-light: #ecfdf5;
+  --brand-red: #dc2626;
+  --brand-red-dark: #b91c1c;
+  --brand-red-deep: #991b1b;
+  --brand-red-light: #fee2e2;
+  --brand-yellow: #d97706;
+  --brand-yellow-dark: #b45309;
+  --brand-yellow-light: #fef3c7;
+
+  --primary: #dc2626;
+  --primary-hover: #b91c1c;
+  --primary-dark: #991b1b;
+  --primary-light: #fef2f2;
+  --primary-text: #dc2626;
+
+  /* App Zoom & Viewport Variables */
+  --app-zoom: 100%;
+  --app-zoom-factor: 1;
+  --app-viewport-h: calc(100vh / var(--app-zoom-factor, 1));
+
+  --secondary: #475569;
+  --secondary-light: #f8fafc;
+
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-sidebar: #ffffff;
+  --sidebar-hover: #fef2f2;
+  --sidebar-text: #475569;
+  --sidebar-text-active: #dc2626;
+  --sidebar-active-bg: #fee2e2;
+
+  --header-bg: #b91c1c;
+  --header-text: #ffffff;
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+
+  --border: #e2e8f0;
+  --border-focus: #dc2626;
+  --border-subtle: #f8fafc;
+
+  --success: #059669;
+  --success-bg: #ecfdf5;
+  --warning: #d97706;
+  --warning-bg: #fef3c7;
+  --danger: #dc2626;
+  --danger-bg: #fee2e2;
+  --info: #0284c7;
+  --info-bg: #f0f9ff;
+
+  /* Standard crisp software shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --brand-glow: none;
+
+  /* Consistent standard enterprise radii */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-full: 9999px;
+
+  /* Layout sizes */
+  --sidebar-w: 250px;
+  --sidebar-collapsed-w: 68px;
+  --header-h: 56px;
+  --mobile-header-h: 54px;
+  --bottom-nav-h: 60px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
+[data-theme="dark"] {
+  --bg-main: #0f1117;
+  --bg-card: #181b24;
+  --bg-sidebar: #13161f;
+  --sidebar-hover: #261618;
+  --sidebar-text: #cbd5e1;
+  --sidebar-text-active: #f87171;
+  --sidebar-active-bg: #450a0a;
+
+  --header-bg: #881337;
+  --header-text: #ffffff;
+
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  --border: #2a2e3d;
+  --border-focus: #ef4444;
+  --border-subtle: #1c202d;
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 2px 4px -1px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 6px 12px -2px rgba(0, 0, 0, 0.6);
+}
+
+/* =========================================================
+   RESET & BASE
+   ========================================================= */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  overflow-x: hidden;
+  height: 100%;
+  min-height: calc(100vh / var(--app-zoom-factor, 1));
+  height: -webkit-fill-available;
+  color-scheme: light;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  height: 100%;
+  min-height: calc(100vh / var(--app-zoom-factor, 1));
+  height: -webkit-fill-available;
+  -webkit-text-size-adjust: 100%;
+}
+
+#root {
+  height: 100%;
+  min-height: calc(100vh / var(--app-zoom-factor, 1));
+  height: -webkit-fill-available;
+  display: flex;
+  flex-direction: column;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+  touch-action: manipulation;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  font-size: 15px;
+}
+
+/* Prevent horizontal overflow app-wide */
+.page-wrapper {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+/* =========================================================
+   SCROLLBAR STYLING
+   ========================================================= */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+[data-theme="dark"] ::-webkit-scrollbar-thumb { background: #381212; }
+
+/* =========================================================
+   SPINNER
+   ========================================================= */
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 2.5px solid #cbd5e1;
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* =========================================================
+   BRAND COMPONENTS
+   ========================================================= */
+.brand-board {
+  background: #7f1d1d;
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid #991b1b;
+}
+
+.brand-text-yellow {
+  color: #fbbf24;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+/* =========================================================
+   CARDS
+   ========================================================= */
+.card {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.12s ease;
+}
+
+/* =========================================================
+   BADGES
+   ========================================================= */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  flex-shrink: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.badge-success { background-color: var(--success-bg); color: #15803d; border: 1px solid #86efac; }
+.badge-warning { background-color: var(--warning-bg); color: #b45309; border: 1px solid #fde68a; }
+.badge-danger  { background-color: var(--danger-bg); color: #b91c1c; border: 1px solid #fca5a5; }
+.badge-info    { background-color: var(--info-bg); color: #1d4ed8; border: 1px solid #bfdbfe; }
+.badge-neutral { background-color: #f1f5f9; color: var(--text-secondary); border: 1px solid #cbd5e1; }
+
+[data-theme="dark"] .badge-neutral {
+  background-color: #261010;
+  color: #cbd5e1;
+  border-color: #381212;
+}
+
+/* =========================================================
+   BUTTONS — Consistent Enterprise System
+   ========================================================= */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0 0.85rem;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+  height: 36px;
+  min-height: 36px;
+  box-sizing: border-box;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: #ffffff;
+  border: 1px solid var(--primary-hover);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+}
+
+.btn-secondary {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.btn-secondary:hover:not(:disabled) {
+  background-color: #f1f5f9;
+  border-color: #94a3b8;
+}
+[data-theme="dark"] .btn-secondary:hover:not(:disabled) {
+  background-color: #241212;
+}
+
+.btn-danger {
+  background-color: var(--danger);
+  color: #ffffff;
+  border: 1px solid #b91c1c;
+}
+.btn-danger:hover:not(:disabled) {
+  background-color: #b91c1c;
+}
+
+.btn-success {
+  background-color: var(--success);
+  color: #ffffff;
+  border: 1px solid #15803d;
+}
+.btn-success:hover:not(:disabled) {
+  background-color: #15803d;
+}
+
+.btn-full { width: 100%; }
+
+.btn-lg {
+  height: 42px;
+  min-height: 42px;
+  padding: 0 1.25rem;
+  font-size: 0.92rem;
+}
+
+.btn-sm {
+  height: 30px;
+  min-height: 30px;
+  padding: 0 0.65rem;
+  font-size: 0.78rem;
+}
+
+/* =========================================================
+   FORMS — Clean Enterprise Inputs
+   ========================================================= */
+.form-group {
+  margin-bottom: 0.9rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.form-input, .form-select, .form-control {
+  width: 100%;
+  padding: 0 0.65rem;
+  height: 36px;
+  min-height: 36px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 0.86rem;
+  box-sizing: border-box;
+  transition: border-color 0.12s ease;
+}
+
+.form-input:focus, .form-select:focus, .form-control:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(185, 28, 28, 0.15);
+}
+
+.form-textarea, textarea.form-control {
+  width: 100%;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 0.86rem;
+  resize: vertical;
+  min-height: 72px;
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   TABLES — Dense Professional Data Display
+   ========================================================= */
+.table-container {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.86rem;
+  min-width: 600px;
+}
+
+.data-table th {
+  background-color: #f8fafc;
+  color: var(--text-secondary);
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.6rem 0.85rem;
+  border-bottom: 1px solid #cbd5e1;
+  white-space: nowrap;
+}
+
+.data-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #f8fafc;
+}
+
+[data-theme="dark"] .data-table th {
+  background-color: #1f0d0d;
+  border-bottom-color: #381212;
+}
+
+[data-theme="dark"] .data-table thead th {
+  background-color: #1f0d0d;
+}
+
+.data-table td {
+  padding: 0.6rem 0.85rem;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+}
+
+.data-table tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table tr:hover {
+  background-color: #f8fafc;
+}
+
+[data-theme="dark"] .data-table tr:hover {
+  background-color: #240f0f;
+}
+
+/* Selected Shop Row Highlight — Light Yellow across the full customer line */
+.order-row-selected,
+.order-row-selected > td {
+  background-color: #fef9c3 !important;
+}
+
+.order-row-selected {
+  border-left: 4px solid #eab308 !important;
+  box-shadow: inset 0 1px 0 rgba(234, 179, 8, 0.35), inset 0 -1px 0 rgba(234, 179, 8, 0.35);
+}
+
+[data-theme="dark"] .order-row-selected,
+[data-theme="dark"] .order-row-selected > td {
+  background-color: #3b2e05 !important;
+}
+
+[data-theme="dark"] .order-row-selected {
+  border-left: 4px solid #facc15 !important;
+  box-shadow: inset 0 1px 0 rgba(250, 204, 21, 0.3), inset 0 -1px 0 rgba(250, 204, 21, 0.3);
+}
+
+/* =========================================================
+   MODALS — Clean Standard Business Dialogs
+   ========================================================= */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: flex-end;   /* Sheet from bottom on mobile */
+  justify-content: center;
+  z-index: 1000;
+  padding: 0;
+}
+
+.modal-content {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  width: 100%;
+  max-width: 100%;
+  max-height: 92vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 1.25rem 1.15rem;
+  padding-bottom: calc(1.25rem + var(--safe-bottom));
+}
+
+/* On larger screens: centred dialog */
+@media (min-width: 640px) {
+  .modal-overlay {
+    align-items: center;
+    padding: 1rem;
+  }
+  .modal-content {
+    border-radius: var(--radius-lg);
+    border-bottom: 1px solid var(--border);
+    max-width: 520px;
+  }
+}
+
+/* =========================================================
+   DRIVER LAYOUT — MOBILE APP SHELL
+   ========================================================= */
+.driver-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  height: -webkit-fill-available;
+  max-width: 580px;
+  margin: 0 auto;
+  background: var(--bg-card);
+  position: relative;
+}
+
+.driver-header {
+  height: calc(var(--mobile-header-h) + var(--safe-top));
+  padding-top: var(--safe-top);
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.driver-main {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 1rem;
+  padding-bottom: calc(var(--bottom-nav-h) + var(--safe-bottom) + 1rem);
+  background: var(--bg-main);
+}
+
+.driver-bottom-nav {
+  height: calc(var(--bottom-nav-h) + var(--safe-bottom));
+  padding-bottom: var(--safe-bottom);
+  flex-shrink: 0;
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 580px;
+  z-index: 50;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* =========================================================
+   MANAGER / OWNER LAYOUT — SIDEBAR + MAIN
+   ========================================================= */
+
+/* Mobile: sidebar hidden by default, overlay when open */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  z-index: 45;
+}
+
+.sidebar-overlay.open {
+  display: block;
+}
+
+/* Desktop sidebar stays fixed */
+.manager-sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 50;
+  background: var(--bg-sidebar);
+  color: var(--sidebar-text);
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  border-right: 1px solid var(--border);
+}
+
+.manager-main-area {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh / var(--app-zoom-factor, 1));
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  transition: margin-left 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.manager-topbar {
+  height: var(--header-h);
+  background: var(--header-bg, #047857);
+  color: var(--header-text, #ffffff);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.25rem;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  gap: 0.75rem;
+  flex-shrink: 0;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Translucent search pill inside Foodager-style header */
+.header-search-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 9999px;
+  padding: 0.35rem 0.95rem;
+  color: #ffffff;
+  transition: all 0.15s ease;
+}
+.header-search-pill:focus-within {
+  background: rgba(255, 255, 255, 0.26);
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
+}
+.header-search-pill input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  font-size: 0.84rem;
+  width: 100%;
+}
+.header-search-pill input::placeholder {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* Header Action Buttons */
+.header-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  height: 34px;
+  padding: 0 0.75rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.header-action-btn:hover {
+  background: rgba(255, 255, 255, 0.24);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Header User Pill */
+.header-user-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  height: 34px;
+  padding: 0.2rem 0.65rem 0.2rem 0.3rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.header-user-pill:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+/* Foodager Row Actions */
+.action-pill-delete {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  padding: 4px 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.action-pill-delete:hover {
+  background: #fecdd3;
+  color: #b91c1c;
+}
+
+.action-pill-edit {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+  border-radius: 6px;
+  padding: 4px 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.action-pill-edit:hover {
+  background: #d1fae5;
+  color: #047857;
+}
+
+/* Foodager Bottom Action Buttons */
+.btn-approve-outline {
+  background: #ffffff;
+  color: #059669;
+  border: 1.5px solid #059669;
+  border-radius: 8px;
+  padding: 0.4rem 0.9rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 0.82rem;
+}
+.btn-approve-outline:hover {
+  background: #ecfdf5;
+}
+
+.btn-approve-solid {
+  background: #059669;
+  color: #ffffff;
+  border: 1.5px solid #059669;
+  border-radius: 8px;
+  padding: 0.4rem 1rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 0.82rem;
+}
+.btn-approve-solid:hover {
+  background: #047857;
+}
+
+.btn-delete-outline {
+  background: #ffffff;
+  color: #dc2626;
+  border: 1.5px solid #f87171;
+  border-radius: 8px;
+  padding: 0.4rem 0.9rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 0.82rem;
+}
+.btn-delete-outline:hover {
+  background: #fee2e2;
+}
+
+.manager-page-content {
+  padding: 1.25rem;
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* Hamburger button visible only on mobile */
+.sidebar-hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* =========================================================
+   RESPONSIVE BREAKPOINTS
+   ========================================================= */
+
+/* ---- Small Mobile: 320px – 479px ---- */
+@media (max-width: 479px) {
+  .manager-page-content { padding: 0.85rem 0.75rem; }
+  .manager-topbar { padding: 0 0.85rem; }
+
+  /* Hide "Expand / Icon Only" text label on very small screens */
+  .sidebar-toggle-label { display: none; }
+
+  /* Stack stat cards vertically */
+  .stat-grid-4 { grid-template-columns: 1fr 1fr !important; }
+  .stat-grid-3 { grid-template-columns: 1fr !important; }
+
+  /* Full-width action buttons */
+  .action-btn-group {
+    flex-direction: column;
+    width: 100%;
+  }
+  .action-btn-group .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Condensed table cells */
+  .data-table th, .data-table td {
+    padding: 0.65rem 0.75rem;
+    font-size: 0.82rem;
+  }
+}
+
+/* ---- Mobile: 480px – 767px ---- */
+@media (max-width: 767px) {
+  /* Manager/Owner sidebar: slide in as drawer */
+  .manager-sidebar {
+    transform: translateX(-100%);
+    width: var(--sidebar-w) !important; /* Always full width when drawer opens */
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .manager-sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  /* Main area takes full width on mobile */
+  .manager-main-area {
+    margin-left: 0 !important;
+  }
+
+  /* Show hamburger */
+  .sidebar-hamburger {
+    display: flex;
+  }
+
+  /* Show close button inside drawer */
+  .mobile-sidebar-close {
+    display: flex !important;
+  }
+
+  /* Hide desktop collapse toggle */
+  .sidebar-desktop-toggle { display: none; }
+
+  /* Page content needs safe area padding */
+  .manager-page-content {
+    padding: 1rem 0.9rem;
+    padding-bottom: calc(1rem + var(--safe-bottom));
+  }
+
+  /* Modal is full-width bottom sheet on mobile (already done above) */
+
+  /* Tables: allow horizontal scroll with momentum */
+  .table-container {
+    margin: 0 -0.9rem;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  /* Smaller form inputs to save screen space */
+  .form-input, .form-select, .form-textarea {
+    padding: 0.55rem 0.75rem;
+  }
+}
+
+/* ---- Tablet: 768px – 1023px ---- */
+@media (min-width: 768px) and (max-width: 1023px) {
+  :root {
+    --sidebar-w: 220px;
+    --sidebar-collapsed-w: 64px;
+  }
+
+  .manager-page-content { padding: 1rem 1.1rem; }
+  .manager-topbar { padding: 0 1.1rem; }
+
+  /* Tablet: show sidebar but start collapsed */
+  .manager-sidebar {
+    transform: translateX(0);
+  }
+
+  .stat-grid-4 { grid-template-columns: 1fr 1fr !important; }
+}
+
+/* ---- Desktop: 1024px+ ---- */
+@media (min-width: 1024px) {
+  .manager-sidebar {
+    transform: translateX(0);
+  }
+
+  .sidebar-hamburger { display: none !important; }
+  .sidebar-overlay   { display: none !important; }
+}
+
+/* ---- Wide Desktop: 1280px+ ---- */
+@media (min-width: 1280px) {
+  .manager-page-content {
+    padding: 1.5rem 2rem;
+  }
+}
+
+/* =========================================================
+   BILLING PAGE SIZING & RESPONSIVENESS
+   ========================================================= */
+.manager-page-content:has(.billing-page-container) {
+  padding: 0.35rem 0.65rem !important;
+  height: calc((100vh / var(--app-zoom-factor, 1)) - var(--header-h)) !important;
+  max-height: calc((100vh / var(--app-zoom-factor, 1)) - var(--header-h)) !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  box-sizing: border-box !important;
+  flex: 1 !important;
+}
+
+.billing-page-container {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  flex: 1 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.billing-workspace-grid {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.billing-table-wrapper {
+  flex: 1 1 0% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  margin-bottom: 0;
+  box-sizing: border-box;
+}
+
+.billing-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.35rem;
+  margin-bottom: 0.25rem;
+  flex-shrink: 0;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.billing-filter-bar {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 0.2rem;
+  align-items: center;
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* WhatsApp Split Workspace Panel - Phone Size Viewport */
+.billing-whatsapp-desktop-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  width: 385px;
+  min-width: 350px;
+  max-width: 420px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  animation: waSlideIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes waSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.billing-whatsapp-panel {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
+  flex-shrink: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.22);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  box-sizing: border-box;
+  background: #111b21;
+}
+
+/* WhatsApp Single-Screen Mobile App Navigation */
+.wa-mobile-viewport {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background: #111b21;
+  display: flex;
+  flex-direction: column;
+  overscroll-behavior: contain;
+}
+
+.wa-mobile-slider {
+  display: flex;
+  width: 200%;
+  height: 100%;
+  transition: transform 0.24s cubic-bezier(0.2, 0.9, 0.3, 1);
+  will-change: transform;
+}
+
+.wa-mobile-slider.show-list {
+  transform: translateX(0%);
+}
+
+.wa-mobile-slider.show-chat {
+  transform: translateX(-50%);
+}
+
+.wa-screen-pane {
+  width: 50%;
+  height: 100%;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* WhatsApp Scrollbars with scroll containment */
+.wa-scroll-container {
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.wa-scroll-container::-webkit-scrollbar {
+  width: 4px;
+}
+
+.wa-scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.wa-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+/* Chat bubble styling */
+.wa-bubble-received {
+  background: #202c33;
+  color: #e9edef;
+  border-radius: 0 10px 10px 10px;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  border-left: 3px solid #00a884;
+}
+
+.wa-bubble-sent {
+  background: #005c4b;
+  color: #e9edef;
+  border-radius: 10px 0 10px 10px;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+/* WhatsApp wallpaper pattern */
+.wa-chat-wallpaper {
+  background-color: #0b141a;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+/* Mobile Modal Drawer Overlay */
+.billing-whatsapp-mobile-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justifyContent: center;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+@keyframes waFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.billing-whatsapp-mobile-trigger {
+  display: none !important;
+}
+
+.resize-handle-bar {
+  background: var(--border);
+  transition: background 0.15s ease, height 0.15s ease;
+}
+
+div:hover > .resize-handle-bar {
+  background: #059669 !important;
+  height: 55px !important;
+}
+
+.workspace-toolbar {
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.mobile-tab-group {
+  display: none !important;
+}
+
+.desktop-mode-group {
+  display: flex !important;
+}
+
+/* 1260px - 1440px adjustments */
+@media (max-width: 1260px) {
+  .billing-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Tablet (768px - 1023px): WhatsApp viewport & Billing table adjustments */
+@media (max-width: 1023px) {
+  .billing-workspace-grid {
+    flex-direction: column !important;
+    overflow: hidden;
+  }
+  .billing-whatsapp-desktop-wrapper {
+    width: 100% !important;
+    max-width: 420px !important;
+    margin: 0 auto;
+    height: 520px !important;
+    min-height: 480px;
+    flex-shrink: 0;
+  }
+  .billing-table-wrapper {
+    width: 100% !important;
+    flex: 1 1 auto !important;
+    min-height: 480px;
+  }
+  .resize-divider-bar {
+    display: none !important;
+  }
+}
+
+/* Mobile (<= 767px) */
+@media (max-width: 767px) {
+  .billing-page-container {
+    height: auto;
+    max-height: none;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .billing-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+  .billing-filter-bar {
+    gap: 0.4rem;
+  }
+  .desktop-mode-group {
+    display: none !important;
+  }
+  .mobile-tab-group {
+    display: flex !important;
+  }
+  .billing-whatsapp-desktop-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 500px !important;
+  }
+}
+
+@media (max-width: 479px) {
+  .billing-stat-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* =========================================================
+   DRIVER CARD (Delivery Item)
+   ========================================================= */
+.driver-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 1.1rem;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 0.9rem;
+  transition: box-shadow 0.15s ease, transform 0.1s ease;
+}
+
+.driver-card:active {
+  background-color: #fff1f2;
+  transform: scale(0.995);
+}
+
+[data-theme="dark"] .driver-card:active {
+  background-color: #240f0f;
+}
+
+/* =========================================================
+   UTILITY CLASSES
+   ========================================================= */
+.text-truncate {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.nowrap { white-space: nowrap; }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Flex utilities */
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; }
+.flex-wrap { flex-wrap: wrap; }
+.gap-sm { gap: 0.5rem; }
+.gap-md { gap: 1rem; }
+
+/* =========================================================
+   STAT CARD GRIDS (responsive)
+   ========================================================= */
+.stat-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.stat-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.stat-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 1023px) {
+  .stat-grid-4 { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 767px) {
+  .stat-grid-4 { grid-template-columns: 1fr 1fr; }
+  .stat-grid-3 { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 479px) {
+  .stat-grid-4 { grid-template-columns: 1fr 1fr; }
+  .stat-grid-3 { grid-template-columns: 1fr; }
+  .stat-grid-2 { grid-template-columns: 1fr; }
+}
+
+/* =========================================================
+   PAGE HEADER
+   ========================================================= */
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.page-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@media (max-width: 479px) {
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .page-header-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+  .page-header-actions .btn {
+    flex: 1;
+  }
+}
+
+/* =========================================================
+   ANIMATE SPIN (for refresh icons)
+   ========================================================= */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* =========================================================
+   OFFLINE BANNER
+   ========================================================= */
+.offline-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background: #b45309;
+  color: white;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.5rem 1rem;
+  padding-top: calc(0.5rem + var(--safe-top));
+}
+
+/* =========================================================
+   FOCUS STYLES (Accessibility)
+   ========================================================= */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* =========================================================
+   PRINT OPTIMIZATION
+   ========================================================= */
+@media print {
+  body, html {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  .print-hidden,
+  nav, aside, header, .sidebar, .app-header, .btn, button,
+  .offline-banner, .driver-bottom-nav,
+  .manager-sidebar, .manager-topbar, .sidebar-hamburger {
+    display: none !important;
+  }
+
+  .modal-overlay:not(:has(.invoice-printable-wrapper)):not(:has(.statement-printable-wrapper)) {
+    display: none !important;
+  }
+
+  .invoice-modal-overlay,
+  .statement-modal-overlay {
+    position: static !important;
+    display: block !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  .invoice-printable-wrapper,
+  .statement-printable-wrapper {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  .printable-content {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    padding: 1.5cm !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  @page {
+    size: A4;
+    margin: 1cm;
+  }
+}

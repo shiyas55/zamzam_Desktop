@@ -1,0 +1,7 @@
+{
+  "version": "3.3.0",
+  "buildTimestamp": "2026-10-26T00:27:00.000Z",
+  "lastWebsiteUpdate": "October 26, 2026, 12:27 AM IST",
+  "environment": "production",
+  "releaseNotes": "Zero-latency wholesale order entry, automated silent background backend & WhatsApp bridge service, PostgreSQL migration assistant, and LAN multi-client PC support."
+}

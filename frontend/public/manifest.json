@@ -1,0 +1,40 @@
+{
+  "name": "Zamzam Foods — Distribution Management",
+  "short_name": "Zamzam Foods",
+  "description": "Wholesale bakery distribution, driver dispatch, payments, and credit ledger for Zamzam Foods.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#b91c1c",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["business", "productivity"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Create Order",
+      "url": "/manager/create-order",
+      "description": "Place a new wholesale order"
+    },
+    {
+      "name": "Deliveries",
+      "url": "/driver",
+      "description": "View today's delivery list"
+    }
+  ]
+}

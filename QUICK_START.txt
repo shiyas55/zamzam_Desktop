@@ -1,0 +1,53 @@
+==============================================================================
+               ZAMZAM FOODS — COMPLETE WINDOWS SERVER & CLIENT PACK
+==============================================================================
+
+THIS COMPLETE PACK CONTAINS EVERYTHING YOU NEED FOR:
+1. Running the Zamzam Foods Server with 0 latency & fast order entry
+2. Auto-running the Backend (port 8000) & WhatsApp Bridge (port 3005) invisibly
+3. 1-Click Migration from SQLite to PostgreSQL without losing data
+4. Connecting any number of Client PCs on the local network (LAN)
+
+------------------------------------------------------------------------------
+QUICK 1-CLICK LAUNCHERS:
+------------------------------------------------------------------------------
+
+[1] 1_START_ZAMZAM_APP.bat
+    -> Double-click to start Zamzam Foods Desktop App.
+    -> Automatically starts Backend and WhatsApp bridge silently in background.
+
+[2] 2_ENABLE_AUTOSTART_ON_BOOT.bat
+    -> Double-click ONCE on your Server PC.
+    -> Configures Windows to auto-start both Backend (8000) and WhatsApp (3005)
+       invisibly on boot (no black console windows).
+    -> Configures Windows Firewall to allow Client PCs on your LAN.
+
+[3] RUN_ALL_SERVICES_HIDDEN.bat (or run_all_hidden.vbs)
+    -> Double-click to start both Backend & WhatsApp Bridge 100% invisibly right now.
+
+[4] CONNECT_AS_CLIENT_PC.bat
+    -> Run on any CLIENT PC in your shop.
+    -> Prompts for the Server PC's IP address (e.g. 192.168.1.100).
+    -> Launches Zamzam Foods in standalone App mode connected to the Server!
+
+[5] 5_MIGRATE_TO_POSTGRES.bat (or migrate_sqlite_to_postgres.bat)
+    -> 1-click migration assistant to transfer your data from SQLite to PostgreSQL.
+    -> Takes an automatic timestamped backup of db.sqlite3 into backups/.
+    -> Exports all orders, customers, and prices to JSON.
+    -> Creates tables in PostgreSQL and imports all your data seamlessly.
+
+[6] 3_TEST_ZAMZAM_SERVICES.bat
+    -> Tests if Backend (8000) and WhatsApp (3005) are active and responding.
+
+[7] 4_CONNECT_WHATSAPP_QR.bat
+    -> Directly opens the WhatsApp Bridge QR Code page (http://localhost:3005/qr).
+
+[8] stop_backend_windows.bat
+    -> Cleanly stops both the Backend server and WhatsApp bridge if you ever need to.
+
+------------------------------------------------------------------------------
+DOCUMENTATION:
+------------------------------------------------------------------------------
+See 'POSTGRES_MIGRATION_AND_CLIENT_GUIDE.md' for full detailed instructions,
+including architectural diagrams and step-by-step screenshots guide.
+==============================================================================

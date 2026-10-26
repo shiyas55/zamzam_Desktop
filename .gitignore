@@ -1,0 +1,47 @@
+﻿# Python virtual environments
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Local databases and backups
+*.sqlite3
+*.sqlite3-*
+*.db
+backups/
+installer/dist/*.json
+installer/dist/*.sql
+
+# WhatsApp sessions and cache
+whatsapp-bridge/.wwebjs_auth/
+whatsapp-bridge/.wwebjs_cache/
+
+# Frontend dependencies and generated files
+frontend/node_modules/
+frontend/dist/
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# Testing and type-checking caches
+.pytest_cache/
+.mypy_cache/
+
+
+node_modules/
+**/node_modules/
+*.exe
+.rustdesk*
+.env
+
+node_modules/
+**/node_modules/
+*.exe
+.rustdesk*
+installer/README_WINDOWS_INSTALLATION.md

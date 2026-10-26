@@ -1,0 +1,38 @@
+==============================================================================
+           ZAMZAM FOODS — WINDOWS UPDATE (100% DATABASE SAFE)
+==============================================================================
+
+IMPORTANT NOTE ABOUT YOUR DATABASE:
+  • This update package DOES NOT contain any "db.sqlite3" file.
+  • Your existing customer records, sales orders, ledger balances, and
+    bakery shop data on your Windows laptop will NOT be overwritten!
+
+HOW TO UPDATE YOUR WINDOWS LAPTOP:
+------------------------------------------------------------------------------
+Option A (In-Place Update — Recommended):
+  1. Close Zamzam Foods on your Windows laptop if it is running.
+  2. Extract all files from this ZIP directly into your existing Zamzam Foods folder.
+  3. When Windows asks to replace files, click "Replace the files in the destination".
+     (Your "db.sqlite3" will stay untouched because this zip does NOT contain one!)
+  4. Double-click "1_START_ZAMZAM_APP.bat" to start!
+
+Option B (Fresh Folder):
+  1. Extract this ZIP into a new folder on your Windows laptop (e.g. C:\ZamzamFoods).
+  2. Copy your existing "db.sqlite3" file from your old folder into this new folder.
+  3. Double-click "1_START_ZAMZAM_APP.bat" to start!
+
+WHAT IS NEW IN THIS UPDATE:
+------------------------------------------------------------------------------
+  ✅ Fixed WhatsApp Invoice Image Text Alignment:
+     Replaced old rendering with native browser engine (no overlapping text,
+     no missing spaces).
+  ✅ Clean Single Sidebar:
+     Fast Wholesale and WhatsApp combined into one clean "⚡ Fast Wholesale" menu.
+  ✅ Full Notepad & Daily Expenses Sheet:
+     Quick-switcher between Sales Sheet & Daily Bakery Expenses (Flour, Oil, etc.).
+  ✅ Auto-Recovery WhatsApp Bridge:
+     Background WhatsApp service auto-reloads if disconnected.
+
+Need to test services?
+  • Double-click "3_TEST_ZAMZAM_SERVICES.bat" to verify Backend & WhatsApp status.
+==============================================================================

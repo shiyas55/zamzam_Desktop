@@ -1,0 +1,51 @@
+@echo off
+setlocal EnableDelayedExpansion
+title Zamzam Foods - Reset WhatsApp Session
+color 0E
+
+echo ==============================================================================
+echo             ZAMZAM FOODS - RESET WHATSAPP SESSION & RE-LINK
+echo ==============================================================================
+echo.
+echo This script will:
+echo  1. Stop any running WhatsApp Bridge background processes.
+echo  2. Wipe corrupted/stale WhatsApp session cache (.wwebjs_auth).
+echo  3. Generate a fresh QR code with the latest WhatsApp Web version.
+echo.
+echo Press any key to proceed with reset...
+pause >nul
+
+cd /d "%~dp0"
+
+echo [1/3] Stopping WhatsApp Bridge processes...
+powershell -NoProfile -Command "
+$connections = Get-NetTCPConnection -LocalPort 3005 -ErrorAction SilentlyContinue;
+if ($connections) {
+    foreach ($conn in $connections) {
+        $procId = $conn.OwningProcess;
+        if ($procId -gt 0) {
+            Write-Host ('Stopping process ID: ' + $procId);
+            Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue;
+        }
+    }
+}
+" >nul 2>&1
+
+timeout /t 2 /nobreak >nul
+
+echo [2/3] Cleaning stale session data...
+if exist "whatsapp-bridge\.wwebjs_auth" (
+    rmdir /s /q "whatsapp-bridge\.wwebjs_auth" >nul 2>&1
+    echo   ^>^> Removed .wwebjs_auth folder.
+)
+if exist "whatsapp-bridge\.wwebjs_cache" (
+    rmdir /s /q "whatsapp-bridge\.wwebjs_cache" >nul 2>&1
+    echo   ^>^> Removed .wwebjs_cache folder.
+)
+
+echo.
+echo [3/3] Starting fresh WhatsApp Bridge...
+echo A new QR code page will open in your browser in a few seconds.
+echo.
+
+call "%~dp0start_whatsapp_bridge.bat"
