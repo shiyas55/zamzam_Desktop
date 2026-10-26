@@ -473,6 +473,7 @@ export interface DashboardSummary {
   today_credit?: string;
   net_collection?: string;
   last_day_net_collection?: string;
+  total_net_collection?: string;
   last_day_date?: string;
   total_customers?: number;
   total_receivable?: string;

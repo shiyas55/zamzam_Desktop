@@ -55,6 +55,7 @@ export interface DateFilterParams extends Record<string, string | number | boole
   date_preset?: DatePreset;
   start_date?: string;
   end_date?: string;
+  date?: string;
 }
 
 export interface DriverPerformanceParams extends Record<string, string | number | boolean | undefined> {

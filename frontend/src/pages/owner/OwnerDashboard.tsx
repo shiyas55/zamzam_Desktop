@@ -33,9 +33,10 @@ export const OwnerDashboard: React.FC = () => {
 
   // Date Filtering State
   const [datePreset, setDatePreset] = useState<DatePreset>('today');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [showCustomRange, setShowCustomRange] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string>(() => {
+    return new Date().toISOString().split('T')[0];
+  });
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   // Data & loading state
   const [data, setData] = useState<DashboardSummary | null>(null);
@@ -48,8 +49,9 @@ export const OwnerDashboard: React.FC = () => {
       setError(null);
       const params: DateFilterParams = overrideParams || {
         date_preset: datePreset,
-        start_date: datePreset === 'custom' ? startDate : undefined,
-        end_date: datePreset === 'custom' ? endDate : undefined,
+        start_date: datePreset === 'custom' ? selectedDate : undefined,
+        end_date: datePreset === 'custom' ? selectedDate : undefined,
+        date: datePreset === 'custom' ? selectedDate : undefined,
       };
       const res = await reportService.getDashboardSummary(params);
       setData(res);
@@ -65,14 +67,16 @@ export const OwnerDashboard: React.FC = () => {
     fetchDashboard();
   }, [datePreset]);
 
-  const handleApplyCustomDates = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!startDate || !endDate) return;
+  const handleApplySingleDate = (e?: React.FormEvent, dateVal?: string) => {
+    if (e) e.preventDefault();
+    const d = dateVal || selectedDate;
+    if (!d) return;
     setDatePreset('custom');
     fetchDashboard({
       date_preset: 'custom',
-      start_date: startDate,
-      end_date: endDate,
+      start_date: d,
+      end_date: d,
+      date: d,
     });
   };
 
@@ -87,7 +91,7 @@ export const OwnerDashboard: React.FC = () => {
       case 'this_month':
         return "THIS MONTH'S";
       default:
-        return 'PERIOD';
+        return 'SELECTED DATE';
     }
   };
 
@@ -145,7 +149,7 @@ export const OwnerDashboard: React.FC = () => {
                 fontSize: '0.8rem',
               }}
               onClick={() => {
-                setShowCustomRange(false);
+                setShowDatePicker(false);
                 setDatePreset(preset);
               }}
             >
@@ -154,11 +158,11 @@ export const OwnerDashboard: React.FC = () => {
           ))}
 
           <button
-            className={`btn btn-sm ${datePreset === 'custom' || showCustomRange ? 'btn-primary' : 'btn-secondary'}`}
+            className={`btn btn-sm ${datePreset === 'custom' || showDatePicker ? 'btn-primary' : 'btn-secondary'}`}
             style={{ padding: '0.35rem 0.8rem', fontSize: '0.8rem' }}
-            onClick={() => setShowCustomRange(!showCustomRange)}
+            onClick={() => setShowDatePicker(!showDatePicker)}
           >
-            Custom Range
+            {datePreset === 'custom' && selectedDate ? `Date: ${selectedDate}` : 'Select Date'}
           </button>
         </div>
 
@@ -169,48 +173,42 @@ export const OwnerDashboard: React.FC = () => {
         )}
       </div>
 
-      {/* Custom Range Picker Drawer */}
-      {showCustomRange && (
+      {/* Single Date Picker Drawer */}
+      {showDatePicker && (
         <form
-          onSubmit={handleApplyCustomDates}
+          onSubmit={(e) => handleApplySingleDate(e)}
           className="card"
           style={{
-            padding: '1rem 1.25rem',
+            padding: '0.9rem 1.25rem',
             marginBottom: '1.5rem',
             display: 'flex',
             alignItems: 'center',
-            gap: '1rem',
+            gap: '0.85rem',
             flexWrap: 'wrap',
             background: 'var(--bg-main)',
             border: '1px solid var(--border)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <label style={{ fontSize: '0.82rem', fontWeight: 600 }}>Start Date:</label>
+            <label style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-secondary)' }}>Select Date:</label>
             <input
               type="date"
               className="form-input"
-              style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }}
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              required
-            />
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <label style={{ fontSize: '0.82rem', fontWeight: 600 }}>End Date:</label>
-            <input
-              type="date"
-              className="form-input"
-              style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }}
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              style={{ padding: '0.35rem 0.65rem', fontSize: '0.85rem' }}
+              value={selectedDate}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSelectedDate(val);
+                if (val) {
+                  handleApplySingleDate(undefined, val);
+                }
+              }}
               required
             />
           </div>
 
           <button type="submit" className="btn btn-primary btn-sm">
-            Apply Date Range
+            Apply Date
           </button>
         </form>
       )}
@@ -303,21 +301,26 @@ export const OwnerDashboard: React.FC = () => {
                 </div>
               </div>
 
-              {/* 4. Last Day Net Collection */}
+              {/* 4. Total Net Collection */}
               <div className="card" style={{ padding: '1.15rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
                   <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
-                    Last Day Net Collection
+                    Total Net Collection
                   </span>
                   <div style={{ width: 32, height: 32, borderRadius: '8px', background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <History size={16} />
                   </div>
                 </div>
                 <p style={{ fontSize: '1.5rem', fontWeight: 900, color: '#1d4ed8', margin: 0 }}>
-                  {formatCurrency(data.last_day_net_collection || '0.00')}
+                  {formatCurrency(
+                    data.total_net_collection ??
+                    (parseFloat(data.last_day_net_collection || '0') + parseFloat(data.net_collection || '0')).toFixed(2)
+                  )}
                 </p>
                 <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                  {data.last_day_date ? `Previous day (${data.last_day_date})` : 'Previous day closing net'}
+                  {data.last_day_date
+                    ? `Last Day (${formatCurrency(data.last_day_net_collection || '0.00')}) + Net (${formatCurrency(data.net_collection || '0.00')})`
+                    : 'Previous day net + current net'}
                 </span>
               </div>
 

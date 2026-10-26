@@ -20,19 +20,33 @@ def resolve_date_range(request):
     """
     Parses preset or custom date range:
     - preset: 'today', 'yesterday', 'this_week', 'this_month'
-    - custom: start_date, end_date (YYYY-MM-DD)
+    - custom: start_date, end_date (YYYY-MM-DD), or single date
     Returns: (start_date: date, end_date: date, preset_name: str)
     """
     today = timezone.localdate()
     preset = request.query_params.get("date_preset", "today").lower()
     start_date_param = request.query_params.get("start_date")
     end_date_param = request.query_params.get("end_date")
+    date_param = request.query_params.get("date")
+
+    if date_param:
+        try:
+            single_date = datetime.datetime.strptime(date_param, "%Y-%m-%d").date()
+            return single_date, single_date, "custom"
+        except (ValueError, TypeError):
+            pass
 
     if start_date_param and end_date_param:
         try:
             start_date = datetime.datetime.strptime(start_date_param, "%Y-%m-%d").date()
             end_date = datetime.datetime.strptime(end_date_param, "%Y-%m-%d").date()
             return start_date, end_date, "custom"
+        except (ValueError, TypeError):
+            pass
+    elif start_date_param:
+        try:
+            single_date = datetime.datetime.strptime(start_date_param, "%Y-%m-%d").date()
+            return single_date, single_date, "custom"
         except (ValueError, TypeError):
             pass
 
@@ -171,6 +185,9 @@ class DashboardSummaryView(APIView):
             ld_expenses = DriverExpense.objects.filter(date=last_day).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
             last_day_net_collection = ld_collected - ld_expenses
 
+        # Total Net Collection = Last Day Net Collection + Current Period Net Collection
+        total_net_collection = last_day_net_collection + net_collection
+
         # Period Credit = Sales - Collections (Net Credit Extended)
         period_credit = max(Decimal("0.00"), period_sales - total_collected)
 
@@ -226,6 +243,7 @@ class DashboardSummaryView(APIView):
             "today_credit": period_credit,
             "net_collection": net_collection,
             "last_day_net_collection": last_day_net_collection,
+            "total_net_collection": total_net_collection,
             "last_day_date": str(last_day),
             "total_customers": total_customers,
             "total_receivable": total_receivable,
