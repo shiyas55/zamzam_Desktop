@@ -24,6 +24,29 @@ export interface SystemSettings {
   updated_at?: string;
 }
 
+export interface BackgroundServicesStatus {
+  backend: {
+    running: boolean;
+    port: number;
+    host: string;
+  };
+  whatsapp: {
+    running: boolean;
+    port: number;
+    host: string;
+    url: string;
+  };
+  autostart: {
+    enabled: boolean;
+    platform: string;
+    method: string | null;
+  };
+  system: {
+    platform: string;
+    timestamp: string;
+  };
+}
+
 export const settingsService = {
   async getSettings(): Promise<SystemSettings> {
     return apiClient.get<SystemSettings>('/settings/');
@@ -39,5 +62,17 @@ export const settingsService = {
 
   async resetPin(payload: { username: string; password: string; new_pin?: string }): Promise<{ success: boolean; message: string; pin?: string }> {
     return apiClient.post<{ success: boolean; message: string; pin?: string }>('/settings/reset-pin/', payload);
+  },
+
+  async getServicesStatus(): Promise<BackgroundServicesStatus> {
+    return apiClient.get<BackgroundServicesStatus>('/services/status/');
+  },
+
+  async startBackgroundServices(action: 'start_services' | 'start_whatsapp' = 'start_services'): Promise<{ success: boolean; message: string; whatsapp_running: boolean }> {
+    return apiClient.post<{ success: boolean; message: string; whatsapp_running: boolean }>('/services/manage/', { action });
+  },
+
+  async toggleAutostart(enable: boolean): Promise<{ success: boolean; message: string; autostart: BackgroundServicesStatus['autostart'] }> {
+    return apiClient.post<{ success: boolean; message: string; autostart: BackgroundServicesStatus['autostart'] }>('/services/manage/', { action: 'toggle_autostart', enable });
   },
 };

@@ -12,6 +12,7 @@ from .views import (
     DatabaseRestoreView,
     DatabaseClearAllView,
     BusinessDocumentViewSet,
+    BackgroundServicesView,
 )
 
 router = DefaultRouter()
@@ -23,6 +24,8 @@ urlpatterns = [
     path("settings/", SystemSettingsView.as_view(), name="system_settings"),
     path("settings/verify-pin/", VerifySettingsPinView.as_view(), name="verify_settings_pin"),
     path("settings/reset-pin/", ResetSettingsPinView.as_view(), name="reset_settings_pin"),
+    path("services/status/", BackgroundServicesView.as_view(), name="services_status"),
+    path("services/manage/", BackgroundServicesView.as_view(), name="services_manage"),
     path("database/stats/", DatabaseStatsView.as_view(), name="database_stats"),
     path("database/test-connection/", DatabaseTestConnectionView.as_view(), name="database_test_connection"),
     path("database/backup/", DatabaseBackupView.as_view(), name="database_backup"),

@@ -42,8 +42,13 @@ import {
   ZoomIn,
   ZoomOut,
   QrCode,
+  Play,
+  Power,
+  Zap,
+  Server,
+  Cpu,
 } from 'lucide-react';
-import { settingsService } from '../../services/settingsService';
+import { settingsService, BackgroundServicesStatus } from '../../services/settingsService';
 import {
   checkWhatsAppBridgeStatus,
   BridgeStatus,
@@ -181,9 +186,77 @@ export const SettingsPage: React.FC = () => {
     refreshBridgeStatus();
   };
 
+  // Background Services & Auto-Start State
+  const [servicesStatus, setServicesStatus] = useState<BackgroundServicesStatus | null>(null);
+  const [startingServices, setStartingServices] = useState(false);
+  const [togglingAutostart, setTogglingAutostart] = useState(false);
+  const [serviceActionMessage, setServiceActionMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
+  const refreshServicesStatus = async () => {
+    try {
+      const res = await settingsService.getServicesStatus();
+      setServicesStatus(res);
+    } catch {
+      // Offline fallback
+    }
+  };
+
+  const handleStartServices = async (action: 'start_services' | 'start_whatsapp' = 'start_services') => {
+    setStartingServices(true);
+    setServiceActionMessage(null);
+    try {
+      await settingsService.startBackgroundServices(action);
+      setServiceActionMessage({
+        text: action === 'start_whatsapp'
+          ? 'WhatsApp Bridge started silently in background!'
+          : 'Background services (Backend + WhatsApp) started silently!',
+        type: 'success',
+      });
+      await refreshServicesStatus();
+      await refreshBridgeStatus();
+    } catch (err: any) {
+      setServiceActionMessage({
+        text: err?.response?.data?.error || err?.message || 'Failed to trigger background services.',
+        type: 'error',
+      });
+    } finally {
+      setStartingServices(false);
+      setTimeout(() => setServiceActionMessage(null), 6000);
+    }
+  };
+
+  const handleToggleAutostart = async () => {
+    if (!servicesStatus) return;
+    const nextState = !servicesStatus.autostart.enabled;
+    setTogglingAutostart(true);
+    setServiceActionMessage(null);
+    try {
+      const res = await settingsService.toggleAutostart(nextState);
+      setServicesStatus((prev) => (prev ? { ...prev, autostart: res.autostart } : prev));
+      setServiceActionMessage({
+        text: nextState
+          ? 'Auto-Run on Boot ENABLED! Services will launch automatically when your computer powers on.'
+          : 'Auto-Run on Boot DISABLED.',
+        type: 'success',
+      });
+    } catch (err: any) {
+      setServiceActionMessage({
+        text: err?.response?.data?.error || err?.message || 'Failed to toggle auto-start.',
+        type: 'error',
+      });
+    } finally {
+      setTogglingAutostart(false);
+      setTimeout(() => setServiceActionMessage(null), 6000);
+    }
+  };
+
   useEffect(() => {
     refreshBridgeStatus();
-    const interval = setInterval(refreshBridgeStatus, 15000);
+    refreshServicesStatus();
+    const interval = setInterval(() => {
+      refreshBridgeStatus();
+      refreshServicesStatus();
+    }, 15000);
     return () => clearInterval(interval);
   }, []);
 
@@ -1354,6 +1427,313 @@ export const SettingsPage: React.FC = () => {
                   );
                 })()}
 
+                {/* 2a. Background Services & Auto-Start Control Center */}
+                <div
+                  style={{
+                    padding: '1.4rem',
+                    borderRadius: '14px',
+                    backgroundColor: 'var(--bg-main)',
+                    border: '1.5px solid var(--border)',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '1.25rem',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.8rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}>
+                      <div
+                        style={{
+                          width: 46,
+                          height: 46,
+                          borderRadius: '12px',
+                          backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                          color: '#dc2626',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                        }}
+                      >
+                        <Cpu size={24} />
+                      </div>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+                          <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-main)' }}>
+                            Background Services & Auto-Start (Silent Engine)
+                          </h4>
+                          <span
+                            style={{
+                              fontSize: '0.72rem',
+                              fontWeight: 800,
+                              padding: '2px 8px',
+                              borderRadius: '999px',
+                              backgroundColor: servicesStatus?.whatsapp.running ? '#dcfce7' : '#fee2e2',
+                              color: servicesStatus?.whatsapp.running ? '#15803d' : '#b91c1c',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.35rem',
+                            }}
+                          >
+                            <span
+                              style={{
+                                width: 7,
+                                height: 7,
+                                borderRadius: '50%',
+                                backgroundColor: servicesStatus?.whatsapp.running ? '#22c55e' : '#ef4444',
+                              }}
+                            />
+                            {servicesStatus?.whatsapp.running ? 'ALL SERVICES ONLINE' : 'WHATSAPP OFFLINE'}
+                          </span>
+                        </div>
+                        <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                          Launch Backend Engine (port 8000) and WhatsApp Automation (port 3005) silently in the background, or auto-run on system boot.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        disabled={startingServices}
+                        onClick={() => handleStartServices('start_services')}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.45rem',
+                          padding: '0.55rem 1rem',
+                          fontSize: '0.84rem',
+                          fontWeight: 800,
+                          borderRadius: '8px',
+                          backgroundColor: '#dc2626',
+                          color: '#ffffff',
+                          border: 'none',
+                          cursor: startingServices ? 'wait' : 'pointer',
+                          boxShadow: '0 2px 6px rgba(220, 38, 38, 0.25)',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        <Zap size={15} className={startingServices ? 'animate-spin' : ''} />
+                        <span>{startingServices ? 'Starting Services...' : '⚡ Auto-Run Both in Background'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={startingServices}
+                        onClick={() => handleStartServices('start_whatsapp')}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.45rem',
+                          padding: '0.55rem 0.9rem',
+                          fontSize: '0.84rem',
+                          fontWeight: 700,
+                          borderRadius: '8px',
+                          backgroundColor: 'var(--bg-card)',
+                          color: 'var(--text-main)',
+                          border: '1px solid var(--border)',
+                          cursor: startingServices ? 'wait' : 'pointer',
+                        }}
+                        title="Start or restart WhatsApp Bridge only"
+                      >
+                        <Play size={14} />
+                        <span>Run WhatsApp</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          refreshServicesStatus();
+                          refreshBridgeStatus();
+                        }}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                          padding: '0.55rem 0.75rem',
+                          fontSize: '0.82rem',
+                          fontWeight: 600,
+                          borderRadius: '8px',
+                          backgroundColor: 'var(--bg-card)',
+                          color: 'var(--text-muted)',
+                          border: '1px solid var(--border)',
+                          cursor: 'pointer',
+                        }}
+                        title="Refresh service status"
+                      >
+                        <RotateCcw size={14} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Action Notification Banner */}
+                  {serviceActionMessage && (
+                    <div
+                      style={{
+                        padding: '0.65rem 0.95rem',
+                        borderRadius: '8px',
+                        backgroundColor: serviceActionMessage.type === 'success' ? '#dcfce7' : '#fee2e2',
+                        color: serviceActionMessage.type === 'success' ? '#15803d' : '#991b1b',
+                        border: `1px solid ${serviceActionMessage.type === 'success' ? '#86efac' : '#fca5a5'}`,
+                        fontSize: '0.82rem',
+                        fontWeight: 700,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                      }}
+                    >
+                      {serviceActionMessage.type === 'success' ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
+                      <span>{serviceActionMessage.text}</span>
+                    </div>
+                  )}
+
+                  {/* Service Health Gauges & Boot Auto-Start Row */}
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+                      gap: '0.85rem',
+                    }}
+                  >
+                    {/* 1. Backend Engine */}
+                    <div
+                      style={{
+                        padding: '0.9rem 1rem',
+                        borderRadius: '10px',
+                        backgroundColor: 'var(--bg-card)',
+                        border: '1px solid var(--border)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <Server size={20} style={{ color: '#16a34a' }} />
+                        <div>
+                          <div style={{ fontWeight: 800, fontSize: '0.86rem', color: 'var(--text-main)' }}>
+                            Django Backend Engine
+                          </div>
+                          <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                            Port 8000 &bull; Fast Local Database
+                          </div>
+                        </div>
+                      </div>
+                      <span
+                        style={{
+                          fontSize: '0.72rem',
+                          fontWeight: 800,
+                          padding: '2px 8px',
+                          borderRadius: '6px',
+                          backgroundColor: '#dcfce7',
+                          color: '#15803d',
+                        }}
+                      >
+                        ONLINE
+                      </span>
+                    </div>
+
+                    {/* 2. WhatsApp Bridge */}
+                    <div
+                      style={{
+                        padding: '0.9rem 1rem',
+                        borderRadius: '10px',
+                        backgroundColor: 'var(--bg-card)',
+                        border: '1px solid var(--border)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <MessageCircle
+                          size={20}
+                          style={{ color: servicesStatus?.whatsapp.running ? '#16a34a' : '#ef4444' }}
+                        />
+                        <div>
+                          <div style={{ fontWeight: 800, fontSize: '0.86rem', color: 'var(--text-main)' }}>
+                            WhatsApp Bridge Service
+                          </div>
+                          <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                            Port 3005 &bull; Headless Web Browser
+                          </div>
+                        </div>
+                      </div>
+                      <span
+                        style={{
+                          fontSize: '0.72rem',
+                          fontWeight: 800,
+                          padding: '2px 8px',
+                          borderRadius: '6px',
+                          backgroundColor: servicesStatus?.whatsapp.running ? '#dcfce7' : '#fee2e2',
+                          color: servicesStatus?.whatsapp.running ? '#15803d' : '#b91c1c',
+                        }}
+                      >
+                        {servicesStatus?.whatsapp.running ? 'ONLINE' : 'STOPPED'}
+                      </span>
+                    </div>
+
+                    {/* 3. Auto-Start on Boot Switch */}
+                    <div
+                      style={{
+                        padding: '0.9rem 1rem',
+                        borderRadius: '10px',
+                        backgroundColor: servicesStatus?.autostart.enabled ? 'rgba(34, 197, 94, 0.05)' : 'var(--bg-card)',
+                        border: servicesStatus?.autostart.enabled ? '1px solid #86efac' : '1px solid var(--border)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        cursor: togglingAutostart ? 'wait' : 'pointer',
+                      }}
+                      onClick={togglingAutostart ? undefined : handleToggleAutostart}
+                      title="Click to toggle auto-run on boot"
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <Power
+                          size={20}
+                          style={{ color: servicesStatus?.autostart.enabled ? '#16a34a' : 'var(--text-muted)' }}
+                        />
+                        <div>
+                          <div style={{ fontWeight: 800, fontSize: '0.86rem', color: 'var(--text-main)' }}>
+                            Auto-Start on PC Boot
+                          </div>
+                          <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                            {togglingAutostart
+                              ? 'Saving configuration...'
+                              : servicesStatus?.autostart.enabled
+                              ? `Active (${servicesStatus.autostart.platform === 'windows' ? 'Startup / Registry' : 'LaunchAgent'})`
+                              : 'Click to start with computer'}
+                          </div>
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          width: 44,
+                          height: 24,
+                          borderRadius: 999,
+                          backgroundColor: servicesStatus?.autostart.enabled ? '#16a34a' : '#cbd5e1',
+                          position: 'relative',
+                          transition: 'background-color 0.2s',
+                          flexShrink: 0,
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 18,
+                            height: 18,
+                            borderRadius: '50%',
+                            backgroundColor: '#ffffff',
+                            position: 'absolute',
+                            top: 3,
+                            left: servicesStatus?.autostart.enabled ? 23 : 3,
+                            transition: 'left 0.2s',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 {/* 2b. WhatsApp Laptop Bridge (Free Auto-Send PDF/Image Bills) */}
                 <div
                   style={{
@@ -1433,6 +1813,31 @@ export const SettingsPage: React.FC = () => {
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+                      {!bridgeStatus?.connected && (
+                        <button
+                          type="button"
+                          disabled={startingServices}
+                          onClick={() => handleStartServices('start_whatsapp')}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.4rem',
+                            padding: '0.45rem 0.85rem',
+                            fontSize: '0.82rem',
+                            fontWeight: 700,
+                            borderRadius: '8px',
+                            backgroundColor: '#dc2626',
+                            color: '#ffffff',
+                            border: 'none',
+                            cursor: startingServices ? 'wait' : 'pointer',
+                            boxShadow: '0 2px 6px rgba(220, 38, 38, 0.2)',
+                          }}
+                        >
+                          <Zap size={14} className={startingServices ? 'animate-spin' : ''} />
+                          <span>{startingServices ? 'Starting...' : '⚡ Run Bridge in Background'}</span>
+                        </button>
+                      )}
+
                       <button
                         type="button"
                         onClick={() => window.open(getWhatsAppBridgeQrUrl(), '_blank')}
