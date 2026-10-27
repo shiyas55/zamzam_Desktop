@@ -168,25 +168,32 @@ class DashboardSummaryView(APIView):
         expenses_qs = DriverExpense.objects.filter(date__gte=start_date, date__lte=end_date)
         period_expenses = expenses_qs.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
 
-        # Net Collection = Collection - Driver Expenses
+        # Net Collection for selected period = Collection - Driver Expenses
         net_collection = total_collected - period_expenses
 
-        # Last Day Net Collection (previous calendar day relative to start_date)
-        from apps.reports.models import DailyClosing
+        # Cumulative Net Collection calculations from database records:
+        # 1. Last Day: Cumulative net collection from all previous days up to (start_date - 1 day)
         last_day = start_date - datetime.timedelta(days=1)
-        last_day_closing = DailyClosing.objects.filter(date=last_day, is_closed=True).first()
-        if last_day_closing and last_day_closing.net_collection is not None:
-            last_day_net_collection = last_day_closing.net_collection
-        else:
-            ld_payments = Payment.objects.filter(received_at__date=last_day, status=Payment.Status.COMPLETED)
-            ld_cash = ld_payments.filter(payment_method=Payment.Method.CASH).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
-            ld_upi = ld_payments.filter(payment_method=Payment.Method.GPAY_UPI).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
-            ld_collected = ld_cash + ld_upi
-            ld_expenses = DriverExpense.objects.filter(date=last_day).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
-            last_day_net_collection = ld_collected - ld_expenses
+        prev_payments = Payment.objects.filter(
+            received_at__date__lte=last_day,
+            status=Payment.Status.COMPLETED,
+        )
+        prev_cash = prev_payments.filter(payment_method=Payment.Method.CASH).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+        prev_upi = prev_payments.filter(payment_method=Payment.Method.GPAY_UPI).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+        prev_collected = prev_cash + prev_upi
+        prev_expenses = DriverExpense.objects.filter(date__lte=last_day).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+        last_day_net_collection = prev_collected - prev_expenses
 
-        # Total Net Collection = Last Day Net Collection + Current Period Net Collection
-        total_net_collection = last_day_net_collection + net_collection
+        # 2. Total Net Collection: Cumulative net collection up to end_date (Previous Days' Total + Selected Date Net)
+        cum_payments = Payment.objects.filter(
+            received_at__date__lte=end_date,
+            status=Payment.Status.COMPLETED,
+        )
+        cum_cash = cum_payments.filter(payment_method=Payment.Method.CASH).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+        cum_upi = cum_payments.filter(payment_method=Payment.Method.GPAY_UPI).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+        cum_collected = cum_cash + cum_upi
+        cum_expenses = DriverExpense.objects.filter(date__lte=end_date).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+        total_net_collection = cum_collected - cum_expenses
 
         # Period Credit = Sales - Collections (Net Credit Extended)
         period_credit = max(Decimal("0.00"), period_sales - total_collected)

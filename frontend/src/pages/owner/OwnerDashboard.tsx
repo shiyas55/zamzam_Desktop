@@ -317,11 +317,15 @@ export const OwnerDashboard: React.FC = () => {
                     (parseFloat(data.last_day_net_collection || '0') + parseFloat(data.net_collection || '0')).toFixed(2)
                   )}
                 </p>
-                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                  {data.last_day_date
-                    ? `Last Day (${formatCurrency(data.last_day_net_collection || '0.00')}) + Net (${formatCurrency(data.net_collection || '0.00')})`
-                    : 'Previous day net + current net'}
-                </span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', fontSize: '0.72rem', marginTop: '0.35rem', alignItems: 'center' }}>
+                  <span style={{ color: '#2563eb', fontWeight: 700, background: '#eff6ff', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
+                    Last Day: {formatCurrency(data.last_day_net_collection || '0.00')}
+                  </span>
+                  <span style={{ color: 'var(--text-muted)', fontWeight: 800 }}>+</span>
+                  <span style={{ color: '#059669', fontWeight: 700, background: '#ecfdf5', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
+                    Net: {formatCurrency(data.net_collection || '0.00')}
+                  </span>
+                </div>
               </div>
 
               {/* 5. Total Expenses */}
