@@ -291,3 +291,44 @@ class BusinessDocument(TimeStampedUUIDModel):
 
     def __str__(self):
         return f"{self.title} ({self.get_document_type_display()})"
+
+
+class UserNote(models.Model):
+    """
+    Dynamic database storage for Zamzam Foods business notepad notes.
+    Stored centrally in PostgreSQL / SQLite so all client PCs and devices stay in sync.
+    """
+    id = models.CharField(max_length=100, primary_key=True)
+    title = models.CharField(max_length=255, default="New Note")
+    content = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-updated_at"]
+        verbose_name = "User Note"
+        verbose_name_plural = "User Notes"
+
+    def __str__(self):
+        return self.title or "Untitled Note"
+
+
+class UserSheet(models.Model):
+    """
+    Dynamic database storage for Zamzam Foods sales calculation sheets & daily business expense sheets.
+    Stored centrally in PostgreSQL / SQLite so changes appear in real-time across all PCs.
+    """
+    sheet_type = models.CharField(max_length=50, primary_key=True)  # 'SALES', 'EXPENSE'
+    title = models.CharField(max_length=255, default="")
+    rows = models.JSONField(default=list)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["sheet_type"]
+        verbose_name = "User Sheet"
+        verbose_name_plural = "User Sheets"
+
+    def __str__(self):
+        return f"{self.sheet_type}: {self.title}"
+

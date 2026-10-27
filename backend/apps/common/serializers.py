@@ -128,3 +128,18 @@ class BusinessDocumentSerializer(serializers.ModelSerializer):
         if obj.uploaded_by:
             return obj.uploaded_by.get_full_name() or obj.uploaded_by.username
         return None
+
+
+class UserNoteSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import UserNote
+        model = UserNote
+        fields = ["id", "title", "content", "created_at", "updated_at"]
+
+
+class UserSheetSerializer(serializers.ModelSerializer):
+    class Meta:
+        from .models import UserSheet
+        model = UserSheet
+        fields = ["sheet_type", "title", "rows", "created_at", "updated_at"]
+

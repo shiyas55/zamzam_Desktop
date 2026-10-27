@@ -15,8 +15,11 @@ import {
   RotateCcw,
   Printer,
   BookOpen,
+  Database,
+  RefreshCw,
 } from 'lucide-react';
 import { sendWhatsAppTextMessageViaBridge } from '../utils/whatsappBridgeUtils';
+import { notepadSheetService } from '../services/notepadSheetService';
 
 interface NoteItem {
   id: string;
@@ -173,7 +176,60 @@ export const NotepadSheetModal: React.FC<{
     }
   };
 
-  // Auto-Save Notes
+  // --- DATABASE SYNC STATE ---
+  const [dbSyncStatus, setDbSyncStatus] = useState<'SYNCED' | 'SAVING' | 'ERROR' | 'IDLE' | 'LOADING'>('IDLE');
+  const isInitialLoadRef = useRef(true);
+  const saveDebounceTimerRef = useRef<any>(null);
+
+  // 1. Load dynamic data from PostgreSQL / SQLite Database
+  const loadFromDatabase = async () => {
+    try {
+      setDbSyncStatus('LOADING');
+      const res = await notepadSheetService.getData();
+      if (res && res.status === 'success') {
+        if (res.notes && res.notes.length > 0) {
+          setNotes(res.notes);
+          try {
+            localStorage.setItem('zamzam_user_notes', JSON.stringify(res.notes));
+          } catch (_) {}
+        }
+        if (res.sales_sheet) {
+          setSalesRows(res.sales_sheet.rows);
+          setSalesTitle(res.sales_sheet.title);
+          try {
+            localStorage.setItem('zamzam_sheet_rows', JSON.stringify(res.sales_sheet.rows));
+            localStorage.setItem('zamzam_sheet_title', res.sales_sheet.title);
+          } catch (_) {}
+        }
+        if (res.expense_sheet) {
+          setExpenseRows(res.expense_sheet.rows);
+          setExpenseTitle(res.expense_sheet.title);
+          try {
+            localStorage.setItem('zamzam_sheet_expense_rows', JSON.stringify(res.expense_sheet.rows));
+            localStorage.setItem('zamzam_sheet_expense_title', res.expense_sheet.title);
+          } catch (_) {}
+        }
+        setDbSyncStatus('SYNCED');
+      }
+    } catch (err) {
+      console.warn('Could not connect to database for Notepad & Sheet, fallback to local storage cache', err);
+      setDbSyncStatus('IDLE');
+    } finally {
+      setTimeout(() => {
+        isInitialLoadRef.current = false;
+      }, 400);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      loadFromDatabase();
+    } else {
+      isInitialLoadRef.current = true;
+    }
+  }, [isOpen]);
+
+  // 2. Auto-Save to LocalStorage (Instant local fallback)
   useEffect(() => {
     try {
       localStorage.setItem('zamzam_user_notes', JSON.stringify(notes));
@@ -182,7 +238,6 @@ export const NotepadSheetModal: React.FC<{
     }
   }, [notes]);
 
-  // Auto-Save Sheet Modes
   useEffect(() => {
     localStorage.setItem('zamzam_sheet_active_mode', sheetMode);
   }, [sheetMode]);
@@ -204,6 +259,31 @@ export const NotepadSheetModal: React.FC<{
       console.error(e);
     }
   }, [expenseRows, expenseTitle]);
+
+  // 3. Debounced Auto-Save to Central Database (PostgreSQL / SQLite)
+  useEffect(() => {
+    if (isInitialLoadRef.current) return;
+    if (saveDebounceTimerRef.current) clearTimeout(saveDebounceTimerRef.current);
+
+    setDbSyncStatus('SAVING');
+    saveDebounceTimerRef.current = setTimeout(async () => {
+      try {
+        await notepadSheetService.saveData({
+          notes,
+          sales_sheet: { title: salesTitle, rows: salesRows },
+          expense_sheet: { title: expenseTitle, rows: expenseRows },
+        });
+        setDbSyncStatus('SYNCED');
+      } catch (err) {
+        console.error('Failed to sync Notepad & Sheet to central database', err);
+        setDbSyncStatus('ERROR');
+      }
+    }, 700);
+
+    return () => {
+      if (saveDebounceTimerRef.current) clearTimeout(saveDebounceTimerRef.current);
+    };
+  }, [notes, salesRows, expenseRows, salesTitle, expenseTitle]);
 
   if (!isOpen) return null;
 
@@ -689,6 +769,81 @@ export const NotepadSheetModal: React.FC<{
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {/* Database Live Sync Badge */}
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                padding: '4px 9px',
+                borderRadius: '6px',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                background:
+                  dbSyncStatus === 'SYNCED'
+                    ? 'rgba(16, 185, 129, 0.15)'
+                    : dbSyncStatus === 'SAVING' || dbSyncStatus === 'LOADING'
+                    ? 'rgba(245, 158, 11, 0.15)'
+                    : dbSyncStatus === 'ERROR'
+                    ? 'rgba(239, 68, 68, 0.15)'
+                    : 'rgba(148, 163, 184, 0.12)',
+                color:
+                  dbSyncStatus === 'SYNCED'
+                    ? '#34d399'
+                    : dbSyncStatus === 'SAVING' || dbSyncStatus === 'LOADING'
+                    ? '#fbbf24'
+                    : dbSyncStatus === 'ERROR'
+                    ? '#f87171'
+                    : '#cbd5e1',
+                border: `1px solid ${
+                  dbSyncStatus === 'SYNCED'
+                    ? 'rgba(16, 185, 129, 0.35)'
+                    : dbSyncStatus === 'SAVING' || dbSyncStatus === 'LOADING'
+                    ? 'rgba(245, 158, 11, 0.35)'
+                    : dbSyncStatus === 'ERROR'
+                    ? 'rgba(239, 68, 68, 0.35)'
+                    : 'rgba(148, 163, 184, 0.2)'
+                }`,
+              }}
+              title="Notepad & Sheet are fully connected to PostgreSQL / SQLite database"
+            >
+              <Database size={13} />
+              <span>
+                {dbSyncStatus === 'SYNCED'
+                  ? 'Database Live'
+                  : dbSyncStatus === 'SAVING'
+                  ? 'Saving to DB...'
+                  : dbSyncStatus === 'LOADING'
+                  ? 'Loading DB...'
+                  : dbSyncStatus === 'ERROR'
+                  ? 'Saved Locally'
+                  : 'Database Ready'}
+              </span>
+            </div>
+
+            {/* Manual Sync Button */}
+            <button
+              type="button"
+              onClick={loadFromDatabase}
+              title="Fetch latest notes & sheets from database"
+              style={{
+                background: 'rgba(255, 255, 255, 0.08)',
+                border: '1px solid rgba(255, 255, 255, 0.18)',
+                color: '#e2e8f0',
+                padding: '5px 9px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.3rem',
+                fontSize: '0.72rem',
+                fontWeight: 600,
+              }}
+            >
+              <RefreshCw size={12} className={dbSyncStatus === 'LOADING' ? 'animate-spin' : ''} />
+              <span>Sync</span>
+            </button>
+
             <button
               type="button"
               onClick={() => setIsFullScreen(!isFullScreen)}

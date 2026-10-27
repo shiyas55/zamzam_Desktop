@@ -82,6 +82,7 @@ export function getWhatsAppBridgeQrUrl(): string {
 export interface BridgeStatus {
   connected: boolean;
   hasQr: boolean;
+  stepStatus?: string;
   info?: {
     phone?: string;
     name?: string;
@@ -97,7 +98,7 @@ export async function checkWhatsAppBridgeStatus(): Promise<BridgeStatus> {
     const res = await fetch(`${bridgeUrl}/status`, {
       method: 'GET',
       headers: { 'Accept': 'application/json' },
-      signal: AbortSignal.timeout(2000), // Quick timeout
+      signal: AbortSignal.timeout(3000), // 3s timeout
     });
     if (!res.ok) {
       return { connected: false, hasQr: false };
@@ -106,10 +107,28 @@ export async function checkWhatsAppBridgeStatus(): Promise<BridgeStatus> {
     return {
       connected: Boolean(data.connected),
       hasQr: Boolean(data.hasQr),
+      stepStatus: data.stepStatus || undefined,
       info: data.info || null,
     };
   } catch {
     return { connected: false, hasQr: false };
+  }
+}
+
+/**
+ * Reset WhatsApp bridge session, destroying locks and forcing a fresh QR code.
+ */
+export async function resetWhatsAppBridgeSession(force = true): Promise<boolean> {
+  try {
+    const bridgeUrl = getWhatsAppBridgeBaseUrl();
+    const res = await fetch(`${bridgeUrl}/reset?force=${force}`, {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' },
+      signal: AbortSignal.timeout(10000),
+    });
+    return res.ok;
+  } catch {
+    return false;
   }
 }
 
