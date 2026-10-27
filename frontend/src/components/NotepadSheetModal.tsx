@@ -17,6 +17,10 @@ import {
   BookOpen,
   Database,
   RefreshCw,
+  Sparkles,
+  ChevronDown,
+  CheckSquare,
+  List,
 } from 'lucide-react';
 import { sendWhatsAppTextMessageViaBridge } from '../utils/whatsappBridgeUtils';
 import { notepadSheetService } from '../services/notepadSheetService';
@@ -71,6 +75,195 @@ const INITIAL_EXPENSE_ROWS: SheetRow[] = [
   { id: '3', colA: new Date().toLocaleDateString('en-IN'), colB: 'Vehicle Fuel & Diesel', colC: 'Route 1 Van diesel', colD: 'Cash', colE: '950' },
   { id: '4', colA: new Date().toLocaleDateString('en-IN'), colB: 'Packaging Bags', colC: '500 packaging packets', colD: 'Cash', colE: '450' },
   { id: '5', colA: new Date().toLocaleDateString('en-IN'), colB: 'Staff Tea & Snacks', colC: 'Evening kitchen tea', colD: 'Cash', colE: '140' },
+];
+
+export interface SampleTemplate {
+  id: string;
+  name: string;
+  category: 'SALES' | 'EXPENSE' | 'NOTES';
+  badge: string;
+  description: string;
+  title: string;
+  rows?: SheetRow[];
+  content?: string;
+}
+
+export const SAMPLE_TEMPLATES: SampleTemplate[] = [
+  {
+    id: 'tpl-bread-sales',
+    name: '🍞 Bread & Porotta Wholesale Sales',
+    category: 'SALES',
+    badge: 'Wholesale Sales',
+    description: 'Pre-filled standard bakery batch items, quantities, wholesale rates & auto-totals',
+    title: 'Daily Bread & Porotta Wholesale Sales Sheet',
+    rows: [
+      { id: '1', colA: 'Chappathi (Regular 10s)', colB: 'Fresh Kitchen Batch', colC: '80', colD: '40', colE: '3200' },
+      { id: '2', colA: 'Porotta (Special 5s)', colB: 'Layered Kerala Style', colC: '60', colD: '50', colE: '3000' },
+      { id: '3', colA: 'Wheat Paratha (Packet)', colB: '100% Atta Batch', colC: '40', colD: '45', colE: '1800' },
+      { id: '4', colA: 'Burger Bun (6 pcs packet)', colB: 'Sesame Seed Topping', colC: '35', colD: '35', colE: '1225' },
+      { id: '5', colA: 'White Sliced Bread (Large)', colB: '400g Premium Loaf', colC: '50', colD: '38', colE: '1900' },
+      { id: '6', colA: 'Sweet Cream Bun (Single)', colB: 'Vanilla Cream Filled', colC: '30', colD: '20', colE: '600' },
+    ],
+  },
+  {
+    id: 'tpl-route-delivery',
+    name: '🚐 Route 1 Delivery & Cash Collection',
+    category: 'SALES',
+    badge: 'Route Distribution',
+    description: 'Track shop deliveries, crates count, unit rates and total cash to collect',
+    title: 'Route 1 Shop Deliveries & Daily Collection',
+    rows: [
+      { id: '1', colA: 'Al Madina Supermarket', colB: 'Route 1 - Main Bazaar', colC: '45', colD: '40', colE: '1800' },
+      { id: '2', colA: 'Golden Bakery & Cool Bar', colB: 'Route 1 - Bus Stand', colC: '30', colD: '45', colE: '1350' },
+      { id: '3', colA: 'Kairali General Store', colB: 'Route 1 - East Gate', colC: '25', colD: '50', colE: '1250' },
+      { id: '4', colA: 'City Hypermarket', colB: 'Route 1 - Market Road', colC: '60', colD: '40', colE: '2400' },
+      { id: '5', colA: 'Metro Food Court', colB: 'Route 1 - Junction', colC: '35', colD: '35', colE: '1225' },
+    ],
+  },
+  {
+    id: 'tpl-raw-materials',
+    name: '📦 Raw Material Stock & Purchase',
+    category: 'SALES',
+    badge: 'Raw Stock',
+    description: 'Track flour, atta, oil, yeast and packaging purchase bags, rates & costs',
+    title: 'Bakery Raw Material Purchase & Stock Log',
+    rows: [
+      { id: '1', colA: 'Chakki Fresh Atta', colB: '50kg Jute Bag (Ashirwad)', colC: '10', colD: '380', colE: '3800' },
+      { id: '2', colA: 'Maida All-Purpose Flour', colB: '50kg Bag (Premium)', colC: '15', colD: '410', colE: '6150' },
+      { id: '3', colA: 'Refined Sunflower Oil', colB: '15 Litre Tin', colC: '4', colD: '1650', colE: '6600' },
+      { id: '4', colA: 'Pure Vanaspati Ghee', colB: '15kg Tin', colC: '3', colD: '1450', colE: '4350' },
+      { id: '5', colA: 'Active Dry Baking Yeast', colB: '500g Vacuum Pack', colC: '8', colD: '220', colE: '1760' },
+      { id: '6', colA: 'Printed Poly Packaging Bags', colB: '1000 Pcs Bundle', colC: '5', colD: '450', colE: '2250' },
+    ],
+  },
+  {
+    id: 'tpl-daily-expenses',
+    name: '💸 Daily Bakery Expenses & Fuel',
+    category: 'EXPENSE',
+    badge: 'Daily Expenses',
+    description: 'Daily operational expenses including flour, cooking oil, van diesel and staff snacks',
+    title: 'Zamzam Daily Business Expenses Sheet',
+    rows: [
+      { id: '1', colA: new Date().toLocaleDateString('en-IN'), colB: 'Flour & Wheat Stock', colC: '5 bags flour from wholesaler', colD: 'Cash', colE: '3200' },
+      { id: '2', colA: new Date().toLocaleDateString('en-IN'), colB: 'Cooking Oil & Butter', colC: '20L oil tin for kitchen', colD: 'UPI', colE: '2200' },
+      { id: '3', colA: new Date().toLocaleDateString('en-IN'), colB: 'Vehicle Fuel & Diesel', colC: 'Route 1 Delivery Van diesel', colD: 'Cash', colE: '950' },
+      { id: '4', colA: new Date().toLocaleDateString('en-IN'), colB: 'Packaging Bags', colC: '500 food grade polybags', colD: 'Cash', colE: '450' },
+      { id: '5', colA: new Date().toLocaleDateString('en-IN'), colB: 'Daily Wages & Labour', colC: 'Kitchen helper overtime', colD: 'Cash', colE: '700' },
+      { id: '6', colA: new Date().toLocaleDateString('en-IN'), colB: 'Staff Tea & Snacks', colC: 'Morning and evening tea', colD: 'Cash', colE: '160' },
+    ],
+  },
+  {
+    id: 'tpl-vehicle-log',
+    name: '⛽ Van Maintenance & Driver Allowance',
+    category: 'EXPENSE',
+    badge: 'Fleet & Fuel',
+    description: 'Vehicle diesel, puncture repair, Fastag recharge and driver daily allowances',
+    title: 'Delivery Fleet Maintenance & Fuel Sheet',
+    rows: [
+      { id: '1', colA: new Date().toLocaleDateString('en-IN'), colB: 'Vehicle Fuel & Diesel', colC: 'Route 1 Van Full Tank Diesel', colD: 'Cash', colE: '1850' },
+      { id: '2', colA: new Date().toLocaleDateString('en-IN'), colB: 'Vehicle Maintenance', colC: 'Tyre puncture & air pressure check', colD: 'Cash', colE: '120' },
+      { id: '3', colA: new Date().toLocaleDateString('en-IN'), colB: 'Toll & Parking', colC: 'Highway toll fastag recharge', colD: 'UPI', colE: '400' },
+      { id: '4', colA: new Date().toLocaleDateString('en-IN'), colB: 'Driver Allowance', colC: 'Driver lunch & tea allowance', colD: 'Cash', colE: '150' },
+    ],
+  },
+  {
+    id: 'tpl-note-checklist',
+    name: '📋 Morning Kitchen & Dispatch Checklist',
+    category: 'NOTES',
+    badge: 'Daily Checklist',
+    description: 'Step-by-step checklist for oven heating, baking, packing, crates count & van dispatch',
+    title: 'Morning Kitchen & Dispatch Checklist',
+    content: `MORNING PRODUCTION & DISPATCH CHECKLIST
+Date: ${new Date().toLocaleDateString('en-IN')}
+
+☐ 04:30 AM - Oven pre-heating (220°C) & dough mixer check
+☐ 05:00 AM - Chappathi & Porotta dough kneading completed
+☐ 05:45 AM - First batch bread baking completed & cooling on racks
+☐ 06:15 AM - Quality & heat-seal packaging inspection
+☐ 06:45 AM - Route 1 crate counts verified against loading bill
+☐ 07:00 AM - Delivery van loading completed & invoice bill book handed
+☐ 07:15 AM - Driver cash float handed over (₹500 small change)
+☐ 07:20 AM - Delivery vehicle departed on time`,
+  },
+  {
+    id: 'tpl-note-suppliers',
+    name: '📞 Wholesaler & Supplier Rate Card',
+    category: 'NOTES',
+    badge: 'Contacts Directory',
+    description: 'Directory of verified flour mills, oil wholesalers, packaging suppliers & mechanics',
+    title: 'Key Supplier Contacts & Purchase Rates',
+    content: `ZAMZAM FOODS - KEY SUPPLIERS & CONTACT DIRECTORY
+
+🌾 FLOUR & ATTA MILLS:
+• Sri Venkateswara Flour Mills - 98470 12345 (Rate: ₹34/kg)
+• Malabar Milling Co. - 97451 23456 (Atta: ₹38/kg)
+
+🛢️ COOKING OIL & GHEE:
+• Royal Wholesale Traders - 98765 43210 (15L Tin: ₹1,650)
+• Ghee Wholesaler (Ramesh) - 94471 99887 (Vanaspati: ₹1,450/tin)
+
+📦 PACKAGING & POLYBAGS:
+• Modern Plastics & Paper - 98460 55443 (₹145/bundle 500s)
+• Brand Label Printing Press - 99462 88771
+
+⛽ VEHICLE & EMERGENCY:
+• Highway IndianOil Fuel Pump - 0495 2345678 (Customer Acct #42)
+• Van Mechanic (Salim Workshop) - 98461 12233
+• Battery & Electric Auto Work - 97455 33221`,
+  },
+  {
+    id: 'tpl-note-closing',
+    name: '💰 Daily Cash Reconciliation & Drawer Closing',
+    category: 'NOTES',
+    badge: 'Cash Handover',
+    description: 'Daily cash handover note for driver collection, counter sales, deductions & net drawer cash',
+    title: 'Daily Cash Reconciliation & Handover',
+    content: `═══════════════════════════════════════════════
+ZAMZAM FOODS - DAILY CASH RECONCILIATION
+Date: ${new Date().toLocaleDateString('en-IN')}
+═══════════════════════════════════════════════
+
+1. TOTAL CASH INFLOW:
+• Route 1 Driver Cash Collection:   ₹ 14,500
+• Counter Direct Cash Sales:        ₹  3,800
+-----------------------------------------------
+TOTAL CASH RECEIVED:                ₹ 18,300
+
+2. DEDUCT CASH EXPENSES:
+• Van Diesel Fuel:                - ₹    950
+• Kitchen Helper Daily Wages:     - ₹  1,400
+• Evening Staff Tea & Snacks:     - ₹    150
+-----------------------------------------------
+TOTAL CASH DEDUCTIONS:            - ₹  2,500
+
+3. NET DRAWER CASH:
+═══════════════════════════════════════════════
+FINAL NET CASH IN HAND:             ₹ 15,800
+═══════════════════════════════════════════════
+Handed over by: Manager
+Received by: Owner / Cash Drawer Verified ✓`,
+  },
+  {
+    id: 'tpl-note-credit-reminders',
+    name: '⚠️ Shop Credit & Payment Follow-up List',
+    category: 'NOTES',
+    badge: 'Follow-ups',
+    description: 'Payment reminders and follow-up tracker for shops with pending balances',
+    title: 'Shop Credit Follow-up & Collection Tasks',
+    content: `TODAY'S SHOP PAYMENT FOLLOW-UP LIST
+Priority calls for outstanding credit collection:
+
+☐ City Hypermarket: ₹ 4,200
+  → Call Manager at 11 AM (Promise made last Thursday)
+☐ Golden Bakery & Cool Bar: ₹ 2,150
+  → Promised GPay payment by 2 PM
+☐ Metro Food Court: ₹ 3,400
+  → Driver to collect cash during evening return route
+☐ New Kerala Store: ₹ 1,850
+  → Cheque to be collected tomorrow morning
+☐ Highway Restaurant: ₹ 5,600
+  → Call owner directly regarding overdue invoice #1042`,
+  },
 ];
 
 export const NotepadSheetModal: React.FC<{
@@ -288,6 +481,45 @@ export const NotepadSheetModal: React.FC<{
   if (!isOpen) return null;
 
   const currentNote = notes.find((n) => n.id === activeNoteId) || notes[0];
+
+  // --- TEMPLATE & SIMPLIFIED UI STATE ---
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [templateFilter, setTemplateFilter] = useState<'ALL' | 'SALES' | 'EXPENSE' | 'NOTES'>('ALL');
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handleApplyTemplate = (tpl: SampleTemplate) => {
+    if (tpl.category === 'SALES') {
+      setActiveTab('SHEET');
+      setSheetMode('SALES');
+      setSalesTitle(tpl.title);
+      setSalesRows(tpl.rows ? tpl.rows.map((r, i) => ({ ...r, id: (i + 1).toString() })) : []);
+      showToast(`⚡ Loaded "${tpl.name}" into Sales Sheet!`);
+    } else if (tpl.category === 'EXPENSE') {
+      setActiveTab('SHEET');
+      setSheetMode('EXPENSE');
+      setExpenseTitle(tpl.title);
+      setExpenseRows(tpl.rows ? tpl.rows.map((r, i) => ({ ...r, id: (i + 1).toString() })) : []);
+      showToast(`⚡ Loaded "${tpl.name}" into Expenses Sheet!`);
+    } else if (tpl.category === 'NOTES') {
+      setActiveTab('NOTES');
+      const newNoteId = Date.now().toString();
+      const newNote: NoteItem = {
+        id: newNoteId,
+        title: tpl.title,
+        content: tpl.content || '',
+        updatedAt: new Date().toLocaleDateString('en-IN'),
+      };
+      setNotes((prev) => [newNote, ...prev]);
+      setActiveNoteId(newNoteId);
+      showToast(`⚡ Added "${tpl.name}" to your Notepad!`);
+    }
+    setIsTemplateModalOpen(false);
+  };
 
   // Note Handlers
   const handleCreateNote = () => {
@@ -766,6 +998,30 @@ export const NotepadSheetModal: React.FC<{
                 <span>Quick Notepad</span>
               </button>
             </div>
+
+            {/* 1-Click Sample Business Templates Button */}
+            <button
+              type="button"
+              onClick={() => setIsTemplateModalOpen(true)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                padding: '5px 12px',
+                borderRadius: '8px',
+                fontSize: '0.76rem',
+                fontWeight: 800,
+                backgroundColor: 'rgba(245, 158, 11, 0.18)',
+                color: '#fbbf24',
+                border: '1px solid rgba(245, 158, 11, 0.4)',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+              title="Open pre-filled business templates for sales, expenses & notes"
+            >
+              <Sparkles size={13} color="#fbbf24" />
+              <span>⚡ Sample Templates</span>
+            </button>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -934,6 +1190,31 @@ export const NotepadSheetModal: React.FC<{
                   </button>
                 </div>
 
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTemplateFilter(sheetMode === 'EXPENSE' ? 'EXPENSE' : 'SALES');
+                    setIsTemplateModalOpen(true);
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    backgroundColor: '#fffbeb',
+                    color: '#b45309',
+                    border: '1px solid #fde68a',
+                    cursor: 'pointer',
+                  }}
+                  title="Load pre-filled sample sheet template"
+                >
+                  <Sparkles size={13} color="#d97706" />
+                  <span>⚡ Templates</span>
+                </button>
+
                 <input
                   type="text"
                   value={sheetTitle}
@@ -970,6 +1251,27 @@ export const NotepadSheetModal: React.FC<{
                 <span style={{ fontSize: '0.72rem', color: '#2563eb', fontWeight: 700, backgroundColor: '#eff6ff', padding: '2px 8px', borderRadius: '4px', border: '1px solid #bfdbfe' }}>
                   Enter key = Next Column ➔
                 </span>
+
+                {/* Instant Live Grand Total Pill */}
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.45rem',
+                    padding: '3px 10px',
+                    borderRadius: '6px',
+                    backgroundColor: sheetMode === 'EXPENSE' ? '#fef2f2' : '#ecfdf5',
+                    border: `1px solid ${sheetMode === 'EXPENSE' ? '#fecaca' : '#a7f3d0'}`,
+                  }}
+                  title="Live auto-calculated grand total of this sheet"
+                >
+                  <span style={{ fontSize: '0.72rem', fontWeight: 800, color: sheetMode === 'EXPENSE' ? '#b91c1c' : '#047857' }}>
+                    {sheetMode === 'EXPENSE' ? 'TOTAL EXPENSES:' : 'TOTAL AMOUNT:'}
+                  </span>
+                  <span style={{ fontSize: '0.88rem', fontWeight: 900, color: sheetMode === 'EXPENSE' ? '#dc2626' : '#059669', fontFamily: 'monospace' }}>
+                    ₹{calculateColumnSum('colE')}
+                  </span>
+                </div>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
@@ -1335,18 +1637,43 @@ export const NotepadSheetModal: React.FC<{
                       color: '#ffffff',
                       border: 'none',
                       borderRadius: '6px',
-                      padding: '0 12px',
+                      padding: '0 10px',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '4px',
-                      fontSize: '0.8rem',
+                      fontSize: '0.78rem',
                       fontWeight: 700,
                     }}
-                    title="Create New Note"
+                    title="Create New Blank Note"
                   >
-                    <Plus size={15} />
+                    <Plus size={14} />
                     <span>New</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTemplateFilter('NOTES');
+                      setIsTemplateModalOpen(true);
+                    }}
+                    style={{
+                      backgroundColor: '#fffbeb',
+                      color: '#b45309',
+                      border: '1px solid #fde68a',
+                      borderRadius: '6px',
+                      padding: '0 8px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontSize: '0.76rem',
+                      fontWeight: 700,
+                    }}
+                    title="Load sample business checklist or note template"
+                  >
+                    <Sparkles size={13} color="#d97706" />
+                    <span>Samples</span>
                   </button>
                 </div>
 
@@ -1808,6 +2135,298 @@ export const NotepadSheetModal: React.FC<{
             </div>
           );
         })()}
+
+        {/* ============================================================== */}
+        {/* SAMPLE BUSINESS TEMPLATES MODAL (1-Click Ready-to-Use) */}
+        {/* ============================================================== */}
+        {isTemplateModalOpen && (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(15, 23, 42, 0.75)',
+              backdropFilter: 'blur(5px)',
+              zIndex: 1200,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '1rem',
+            }}
+            onClick={() => setIsTemplateModalOpen(false)}
+          >
+            <div
+              style={{
+                width: '92vw',
+                maxWidth: '820px',
+                maxHeight: '85vh',
+                backgroundColor: '#ffffff',
+                borderRadius: '16px',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
+                border: '1px solid #cbd5e1',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div
+                style={{
+                  padding: '1rem 1.35rem',
+                  backgroundColor: '#0f172a',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  borderBottom: '1px solid #334155',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                  <div
+                    style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '8px',
+                      backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Sparkles size={20} color="#fbbf24" />
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 900, letterSpacing: '-0.01em', color: '#ffffff' }}>
+                      Zamzam Business Sample Templates
+                    </h3>
+                    <span style={{ fontSize: '0.74rem', color: '#94a3b8' }}>
+                      1-Click pre-filled ready-to-use templates for bakery sales, expenses, checklists & supplier records
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsTemplateModalOpen(false)}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    border: 'none',
+                    color: '#ffffff',
+                    padding: '6px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                  }}
+                  title="Close Modal"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Category Filter Pills */}
+              <div
+                style={{
+                  padding: '0.75rem 1.35rem',
+                  backgroundColor: '#f8fafc',
+                  borderBottom: '1px solid #e2e8f0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setTemplateFilter('ALL')}
+                  style={{
+                    padding: '5px 12px',
+                    borderRadius: '6px',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    border: 'none',
+                    cursor: 'pointer',
+                    backgroundColor: templateFilter === 'ALL' ? '#0f172a' : '#e2e8f0',
+                    color: templateFilter === 'ALL' ? '#ffffff' : '#475569',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  🌟 All Templates ({SAMPLE_TEMPLATES.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTemplateFilter('SALES')}
+                  style={{
+                    padding: '5px 12px',
+                    borderRadius: '6px',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    border: 'none',
+                    cursor: 'pointer',
+                    backgroundColor: templateFilter === 'SALES' ? '#059669' : '#e2e8f0',
+                    color: templateFilter === 'SALES' ? '#ffffff' : '#475569',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  🛒 Sales & Stock ({SAMPLE_TEMPLATES.filter((t) => t.category === 'SALES').length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTemplateFilter('EXPENSE')}
+                  style={{
+                    padding: '5px 12px',
+                    borderRadius: '6px',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    border: 'none',
+                    cursor: 'pointer',
+                    backgroundColor: templateFilter === 'EXPENSE' ? '#dc2626' : '#e2e8f0',
+                    color: templateFilter === 'EXPENSE' ? '#ffffff' : '#475569',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  💸 Daily Expenses ({SAMPLE_TEMPLATES.filter((t) => t.category === 'EXPENSE').length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTemplateFilter('NOTES')}
+                  style={{
+                    padding: '5px 12px',
+                    borderRadius: '6px',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    border: 'none',
+                    cursor: 'pointer',
+                    backgroundColor: templateFilter === 'NOTES' ? '#b45309' : '#e2e8f0',
+                    color: templateFilter === 'NOTES' ? '#ffffff' : '#475569',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  📝 Notes & Checklists ({SAMPLE_TEMPLATES.filter((t) => t.category === 'NOTES').length})
+                </button>
+              </div>
+
+              {/* Templates Cards Grid */}
+              <div
+                style={{
+                  padding: '1.25rem',
+                  overflowY: 'auto',
+                  flex: 1,
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+                  gap: '0.9rem',
+                }}
+              >
+                {SAMPLE_TEMPLATES.filter((tpl) => templateFilter === 'ALL' || tpl.category === templateFilter).map((tpl) => (
+                  <div
+                    key={tpl.id}
+                    style={{
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '10px',
+                      padding: '1.1rem',
+                      backgroundColor: '#ffffff',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.03)',
+                      transition: 'all 0.15s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLDivElement).style.borderColor = '#059669';
+                      (e.currentTarget as HTMLDivElement).style.boxShadow = '0 6px 14px -2px rgba(0,0,0,0.08)';
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLDivElement).style.borderColor = '#cbd5e1';
+                      (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 4px rgba(0,0,0,0.03)';
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                        <span
+                          style={{
+                            fontSize: '0.7rem',
+                            fontWeight: 800,
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            backgroundColor:
+                              tpl.category === 'SALES' ? '#ecfdf5' : tpl.category === 'EXPENSE' ? '#fef2f2' : '#fef3c7',
+                            color:
+                              tpl.category === 'SALES' ? '#047857' : tpl.category === 'EXPENSE' ? '#b91c1c' : '#b45309',
+                            border: `1px solid ${
+                              tpl.category === 'SALES' ? '#a7f3d0' : tpl.category === 'EXPENSE' ? '#fecaca' : '#fde68a'
+                            }`,
+                          }}
+                        >
+                          {tpl.badge}
+                        </span>
+                        <span style={{ fontSize: '0.68rem', color: '#94a3b8', fontWeight: 600 }}>
+                          {tpl.category === 'NOTES' ? 'Notepad Template' : 'Spreadsheet Mode'}
+                        </span>
+                      </div>
+                      <h4 style={{ margin: '0 0 0.4rem 0', fontSize: '0.98rem', fontWeight: 800, color: '#0f172a' }}>
+                        {tpl.name}
+                      </h4>
+                      <p style={{ margin: '0 0 0.85rem 0', fontSize: '0.8rem', color: '#64748b', lineHeight: 1.45 }}>
+                        {tpl.description}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleApplyTemplate(tpl)}
+                      style={{
+                        width: '100%',
+                        padding: '8px 14px',
+                        backgroundColor:
+                          tpl.category === 'SALES' ? '#059669' : tpl.category === 'EXPENSE' ? '#b91c1c' : '#b45309',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '6px',
+                        fontSize: '0.8rem',
+                        fontWeight: 800,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.45rem',
+                        transition: 'opacity 0.15s ease',
+                      }}
+                      onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = '0.9')}
+                      onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = '1')}
+                    >
+                      <Sparkles size={14} />
+                      <span>1-Click Load Template</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Floating Toast Notification */}
+        {toastMessage && (
+          <div
+            style={{
+              position: 'fixed',
+              bottom: '24px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 1300,
+              backgroundColor: '#0f172a',
+              color: '#ffffff',
+              padding: '9px 20px',
+              borderRadius: '8px',
+              fontSize: '0.82rem',
+              fontWeight: 700,
+              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.4)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.55rem',
+              border: '1px solid #334155',
+            }}
+          >
+            <Sparkles size={15} color="#fbbf24" />
+            <span>{toastMessage}</span>
+          </div>
+        )}
       </div>
     </div>
   );
