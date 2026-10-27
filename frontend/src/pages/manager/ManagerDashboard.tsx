@@ -422,7 +422,7 @@ export const ManagerDashboard: React.FC = () => {
         <>
           {/* ═══════════════════════════════════════════════════════════════════════
               NET CALCULATION & CUMULATIVE BALANCE BOX
-              Formula: (Period Collection − Total Expenses) = Today's Net  →  + Last Total Net = Grand Total
+              Formula: (Period Collection − Total Expenses) = Total Amount  →  + Last Net Collection = Grand Total
           ═══════════════════════════════════════════════════════════════════════ */}
           {data && (
             <div
@@ -446,7 +446,7 @@ export const ManagerDashboard: React.FC = () => {
                       Net Collection & Cumulative Balance Flow
                     </h4>
                     <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>
-                      Formula: (Period Collection − Total Expenses) = Today Net Amount + Last Total Net = Grand Total
+                      Formula: (Period Collection − Total Expenses) = Total Amount + Last Net Collection = Grand Total
                     </span>
                   </div>
                 </div>
@@ -544,7 +544,7 @@ export const ManagerDashboard: React.FC = () => {
                   </div>
                 </div>
 
-                {/* 3. Today's Net Amount */}
+                {/* 3. Total Amount */}
                 <div
                   style={{
                     background: '#ffffff',
@@ -560,7 +560,7 @@ export const ManagerDashboard: React.FC = () => {
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
                       <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#b45309', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                        3. Today's Net Amount
+                        3. Total Amount
                       </span>
                       <span style={{ fontSize: '0.68rem', fontWeight: 700, background: '#fffbeb', color: '#b45309', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
                         = Period Net
@@ -575,7 +575,7 @@ export const ManagerDashboard: React.FC = () => {
                   </div>
                 </div>
 
-                {/* 4. Last Total Net Collection */}
+                {/* 4. Last Net Collection */}
                 <div
                   style={{
                     background: '#ffffff',
@@ -591,7 +591,7 @@ export const ManagerDashboard: React.FC = () => {
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
                       <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#1d4ed8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                        4. Last Total Net
+                        4. Last Net Collection
                       </span>
                       <span style={{ fontSize: '0.68rem', fontWeight: 700, background: '#eff6ff', color: '#2563eb', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
                         + Previous
@@ -637,7 +637,7 @@ export const ManagerDashboard: React.FC = () => {
                     </div>
                   </div>
                   <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600, marginTop: '0.65rem', paddingTop: '0.45rem', borderTop: '1px dashed rgba(255,255,255,0.15)' }}>
-                    Today's Net + Last Total Net
+                    Total Amount + Last Net Collection
                   </div>
                 </div>
               </div>
@@ -668,11 +668,11 @@ export const ManagerDashboard: React.FC = () => {
                 </span>
                 <span style={{ color: '#64748b', fontWeight: 900 }}>=</span>
                 <span style={{ color: '#b45309', background: '#fffbeb', padding: '0.15rem 0.45rem', borderRadius: '4px' }}>
-                  {formatCurrency(data.net_collection || '0.00')} (Today Net)
+                  {formatCurrency(data.net_collection || '0.00')} (Total Amount)
                 </span>
                 <span style={{ color: '#2563eb', fontWeight: 900 }}>+</span>
                 <span style={{ color: '#1d4ed8', background: '#eff6ff', padding: '0.15rem 0.45rem', borderRadius: '4px' }}>
-                  {formatCurrency(data.last_day_net_collection || '0.00')} (Last Total Net)
+                  {formatCurrency(data.last_day_net_collection || '0.00')} (Last Net Collection)
                 </span>
                 <span style={{ color: '#0f172a', fontWeight: 900 }}>=</span>
                 <span style={{ color: '#0f172a', background: '#e2e8f0', padding: '0.15rem 0.55rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}>
