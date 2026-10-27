@@ -250,6 +250,7 @@ class DashboardSummaryView(APIView):
             "today_credit": period_credit,
             "net_collection": net_collection,
             "last_day_net_collection": last_day_net_collection,
+            "last_day_total_net_collection": last_day_net_collection,
             "total_net_collection": total_net_collection,
             "last_day_date": str(last_day),
             "total_customers": total_customers,
