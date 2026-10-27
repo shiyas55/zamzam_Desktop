@@ -478,10 +478,10 @@ export const CustomerDetailPage: React.FC = () => {
                     navigate('/manager/create-order', {
                       state: {
                         repeatCustomerId: customer.id,
-                        repeatItems: summary.last_order?.items.map((it) => ({
+                        repeatItems: summary.last_order?.items?.map((it) => ({
                           product_id: it.product_id,
                           quantity: it.quantity,
-                        })),
+                        })) || [],
                         sourceOrderNumber: summary.last_order?.order_number,
                       },
                     });

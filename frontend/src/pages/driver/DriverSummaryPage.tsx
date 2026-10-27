@@ -563,7 +563,7 @@ export const DriverSummaryPage: React.FC = () => {
                       <span className="badge badge-success" style={{ fontSize: '0.7rem' }}>Delivered</span>
                     </div>
                     <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>
-                      {d.order_details?.items.map((it) => `${it.product_details?.name} (${it.quantity})`).join(', ')}
+                      {d.order_details?.items?.map((it) => `${it.product_details?.name} (${it.quantity})`).join(', ') || ''}
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.74rem', color: 'var(--text-muted)' }}>
                       <span>Staff: <strong>{d.recipient_name || 'Shop Staff'}</strong></span>

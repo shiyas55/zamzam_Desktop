@@ -1337,7 +1337,7 @@ export const DatabaseStorageBackupSection: React.FC = () => {
               <Layers size={16} color="#0284c7" />
             </div>
             <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.6rem' }}>
-              {stats?.total_records.toLocaleString() || 0}
+              {stats?.total_records != null ? stats.total_records.toLocaleString() : 0}
             </div>
             <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
               Distributed across {stats?.table_count || 10} database entities
@@ -1527,7 +1527,7 @@ export const DatabaseStorageBackupSection: React.FC = () => {
                   marginBottom: '1.25rem',
                 }}
               >
-                📦 <strong>Included:</strong> All 10 modules ({stats?.total_records.toLocaleString() || 0} total records)
+                📦 <strong>Included:</strong> All 10 modules ({stats?.total_records != null ? stats.total_records.toLocaleString() : 0} total records)
               </div>
             </div>
 

@@ -226,7 +226,7 @@ export const SettingsPage: React.FC = () => {
   };
 
   const handleToggleAutostart = async () => {
-    if (!servicesStatus) return;
+    if (!servicesStatus?.autostart) return;
     const nextState = !servicesStatus.autostart.enabled;
     setTogglingAutostart(true);
     setServiceActionMessage(null);
@@ -1468,8 +1468,8 @@ export const SettingsPage: React.FC = () => {
                               fontWeight: 800,
                               padding: '2px 8px',
                               borderRadius: '999px',
-                              backgroundColor: servicesStatus?.whatsapp.running ? '#dcfce7' : '#fee2e2',
-                              color: servicesStatus?.whatsapp.running ? '#15803d' : '#b91c1c',
+                              backgroundColor: servicesStatus?.whatsapp?.running ? '#dcfce7' : '#fee2e2',
+                              color: servicesStatus?.whatsapp?.running ? '#15803d' : '#b91c1c',
                               display: 'inline-flex',
                               alignItems: 'center',
                               gap: '0.35rem',
@@ -1480,10 +1480,10 @@ export const SettingsPage: React.FC = () => {
                                 width: 7,
                                 height: 7,
                                 borderRadius: '50%',
-                                backgroundColor: servicesStatus?.whatsapp.running ? '#22c55e' : '#ef4444',
+                                backgroundColor: servicesStatus?.whatsapp?.running ? '#22c55e' : '#ef4444',
                               }}
                             />
-                            {servicesStatus?.whatsapp.running ? 'ALL SERVICES ONLINE' : 'WHATSAPP OFFLINE'}
+                            {servicesStatus?.whatsapp?.running ? 'ALL SERVICES ONLINE' : 'WHATSAPP OFFLINE'}
                           </span>
                         </div>
                         <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
@@ -1647,7 +1647,7 @@ export const SettingsPage: React.FC = () => {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                         <MessageCircle
                           size={20}
-                          style={{ color: servicesStatus?.whatsapp.running ? '#16a34a' : '#ef4444' }}
+                          style={{ color: servicesStatus?.whatsapp?.running ? '#16a34a' : '#ef4444' }}
                         />
                         <div>
                           <div style={{ fontWeight: 800, fontSize: '0.86rem', color: 'var(--text-main)' }}>
@@ -1664,11 +1664,11 @@ export const SettingsPage: React.FC = () => {
                           fontWeight: 800,
                           padding: '2px 8px',
                           borderRadius: '6px',
-                          backgroundColor: servicesStatus?.whatsapp.running ? '#dcfce7' : '#fee2e2',
-                          color: servicesStatus?.whatsapp.running ? '#15803d' : '#b91c1c',
+                          backgroundColor: servicesStatus?.whatsapp?.running ? '#dcfce7' : '#fee2e2',
+                          color: servicesStatus?.whatsapp?.running ? '#15803d' : '#b91c1c',
                         }}
                       >
-                        {servicesStatus?.whatsapp.running ? 'ONLINE' : 'STOPPED'}
+                        {servicesStatus?.whatsapp?.running ? 'ONLINE' : 'STOPPED'}
                       </span>
                     </div>
 
@@ -1677,8 +1677,8 @@ export const SettingsPage: React.FC = () => {
                       style={{
                         padding: '0.9rem 1rem',
                         borderRadius: '10px',
-                        backgroundColor: servicesStatus?.autostart.enabled ? 'rgba(34, 197, 94, 0.05)' : 'var(--bg-card)',
-                        border: servicesStatus?.autostart.enabled ? '1px solid #86efac' : '1px solid var(--border)',
+                        backgroundColor: servicesStatus?.autostart?.enabled ? 'rgba(34, 197, 94, 0.05)' : 'var(--bg-card)',
+                        border: servicesStatus?.autostart?.enabled ? '1px solid #86efac' : '1px solid var(--border)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
@@ -1690,7 +1690,7 @@ export const SettingsPage: React.FC = () => {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                         <Power
                           size={20}
-                          style={{ color: servicesStatus?.autostart.enabled ? '#16a34a' : 'var(--text-muted)' }}
+                          style={{ color: servicesStatus?.autostart?.enabled ? '#16a34a' : 'var(--text-muted)' }}
                         />
                         <div>
                           <div style={{ fontWeight: 800, fontSize: '0.86rem', color: 'var(--text-main)' }}>
@@ -1699,8 +1699,8 @@ export const SettingsPage: React.FC = () => {
                           <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
                             {togglingAutostart
                               ? 'Saving configuration...'
-                              : servicesStatus?.autostart.enabled
-                              ? `Active (${servicesStatus.autostart.platform === 'windows' ? 'Startup / Registry' : 'LaunchAgent'})`
+                              : servicesStatus?.autostart?.enabled
+                              ? `Active (${servicesStatus?.autostart?.platform === 'windows' ? 'Startup / Registry' : 'LaunchAgent'})`
                               : 'Click to start with computer'}
                           </div>
                         </div>
@@ -1710,7 +1710,7 @@ export const SettingsPage: React.FC = () => {
                           width: 44,
                           height: 24,
                           borderRadius: 999,
-                          backgroundColor: servicesStatus?.autostart.enabled ? '#16a34a' : '#cbd5e1',
+                          backgroundColor: servicesStatus?.autostart?.enabled ? '#16a34a' : '#cbd5e1',
                           position: 'relative',
                           transition: 'background-color 0.2s',
                           flexShrink: 0,
@@ -1724,7 +1724,7 @@ export const SettingsPage: React.FC = () => {
                             backgroundColor: '#ffffff',
                             position: 'absolute',
                             top: 3,
-                            left: servicesStatus?.autostart.enabled ? 23 : 3,
+                            left: servicesStatus?.autostart?.enabled ? 23 : 3,
                             transition: 'left 0.2s',
                             boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
                           }}

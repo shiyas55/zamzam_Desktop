@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ProtectedRoute } from './ProtectedRoute';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 
 // Layouts
 import { OwnerLayout } from '../layouts/OwnerLayout';
@@ -57,56 +58,58 @@ export const AppRoutes: React.FC = () => {
   };
 
   return (
-    <React.Suspense fallback={<PageLoadingFallback />}>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/login" element={isAuthenticated ? getHomeRedirect() : <LoginPage />} />
-        <Route path="/customer/:customerId" element={<CustomerOrderPage />} />
-        <Route path="/" element={getHomeRedirect()} />
+    <ErrorBoundary>
+      <React.Suspense fallback={<PageLoadingFallback />}>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/login" element={isAuthenticated ? getHomeRedirect() : <LoginPage />} />
+          <Route path="/customer/:customerId" element={<CustomerOrderPage />} />
+          <Route path="/" element={getHomeRedirect()} />
 
-        {/* 1. OWNER / ADMIN INTERFACE */}
-        <Route
-          path="/owner"
-          element={
-            <ProtectedRoute allowedRoles={['OWNER', 'MANAGER', 'DRIVER']}>
-              <OwnerLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<OwnerDashboard />} />
-          <Route path="driver-performance" element={<Navigate to="/owner" replace />} />
-          <Route path="customers" element={<CustomerShopsPage />} />
-          <Route path="customers/:id" element={<CustomerDetailPage />} />
-          <Route path="shop-documents" element={<ShopDocumentsPage />} />
-          <Route path="products" element={<ProductsPage />} />
-          <Route path="routes" element={<RoutesPage />} />
-          <Route path="drivers" element={<DriversPage />} />
-          <Route path="create-order" element={<CreateOrderPage />} />
-          <Route path="fast-order" element={<Navigate to="/owner/create-order" replace />} />
-          <Route path="orders" element={<OrdersPage />} />
-          <Route path="deliveries" element={<DeliveriesPage />} />
-          <Route path="expenses" element={<ExpensesPage />} />
-          <Route path="payments" element={<PaymentsPage />} />
-          <Route path="credit" element={<CreditLedgerPage />} />
-          <Route path="reports" element={<ReportsPage />} />
-          <Route path="daily-closing" element={<Navigate to="/owner/create-order" replace />} />
-          <Route path="activity-history" element={<Navigate to="/owner/settings?tab=activity" replace />} />
-          <Route path="attendance" element={<StaffUsersPage defaultTab="attendance" />} />
-          <Route path="notepad" element={<NotepadSheetPage />} />
-          <Route path="users" element={<Navigate to="/owner" replace />} />
-          <Route path="settings" element={<SettingsPage />} />
-        </Route>
+          {/* 1. OWNER / ADMIN INTERFACE */}
+          <Route
+            path="/owner"
+            element={
+              <ProtectedRoute allowedRoles={['OWNER', 'MANAGER', 'DRIVER']}>
+                <OwnerLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<OwnerDashboard />} />
+            <Route path="driver-performance" element={<Navigate to="/owner" replace />} />
+            <Route path="customers" element={<CustomerShopsPage />} />
+            <Route path="customers/:id" element={<CustomerDetailPage />} />
+            <Route path="shop-documents" element={<ShopDocumentsPage />} />
+            <Route path="products" element={<ProductsPage />} />
+            <Route path="routes" element={<RoutesPage />} />
+            <Route path="drivers" element={<DriversPage />} />
+            <Route path="create-order" element={<CreateOrderPage />} />
+            <Route path="fast-order" element={<Navigate to="/owner/create-order" replace />} />
+            <Route path="orders" element={<OrdersPage />} />
+            <Route path="deliveries" element={<DeliveriesPage />} />
+            <Route path="expenses" element={<ExpensesPage />} />
+            <Route path="payments" element={<PaymentsPage />} />
+            <Route path="credit" element={<CreditLedgerPage />} />
+            <Route path="reports" element={<ReportsPage />} />
+            <Route path="daily-closing" element={<Navigate to="/owner/create-order" replace />} />
+            <Route path="activity-history" element={<Navigate to="/owner/settings?tab=activity" replace />} />
+            <Route path="attendance" element={<StaffUsersPage defaultTab="attendance" />} />
+            <Route path="notepad" element={<NotepadSheetPage />} />
+            <Route path="users" element={<Navigate to="/owner" replace />} />
+            <Route path="settings" element={<SettingsPage />} />
+          </Route>
 
-        {/* Legacy Manager & Driver route redirects to Owner interface */}
-        <Route path="/manager/*" element={<Navigate to="/owner" replace />} />
-        <Route path="/manager" element={<Navigate to="/owner" replace />} />
-        <Route path="/driver/*" element={<Navigate to="/owner" replace />} />
-        <Route path="/driver" element={<Navigate to="/owner" replace />} />
+          {/* Legacy Manager & Driver route redirects to Owner interface */}
+          <Route path="/manager/*" element={<Navigate to="/owner" replace />} />
+          <Route path="/manager" element={<Navigate to="/owner" replace />} />
+          <Route path="/driver/*" element={<Navigate to="/owner" replace />} />
+          <Route path="/driver" element={<Navigate to="/owner" replace />} />
 
-        {/* Catch-all redirect */}
-        <Route path="*" element={<Navigate to="/owner" replace />} />
-      </Routes>
-    </React.Suspense>
+          {/* Catch-all redirect */}
+          <Route path="*" element={<Navigate to="/owner" replace />} />
+        </Routes>
+      </React.Suspense>
+    </ErrorBoundary>
   );
 };
 
