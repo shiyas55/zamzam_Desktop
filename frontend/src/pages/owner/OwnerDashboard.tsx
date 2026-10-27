@@ -341,7 +341,10 @@ export const OwnerDashboard: React.FC = () => {
                 <p style={{ fontSize: '1.5rem', fontWeight: 900, color: '#b91c1c', margin: 0 }}>
                   {formatCurrency(data.today_expenses || '0.00')}
                 </p>
-                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Shop, maintenance, fuel & route</span>
+                <div style={{ display: 'flex', gap: '0.4rem', fontSize: '0.7rem', marginTop: '0.2rem' }}>
+                  <span style={{ color: '#b91c1c', fontWeight: 600 }}>Cash: {formatCurrency(data.today_cash_expenses || '0.00')}</span>
+                  <span style={{ color: 'var(--primary)', fontWeight: 600 }}>GPay: {formatCurrency(data.today_upi_expenses || '0.00')}</span>
+                </div>
               </div>
 
               {/* 6. Net Collection (Highlighted Card) */}

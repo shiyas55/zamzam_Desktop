@@ -258,6 +258,8 @@ export interface DashboardSummary {
   today_payments: number;
   total_receivables: number;
   today_expenses: number;
+  today_cash_expenses?: number;
+  today_upi_expenses?: number;
   net_amount: number;
   total_customers: number;
   customers_with_due: number;

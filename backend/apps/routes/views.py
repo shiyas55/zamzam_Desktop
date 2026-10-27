@@ -262,6 +262,10 @@ class DriverExpenseViewSet(viewsets.ModelViewSet):
         if category:
             queryset = queryset.filter(category=category)
 
+        payment_method = self.request.query_params.get("payment_method")
+        if payment_method:
+            queryset = queryset.filter(payment_method=payment_method)
+
         date_param = self.request.query_params.get("date")
         if date_param:
             queryset = queryset.filter(date=date_param)
@@ -301,9 +305,10 @@ class DriverExpenseViewSet(viewsets.ModelViewSet):
             entity_type="EXPENSE",
             entity_id=instance.id,
             entity_name=f"{instance.get_category_display()} Expense",
-            summary=f"{user.get_full_name() or user.username} logged {instance.get_category_display()} expense of ₹{instance.amount}",
+            summary=f"{user.get_full_name() or user.username} logged {instance.get_category_display()} expense of ₹{instance.amount} ({instance.get_payment_method_display()})",
             details={
                 "category": instance.category,
+                "payment_method": instance.payment_method,
                 "amount": str(instance.amount),
                 "date": str(instance.date),
                 "notes": instance.notes,
@@ -334,6 +339,8 @@ class DriverExpenseViewSet(viewsets.ModelViewSet):
         month_qs = qs.filter(date__gte=month_start, date__lte=today)
 
         today_total = today_qs.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+        today_cash_total = today_qs.filter(payment_method=DriverExpense.PaymentMethod.CASH).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+        today_upi_total = today_qs.filter(payment_method=DriverExpense.PaymentMethod.GPAY_UPI).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
         week_total = week_qs.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
         month_total = month_qs.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
         all_total = qs.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
@@ -353,6 +360,8 @@ class DriverExpenseViewSet(viewsets.ModelViewSet):
         return Response({
             "date": today,
             "today_total": str(today_total),
+            "today_cash_total": str(today_cash_total),
+            "today_upi_total": str(today_upi_total),
             "week_total": str(week_total),
             "month_total": str(month_total),
             "all_total": str(all_total),

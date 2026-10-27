@@ -21,6 +21,7 @@ export const DriverExpensesPage: React.FC = () => {
   // Add Expense Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [category, setCategory] = useState<DriverExpenseCategory>('PETROL');
+  const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'GPAY_UPI'>('CASH');
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState('');
@@ -60,6 +61,7 @@ export const DriverExpensesPage: React.FC = () => {
       setError(null);
       await expenseService.createExpense({
         category,
+        payment_method: paymentMethod,
         amount: parsedAmount.toFixed(2),
         date,
         notes: notes || undefined,
@@ -67,6 +69,7 @@ export const DriverExpensesPage: React.FC = () => {
       setIsModalOpen(false);
       setAmount('');
       setNotes('');
+      setPaymentMethod('CASH');
       fetchExpenses();
     } catch (err: unknown) {
       if (err instanceof Error) setError(err.message);
@@ -214,9 +217,20 @@ export const DriverExpensesPage: React.FC = () => {
                   {getCategoryIcon(exp.category)}
                 </div>
                 <div>
-                  <strong style={{ fontSize: '0.95rem', color: 'var(--text-primary)', display: 'block' }}>
-                    {exp.category_display}
-                  </strong>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                    <strong style={{ fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                      {exp.category_display}
+                    </strong>
+                    {exp.payment_method === 'GPAY_UPI' ? (
+                      <span className="badge" style={{ backgroundColor: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', fontSize: '0.68rem', padding: '1px 6px', fontWeight: 700 }}>
+                        📱 GPay / UPI
+                      </span>
+                    ) : (
+                      <span className="badge" style={{ backgroundColor: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca', fontSize: '0.68rem', padding: '1px 6px', fontWeight: 700 }}>
+                        💵 Cash
+                      </span>
+                    )}
+                  </div>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                     {formatDate(exp.date)} {exp.notes && `• ${exp.notes}`}
                   </span>
@@ -297,6 +311,55 @@ export const DriverExpensesPage: React.FC = () => {
               </div>
 
               <div className="form-group">
+                <label className="form-label">Payment Method *</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('CASH')}
+                    style={{
+                      padding: '8px 10px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      borderRadius: '8px',
+                      border: paymentMethod === 'CASH' ? '2px solid #dc2626' : '1px solid #cbd5e1',
+                      background: paymentMethod === 'CASH' ? '#fef2f2' : '#ffffff',
+                      color: paymentMethod === 'CASH' ? '#991b1b' : '#475569',
+                      fontWeight: paymentMethod === 'CASH' ? 800 : 600,
+                      fontSize: '0.88rem',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <span>💵</span>
+                    <span>Cash</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('GPAY_UPI')}
+                    style={{
+                      padding: '8px 10px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      borderRadius: '8px',
+                      border: paymentMethod === 'GPAY_UPI' ? '2px solid #2563eb' : '1px solid #cbd5e1',
+                      background: paymentMethod === 'GPAY_UPI' ? '#eff6ff' : '#ffffff',
+                      color: paymentMethod === 'GPAY_UPI' ? '#1d4ed8' : '#475569',
+                      fontWeight: paymentMethod === 'GPAY_UPI' ? 800 : 600,
+                      fontSize: '0.88rem',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <span>📱</span>
+                    <span>GPay / UPI</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="form-group">
                 <label className="form-label">Date *</label>
                 <input
                   type="date"
@@ -323,7 +386,7 @@ export const DriverExpensesPage: React.FC = () => {
                   Cancel
                 </button>
                 <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={submitting}>
-                  {submitting ? 'Saving...' : 'Save Expense'}
+                  {submitting ? 'Saving...' : `Save ${paymentMethod === 'GPAY_UPI' ? 'GPay' : 'Cash'} Expense`}
                 </button>
               </div>
             </form>

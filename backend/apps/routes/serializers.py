@@ -184,6 +184,7 @@ class DriverExpenseSerializer(serializers.ModelSerializer):
     driver_name = serializers.SerializerMethodField()
     route_name = serializers.SerializerMethodField()
     category_display = serializers.CharField(source="get_category_display", read_only=True)
+    payment_method_display = serializers.CharField(source="get_payment_method_display", read_only=True)
     created_by_name = serializers.SerializerMethodField()
 
     class Meta:
@@ -196,6 +197,8 @@ class DriverExpenseSerializer(serializers.ModelSerializer):
             "category",
             "category_display",
             "custom_category",
+            "payment_method",
+            "payment_method_display",
             "amount",
             "date",
             "notes",
@@ -205,7 +208,7 @@ class DriverExpenseSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "driver", "driver_name", "route_name", "category_display", "created_by", "created_by_name", "created_at", "updated_at"]
+        read_only_fields = ["id", "driver", "driver_name", "route_name", "category_display", "payment_method_display", "created_by", "created_by_name", "created_at", "updated_at"]
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_driver_name(self, obj):
@@ -242,6 +245,7 @@ class CreateDriverExpenseSerializer(serializers.ModelSerializer):
             "driver",
             "category",
             "custom_category",
+            "payment_method",
             "amount",
             "date",
             "notes",

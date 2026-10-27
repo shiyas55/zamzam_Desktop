@@ -560,7 +560,10 @@ export const ManagerDashboard: React.FC = () => {
               <p style={{ fontSize: '1.75rem', fontWeight: 900, color: '#dc2626', margin: '0 0 0.15rem', lineHeight: 1 }}>
                 {formatCurrency(data?.today_expenses || '0.00')}
               </p>
-              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Shop, maintenance & route costs</span>
+              <div style={{ display: 'flex', gap: '0.4rem', fontSize: '0.7rem', marginTop: '0.2rem' }}>
+                <span style={{ color: '#dc2626', fontWeight: 600 }}>Cash: {formatCurrency(data?.today_cash_expenses || '0.00')}</span>
+                <span style={{ color: 'var(--primary)', fontWeight: 600 }}>GPay: {formatCurrency(data?.today_upi_expenses || '0.00')}</span>
+              </div>
             </div>
 
             {/* 9. Total Outstanding */}

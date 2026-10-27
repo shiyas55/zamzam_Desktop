@@ -63,6 +63,7 @@ export const ExpensesPage: React.FC = () => {
   const [selectedDriver, setSelectedDriver] = useState('');
   const [selectedRoute, setSelectedRoute] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
 
   // Add Expense Modal
@@ -73,6 +74,7 @@ export const ExpensesPage: React.FC = () => {
   const [formData, setFormData] = useState({
     category: 'SHOP_EXPENSE' as DriverExpenseCategory,
     custom_category: '',
+    payment_method: 'CASH' as 'CASH' | 'GPAY_UPI',
     driver: '',
     amount: '',
     date: new Date().toISOString().split('T')[0],
@@ -100,6 +102,7 @@ export const ExpensesPage: React.FC = () => {
           driver: selectedDriver || undefined,
           route: selectedRoute || undefined,
           category: selectedCategory || undefined,
+          payment_method: selectedPaymentMethod || undefined,
           date: selectedDate || undefined,
         }),
         expenseService.getExpenseSummary(selectedDriver || undefined),
@@ -119,7 +122,7 @@ export const ExpensesPage: React.FC = () => {
 
   useEffect(() => {
     fetchData();
-  }, [selectedDriver, selectedRoute, selectedCategory, selectedDate]);
+  }, [selectedDriver, selectedRoute, selectedCategory, selectedPaymentMethod, selectedDate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,6 +138,7 @@ export const ExpensesPage: React.FC = () => {
       await expenseService.createExpense({
         category: formData.category,
         custom_category: formData.custom_category.trim() || undefined,
+        payment_method: formData.payment_method,
         driver: formData.driver || null,
         amount: formData.amount,
         date: formData.date || undefined,
@@ -146,6 +150,7 @@ export const ExpensesPage: React.FC = () => {
       setFormData({
         category: 'SHOP_EXPENSE',
         custom_category: '',
+        payment_method: 'CASH',
         driver: '',
         amount: '',
         date: new Date().toISOString().split('T')[0],
@@ -276,8 +281,9 @@ export const ExpensesPage: React.FC = () => {
           <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#dc2626', marginTop: '0.25rem' }}>
             {formatCurrency(summary?.today_total || '0.00')}
           </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-            Recorded today
+          <div style={{ display: 'flex', gap: '0.6rem', fontSize: '0.74rem', marginTop: '0.35rem' }}>
+            <span style={{ color: '#dc2626', fontWeight: 700 }}>Cash: {formatCurrency(summary?.today_cash_total || '0.00')}</span>
+            <span style={{ color: 'var(--primary)', fontWeight: 700 }}>GPay: {formatCurrency(summary?.today_upi_total || '0.00')}</span>
           </div>
         </div>
 
@@ -387,6 +393,17 @@ export const ExpensesPage: React.FC = () => {
           ))}
         </select>
 
+        <select
+          className="form-select"
+          style={{ minWidth: '170px' }}
+          value={selectedPaymentMethod}
+          onChange={(e) => setSelectedPaymentMethod(e.target.value)}
+        >
+          <option value="">All Payment Modes</option>
+          <option value="CASH">💵 Cash Only</option>
+          <option value="GPAY_UPI">📱 GPay / UPI Only</option>
+        </select>
+
         <input
           type="date"
           className="form-input"
@@ -395,13 +412,14 @@ export const ExpensesPage: React.FC = () => {
           onChange={(e) => setSelectedDate(e.target.value)}
         />
 
-        {(selectedDriver || selectedRoute || selectedCategory || selectedDate) && (
+        {(selectedDriver || selectedRoute || selectedCategory || selectedPaymentMethod || selectedDate) && (
           <button
             className="btn btn-secondary"
             onClick={() => {
               setSelectedDriver('');
               setSelectedRoute('');
               setSelectedCategory('');
+              setSelectedPaymentMethod('');
               setSelectedDate('');
             }}
           >
@@ -423,6 +441,7 @@ export const ExpensesPage: React.FC = () => {
                 <th>Expense Source</th>
                 <th>Route / Location</th>
                 <th>Category</th>
+                <th>Payment Mode</th>
                 <th>Logged By</th>
                 <th>Amount (₹)</th>
                 <th>Date</th>
@@ -456,6 +475,17 @@ export const ExpensesPage: React.FC = () => {
                       <span className={`badge ${getCategoryBadgeClass(exp.category)}`}>
                         {exp.custom_category || exp.category_display || exp.category}
                       </span>
+                    </td>
+                    <td>
+                      {exp.payment_method === 'GPAY_UPI' ? (
+                        <span className="badge" style={{ backgroundColor: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                          <span>📱</span> GPay / UPI
+                        </span>
+                      ) : (
+                        <span className="badge" style={{ backgroundColor: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                          <span>💵</span> Cash
+                        </span>
+                      )}
                     </td>
                     <td style={{ fontSize: '0.84rem', color: 'var(--text-secondary)' }}>
                       {exp.created_by_name ? (
@@ -498,7 +528,7 @@ export const ExpensesPage: React.FC = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                  <td colSpan={9} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
                     No expenses found matching current filters.
                   </td>
                 </tr>
@@ -705,6 +735,62 @@ export const ExpensesPage: React.FC = () => {
                     }}
                   >
                     +₹100
+                  </button>
+                </div>
+              </div>
+
+              {/* Payment Mode Selector: Cash vs GPay / UPI */}
+              <div style={{ marginBottom: '1.1rem' }}>
+                <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: '0.45rem', letterSpacing: '0.04em' }}>
+                  Payment Method *
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, payment_method: 'CASH' })}
+                    style={{
+                      padding: '10px 12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      borderRadius: '10px',
+                      border: formData.payment_method === 'CASH' ? '2.5px solid #dc2626' : '1.5px solid #cbd5e1',
+                      backgroundColor: formData.payment_method === 'CASH' ? '#fef2f2' : '#ffffff',
+                      color: formData.payment_method === 'CASH' ? '#991b1b' : '#475569',
+                      fontWeight: formData.payment_method === 'CASH' ? 800 : 600,
+                      fontSize: '0.92rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                      boxShadow: formData.payment_method === 'CASH' ? '0 2px 6px rgba(220, 38, 38, 0.18)' : 'none',
+                    }}
+                  >
+                    <span style={{ fontSize: '1.25rem' }}>💵</span>
+                    <span>Cash Expense</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, payment_method: 'GPAY_UPI' })}
+                    style={{
+                      padding: '10px 12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      borderRadius: '10px',
+                      border: formData.payment_method === 'GPAY_UPI' ? '2.5px solid #2563eb' : '1.5px solid #cbd5e1',
+                      backgroundColor: formData.payment_method === 'GPAY_UPI' ? '#eff6ff' : '#ffffff',
+                      color: formData.payment_method === 'GPAY_UPI' ? '#1d4ed8' : '#475569',
+                      fontWeight: formData.payment_method === 'GPAY_UPI' ? 800 : 600,
+                      fontSize: '0.92rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                      boxShadow: formData.payment_method === 'GPAY_UPI' ? '0 2px 6px rgba(37, 99, 235, 0.18)' : 'none',
+                    }}
+                  >
+                    <span style={{ fontSize: '1.25rem' }}>📱</span>
+                    <span>GPay / UPI</span>
                   </button>
                 </div>
               </div>
@@ -969,7 +1055,7 @@ export const ExpensesPage: React.FC = () => {
                     {formSubmitting
                       ? 'Saving...'
                       : formData.amount
-                      ? `Save ₹${formData.amount} Expense`
+                      ? `Save ₹${formData.amount} (${formData.payment_method === 'GPAY_UPI' ? 'GPay' : 'Cash'}) Expense`
                       : 'Save Expense'}
                   </span>
                 </button>

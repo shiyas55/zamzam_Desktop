@@ -284,6 +284,8 @@ export interface DriverExpense {
   category: DriverExpenseCategory;
   category_display: string;
   custom_category?: string;
+  payment_method?: PaymentMethod;
+  payment_method_display?: string;
   amount: string;
   date: string;
   notes?: string;
@@ -298,6 +300,8 @@ export interface DriverExpense {
 
 export interface DriverExpenseSummary {
   today_total: string;
+  today_cash_total?: string;
+  today_upi_total?: string;
   week_total: string;
   month_total: string;
   category_breakdown: Record<string, string>;
@@ -444,6 +448,8 @@ export interface DailyFinancialSummaryResponse {
   previous_credit_collected: string;
   credit_generated: string;
   driver_expenses: string;
+  driver_cash_expenses?: string;
+  driver_gpay_expenses?: string;
   staff_cash_paid?: string;
   staff_gpay_paid?: string;
   total_staff_payouts?: string;
@@ -470,6 +476,8 @@ export interface DashboardSummary {
   upi_collected?: string;
   total_collected?: string;
   today_expenses?: string;
+  today_cash_expenses?: string;
+  today_upi_expenses?: string;
   today_credit?: string;
   net_collection?: string;
   last_day_net_collection?: string;
@@ -488,6 +496,8 @@ export interface DashboardSummary {
     today_sales: string;
     today_collected: string;
     today_expenses?: string;
+    today_cash_expenses?: string;
+    today_upi_expenses?: string;
     net_collected?: string;
     total_receivable: string;
     total_deliveries?: number;

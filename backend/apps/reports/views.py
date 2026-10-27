@@ -118,6 +118,8 @@ class DashboardSummaryView(APIView):
                 date__lte=end_date,
             )
             total_expenses = expenses_qs.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+            cash_expenses = expenses_qs.filter(payment_method=DriverExpense.PaymentMethod.CASH).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+            upi_expenses = expenses_qs.filter(payment_method=DriverExpense.PaymentMethod.GPAY_UPI).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
             net_collection = total_collected - total_expenses
 
             return Response({
@@ -138,6 +140,8 @@ class DashboardSummaryView(APIView):
                 "upi_collected": upi_collected,
                 "total_collected": total_collected,
                 "today_expenses": total_expenses,
+                "today_cash_expenses": cash_expenses,
+                "today_upi_expenses": upi_expenses,
                 "net_collection": net_collection,
             })
 
@@ -167,6 +171,8 @@ class DashboardSummaryView(APIView):
         # Driver Expenses
         expenses_qs = DriverExpense.objects.filter(date__gte=start_date, date__lte=end_date)
         period_expenses = expenses_qs.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+        cash_expenses = expenses_qs.filter(payment_method=DriverExpense.PaymentMethod.CASH).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+        upi_expenses = expenses_qs.filter(payment_method=DriverExpense.PaymentMethod.GPAY_UPI).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
 
         # Net Collection for selected period = Collection - Driver Expenses
         net_collection = total_collected - period_expenses
@@ -212,6 +218,8 @@ class DashboardSummaryView(APIView):
             r_sales = r_orders.aggregate(total=Sum("total_amount"))["total"] or Decimal("0.00")
             r_payments = payments_qs.filter(customer__route=r).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
             r_expenses = expenses_qs.filter(driver__assigned_route=r).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+            r_cash_expenses = expenses_qs.filter(driver__assigned_route=r, payment_method=DriverExpense.PaymentMethod.CASH).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+            r_upi_expenses = expenses_qs.filter(driver__assigned_route=r, payment_method=DriverExpense.PaymentMethod.GPAY_UPI).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
             r_receivables = active_customers.filter(route=r).aggregate(total=Sum("current_balance"))["total"] or Decimal("0.00")
             r_deliv = deliveries_qs.filter(route=r)
 
@@ -227,6 +235,8 @@ class DashboardSummaryView(APIView):
                 "not_delivered_count": r_deliv.filter(status__in=[Delivery.Status.NOT_DELIVERED, Delivery.Status.FAILED]).count(),
                 "today_collected": r_payments,
                 "today_expenses": r_expenses,
+                "today_cash_expenses": r_cash_expenses,
+                "today_upi_expenses": r_upi_expenses,
                 "net_collected": r_payments - r_expenses,
                 "total_receivable": r_receivables,
             })
@@ -247,6 +257,8 @@ class DashboardSummaryView(APIView):
             "upi_collected": upi_collected,
             "total_collected": total_collected,
             "today_expenses": period_expenses,
+            "today_cash_expenses": cash_expenses,
+            "today_upi_expenses": upi_expenses,
             "today_credit": period_credit,
             "net_collection": net_collection,
             "last_day_net_collection": last_day_net_collection,
@@ -807,6 +819,8 @@ class DailyFinancialSummaryView(APIView):
 
         # Driver Expenses
         exp_qs = DriverExpense.objects.filter(date__gte=start_date, date__lte=end_date)
+        driver_cash_expenses = exp_qs.filter(payment_method=DriverExpense.PaymentMethod.CASH).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+        driver_gpay_expenses = exp_qs.filter(payment_method=DriverExpense.PaymentMethod.GPAY_UPI).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
         driver_expenses = exp_qs.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
 
         # Staff Payouts (Wages & Advances via Attendance or Payouts)
@@ -842,6 +856,8 @@ class DailyFinancialSummaryView(APIView):
             "previous_credit_collected": previous_credit_collected,
             "credit_generated": credit_sales,
             "driver_expenses": driver_expenses,
+            "driver_cash_expenses": driver_cash_expenses,
+            "driver_gpay_expenses": driver_gpay_expenses,
             "staff_cash_paid": staff_cash_paid,
             "staff_gpay_paid": staff_gpay_paid,
             "total_staff_payouts": total_staff_payouts,
@@ -894,7 +910,9 @@ class DailyClosingView(APIView):
         total_staff_payouts = staff_cash_paid + staff_gpay_paid
 
         expenses_qs = DriverExpense.objects.filter(date=target_date)
-        driver_expenses = expenses_qs.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+        driver_cash_expenses = expenses_qs.filter(payment_method=DriverExpense.PaymentMethod.CASH).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+        driver_gpay_expenses = expenses_qs.filter(payment_method=DriverExpense.PaymentMethod.GPAY_UPI).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+        driver_expenses = driver_cash_expenses + driver_gpay_expenses
         net_collection = total_collected - driver_expenses - total_staff_payouts
 
         # Credit generated
@@ -951,7 +969,7 @@ class DailyClosingView(APIView):
                     }
                 }
 
-        expected_cash_in_hand = opening_cash + cash_collected - driver_expenses - staff_cash_paid
+        expected_cash_in_hand = opening_cash + cash_collected - driver_cash_expenses - staff_cash_paid
 
         return Response({
             "date": str(target_date),
@@ -972,6 +990,8 @@ class DailyClosingView(APIView):
                 "today_order_collected": str(today_order_collected),
                 "previous_credit_collected": str(previous_credit_collected),
                 "driver_expenses": str(driver_expenses),
+                "driver_cash_expenses": str(driver_cash_expenses),
+                "driver_gpay_expenses": str(driver_gpay_expenses),
                 "staff_cash_paid": str(staff_cash_paid),
                 "staff_gpay_paid": str(staff_gpay_paid),
                 "total_staff_payouts": str(total_staff_payouts),

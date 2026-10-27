@@ -654,7 +654,7 @@ export const ReportsPage: React.FC = () => {
                     {formatCurrency(financialSummary.driver_expenses)}
                   </p>
                   <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                    Fuel, maintenance, toll, food
+                    Cash: {formatCurrency(financialSummary.driver_cash_expenses || '0.00')} • GPay: {formatCurrency(financialSummary.driver_gpay_expenses || '0.00')}
                   </span>
                 </div>
 

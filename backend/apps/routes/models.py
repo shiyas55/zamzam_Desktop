@@ -134,6 +134,10 @@ class DriverExpense(TimeStampedUUIDModel):
         VEHICLE_REPAIR = "VEHICLE_REPAIR", "Vehicle Expense"
         OTHER = "OTHER", "Other"
 
+    class PaymentMethod(models.TextChoices):
+        CASH = "CASH", "Cash"
+        GPAY_UPI = "GPAY_UPI", "GPay / UPI"
+
     driver = models.ForeignKey(
         Driver,
         on_delete=models.CASCADE,
@@ -153,6 +157,13 @@ class DriverExpense(TimeStampedUUIDModel):
         max_length=100,
         blank=True,
         help_text="Custom category description if 'Other' selected"
+    )
+    payment_method = models.CharField(
+        max_length=20,
+        choices=PaymentMethod.choices,
+        default=PaymentMethod.CASH,
+        db_index=True,
+        help_text="Payment method used for the expense (Cash or GPay/UPI)"
     )
     amount = models.DecimalField(
         max_digits=12,
@@ -182,7 +193,8 @@ class DriverExpense(TimeStampedUUIDModel):
     def __str__(self):
         category_name = self.custom_category if self.category == self.Category.OTHER and self.custom_category else self.get_category_display()
         driver_name = (self.driver.user.get_full_name() or self.driver.user.username) if self.driver and self.driver.user else "Shop/General"
-        return f"{driver_name} - {category_name}: ₹{self.amount} ({self.date})"
+        method_label = "Cash" if self.payment_method == self.PaymentMethod.CASH else "GPay/UPI"
+        return f"{driver_name} - {category_name}: ₹{self.amount} [{method_label}] ({self.date})"
 
 
 class DriverShift(TimeStampedUUIDModel):

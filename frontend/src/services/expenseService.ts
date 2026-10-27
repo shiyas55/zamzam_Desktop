@@ -5,6 +5,7 @@ export interface CreateExpensePayload {
   driver?: string | null;
   category: DriverExpenseCategory | string;
   custom_category?: string;
+  payment_method?: 'CASH' | 'GPAY_UPI';
   amount: string;
   date?: string;
   notes?: string;
@@ -17,6 +18,7 @@ export const expenseService = {
     driver?: string;
     route?: string;
     category?: string;
+    payment_method?: string;
     date?: string;
     start_date?: string;
     end_date?: string;
