@@ -69,4 +69,4 @@ echo  3. WhatsApp sending and wholesale billing will always be connected.
 echo  4. When you turn OFF your PC, both services safely shut down.
 echo ******************************************************************************
 echo.
-pause
+if not "%~1"=="/silent" pause

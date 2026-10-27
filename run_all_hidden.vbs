@@ -11,7 +11,7 @@ WshShell.CurrentDirectory = currentDir
 ' False = Asynchronous (Runs in background continuously)
 
 ' 1. Start Django Backend on Port 8000
-WshShell.Run "cmd.exe /c """"" & currentDir & "\start_backend_windows.bat"" /silent""", 0, False
+WshShell.Run "cmd.exe /c """ & currentDir & "\start_backend_windows.bat"" /silent", 0, False
 
 ' 2. Start WhatsApp Bridge on Port 3005
-WshShell.Run "cmd.exe /c """"" & currentDir & "\start_whatsapp_bridge.bat"" /silent""", 0, False
+WshShell.Run "cmd.exe /c """ & currentDir & "\start_whatsapp_bridge.bat"" /silent", 0, False

@@ -33,4 +33,4 @@ echo ===========================================================================
 echo [SUCCESS] Auto-start disabled. Backend and WhatsApp will not start on boot.
 echo ==============================================================================
 echo.
-pause
+if not "%~1"=="/silent" pause

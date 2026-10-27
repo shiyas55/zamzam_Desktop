@@ -1466,14 +1466,16 @@ class BackgroundServicesView(APIView):
         is_mac = sys.platform == "darwin"
 
         if is_windows:
-            startup_path = os.path.expandvars(r"%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\ZamzamFoods_AutoStart.lnk")
-            if os.path.exists(startup_path):
-                return {"enabled": True, "platform": "windows", "method": "Startup Folder"}
+            startup_dir = os.path.expandvars(r"%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup")
+            for name in ["ZamzamFoods_AutoStart.vbs", "ZamzamFoods_AutoStart.lnk", "ZamzamFoods_AutoStart.bat"]:
+                if os.path.exists(os.path.join(startup_dir, name)):
+                    return {"enabled": True, "platform": "windows", "method": "Startup Folder"}
             try:
                 import winreg
                 key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Run")
                 val, _ = winreg.QueryValueEx(key, "ZamzamFoodsServices")
-                return {"enabled": True, "platform": "windows", "method": "Windows Registry"}
+                if val:
+                    return {"enabled": True, "platform": "windows", "method": "Windows Registry"}
             except Exception:
                 pass
             return {"enabled": False, "platform": "windows", "method": None}
@@ -1528,54 +1530,108 @@ class BackgroundServicesView(APIView):
         is_windows = sys.platform == "win32"
         is_mac = sys.platform == "darwin"
 
-        if action in ["start_services", "start_whatsapp"]:
-            if is_windows:
-                vbs_path = project_root / "run_all_hidden.vbs"
-                bat_path = project_root / "start_whatsapp_bridge.bat"
-                if vbs_path.exists():
-                    subprocess.Popen(["wscript.exe", str(vbs_path)], cwd=str(project_root))
-                elif bat_path.exists():
-                    subprocess.Popen(["cmd.exe", "/c", str(bat_path), "/silent"], cwd=str(project_root), creationflags=0x08000000)
-            elif is_mac:
-                sh_path = project_root / "start_whatsapp_bridge_mac.sh"
-                if sh_path.exists():
-                    subprocess.Popen(["/bin/bash", str(sh_path)], cwd=str(project_root), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+        try:
+            if action in ["start_services", "start_whatsapp"]:
+                if is_windows:
+                    bat_path = project_root / "start_whatsapp_bridge.bat"
+                    vbs_path = project_root / "run_all_hidden.vbs"
+
+                    wscript_bin = "wscript.exe"
+                    for candidate in [r"C:\Windows\System32\wscript.exe", r"C:\Windows\SysWOW64\wscript.exe"]:
+                        if os.path.exists(candidate):
+                            wscript_bin = candidate
+                            break
+
+                    if action == "start_services" and vbs_path.exists():
+                        subprocess.Popen(f'"{wscript_bin}" "{str(vbs_path)}"', cwd=str(project_root), shell=True)
+                    elif bat_path.exists():
+                        subprocess.Popen(f'cmd.exe /c "{str(bat_path)}" /silent', cwd=str(project_root), shell=True)
+                    else:
+                        wa_dir = project_root / "whatsapp-bridge"
+                        subprocess.Popen("node server.js", cwd=str(wa_dir), shell=True)
+                elif is_mac:
+                    sh_path = project_root / "start_whatsapp_bridge_mac.sh"
+                    if sh_path.exists():
+                        subprocess.Popen(["/bin/bash", str(sh_path)], cwd=str(project_root), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+                    else:
+                        wa_dir = project_root / "whatsapp-bridge"
+                        subprocess.Popen(["node", "server.js"], cwd=str(wa_dir), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
                 else:
                     wa_dir = project_root / "whatsapp-bridge"
-                    subprocess.Popen(["node", "server.js"], cwd=str(wa_dir), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
-            else:
-                wa_dir = project_root / "whatsapp-bridge"
-                if wa_dir.exists():
-                    subprocess.Popen(["node", "server.js"], cwd=str(wa_dir), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+                    if wa_dir.exists():
+                        subprocess.Popen(["node", "server.js"], cwd=str(wa_dir), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
 
-            time.sleep(1.5)
-            whatsapp_running = self._check_port_listening(3005)
-            return Response({
-                "success": True,
-                "message": "Background services trigger initiated.",
-                "whatsapp_running": whatsapp_running,
-            })
+                time.sleep(2.0)
+                whatsapp_running = self._check_port_listening(3005)
+                return Response({
+                    "success": True,
+                    "message": "Background services trigger initiated.",
+                    "whatsapp_running": whatsapp_running,
+                })
 
-        elif action == "toggle_autostart":
-            enable = bool(request.data.get("enable", True))
-            if is_windows:
-                script = "enable_autostart_windows.bat" if enable else "disable_autostart_windows.bat"
-                script_path = project_root / script
-                if script_path.exists():
-                    subprocess.Popen(["cmd.exe", "/c", str(script_path)], cwd=str(project_root), creationflags=0x08000000)
-            elif is_mac:
-                script = "enable_autostart_mac.sh" if enable else "disable_autostart_mac.sh"
-                script_path = project_root / script
-                if script_path.exists():
-                    subprocess.run(["/bin/bash", str(script_path)], cwd=str(project_root), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            elif action == "toggle_autostart":
+                enable = bool(request.data.get("enable", True))
+                if is_windows:
+                    startup_dir = os.path.expandvars(r"%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup")
+                    vbs_startup = os.path.join(startup_dir, "ZamzamFoods_AutoStart.vbs")
+                    lnk_startup = os.path.join(startup_dir, "ZamzamFoods_AutoStart.lnk")
 
-            time.sleep(0.5)
-            autostart_info = self._check_autostart_status()
-            return Response({
-                "success": True,
-                "message": f"Auto-start on boot {'enabled' if enable else 'disabled'}.",
-                "autostart": autostart_info,
-            })
+                    if enable:
+                        try:
+                            vbs_runner = str(project_root / "run_all_hidden.vbs")
+                            content = f'Set Wsh = CreateObject("WScript.Shell")\r\nWsh.CurrentDirectory = "{str(project_root)}"\r\nWsh.Run "wscript.exe ""{vbs_runner}""", 0, False\r\n'
+                            with open(vbs_startup, "w", encoding="utf-8") as f:
+                                f.write(content)
+                        except Exception:
+                            pass
 
-        return Response({"error": f"Unknown action '{action}'"}, status=400)
+                        try:
+                            import winreg
+                            key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Run", 0, winreg.KEY_SET_VALUE)
+                            winreg.SetValueEx(key, "ZamzamFoodsServices", 0, winreg.REG_SZ, f'wscript.exe "{str(project_root / "run_all_hidden.vbs")}"')
+                            winreg.CloseKey(key)
+                        except Exception:
+                            pass
+                    else:
+                        for p in [vbs_startup, lnk_startup]:
+                            try:
+                                if os.path.exists(p):
+                                    os.remove(p)
+                            except Exception:
+                                pass
+                        try:
+                            import winreg
+                            key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Run", 0, winreg.KEY_SET_VALUE)
+                            try:
+                                winreg.DeleteValue(key, "ZamzamFoodsServices")
+                            except FileNotFoundError:
+                                pass
+                            winreg.CloseKey(key)
+                        except Exception:
+                            pass
+
+                    script = "enable_autostart_windows.bat" if enable else "disable_autostart_windows.bat"
+                    script_path = project_root / script
+                    if script_path.exists():
+                        try:
+                            subprocess.Popen(f'cmd.exe /c "{str(script_path)}" /silent', cwd=str(project_root), shell=True)
+                        except Exception:
+                            pass
+                elif is_mac:
+                    script = "enable_autostart_mac.sh" if enable else "disable_autostart_mac.sh"
+                    script_path = project_root / script
+                    if script_path.exists():
+                        subprocess.run(["/bin/bash", str(script_path)], cwd=str(project_root), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+                time.sleep(0.5)
+                autostart_info = self._check_autostart_status()
+                return Response({
+                    "success": True,
+                    "message": f"Auto-start on boot {'enabled' if enable else 'disabled'}.",
+                    "autostart": autostart_info,
+                })
+
+            return Response({"error": f"Unknown action '{action}'"}, status=400)
+        except Exception as e:
+            return Response({"error": f"Failed to execute {action}: {str(e)}"}, status=500)
 
