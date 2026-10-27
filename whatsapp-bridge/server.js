@@ -38,36 +38,65 @@ class SafeLocalAuth extends LocalAuth {
 // Kill orphaned headless Chrome/Edge processes holding the .wwebjs_auth session lock
 function terminateOrphanedWwebjsBrowser() {
   if (process.platform === 'win32') {
+    // 1. Fast CIM / WMI query targeting only chrome/edge processes with headless or wwebjs_auth
     try {
       const { execSync } = require('child_process');
       execSync(
-        `powershell -NoProfile -Command "Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like '*wwebjs_auth*' } | Stop-Process -Force -ErrorAction SilentlyContinue"`,
-        { timeout: 6000, stdio: 'ignore' }
+        `powershell -NoProfile -ExecutionPolicy Bypass -Command "$procs = Get-CimInstance Win32_Process -Filter \\"Name = 'chrome.exe' OR Name = 'msedge.exe'\\" -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like '*headless*' -or $_.CommandLine -like '*wwebjs_auth*' -or $_.CommandLine -like '*whatsapp-bridge*' }; if ($procs) { $procs | Stop-Process -Force -ErrorAction SilentlyContinue }"`,
+        { timeout: 5000, stdio: 'ignore' }
       );
-      console.log('🧹 Cleaned up any orphaned WhatsApp Chrome background processes.');
+      console.log('🧹 Cleaned up any orphaned WhatsApp Chrome background processes via PowerShell.');
     } catch (e) {
       // Non-fatal if no process or command timeout
     }
+
+    // 2. WMIC fallback for Windows environments where PowerShell command line access is restricted
+    try {
+      const { execSync } = require('child_process');
+      execSync(
+        `wmic process where "name='chrome.exe' and (commandline like '%%headless%%' or commandline like '%%wwebjs_auth%%' or commandline like '%%whatsapp-bridge%%')" call terminate`,
+        { timeout: 4000, stdio: 'ignore' }
+      );
+    } catch (e) {}
+
+    try {
+      const { execSync } = require('child_process');
+      execSync(
+        `wmic process where "name='msedge.exe' and (commandline like '%%headless%%' or commandline like '%%wwebjs_auth%%' or commandline like '%%whatsapp-bridge%%')" call terminate`,
+        { timeout: 4000, stdio: 'ignore' }
+      );
+    } catch (e) {}
   }
 }
 
 // Delete stale lock files that Chromium leaves behind if terminated abruptly
 function cleanupStaleSessionLocks() {
-  const sessionPath = path.join(__dirname, '.wwebjs_auth', 'session');
-  if (fs.existsSync(sessionPath)) {
-    const lockFiles = ['SingletonLock', 'SingletonCookie', 'SingletonSocket', 'lockfile', 'DevToolsActivePort'];
-    for (const f of lockFiles) {
-      try {
-        const fullPath = path.join(sessionPath, f);
-        if (fs.existsSync(fullPath)) {
-          fs.unlinkSync(fullPath);
-          console.log(`🧹 Removed stale browser lock: ${f}`);
+  const authDir = path.join(__dirname, '.wwebjs_auth');
+  if (!fs.existsSync(authDir)) return;
+
+  const lockFiles = ['SingletonLock', 'SingletonCookie', 'SingletonSocket', 'lockfile', 'DevToolsActivePort'];
+
+  function removeLocksInDir(dir, depth = 0) {
+    if (depth > 3) return;
+    try {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          removeLocksInDir(full, depth + 1);
+        } else if (lockFiles.includes(entry.name)) {
+          try {
+            fs.unlinkSync(full);
+            console.log(`🧹 Removed stale browser lock: ${full}`);
+          } catch (e) {
+            // Process may still be holding handle
+          }
         }
-      } catch (e) {
-        // File may be locked if process is still running
       }
-    }
+    } catch (e) {}
   }
+
+  removeLocksInDir(authDir);
 }
 
 const app = express();
@@ -172,14 +201,19 @@ function getPuppeteerArgs() {
 }
 
 // Factory to create a WhatsApp Client instance with SafeLocalAuth
-function createClient(version) {
+function createClient(version, customClientId) {
   const targetVersion = version || currentWaVersion || FALLBACK_WA_VERSION;
   console.log(`[WhatsApp] Initializing WhatsApp Web Client with version: ${targetVersion}`);
 
+  const authOptions = {
+    dataPath: path.join(__dirname, '.wwebjs_auth'),
+  };
+  if (customClientId) {
+    authOptions.clientId = customClientId;
+  }
+
   const newClient = new Client({
-    authStrategy: new SafeLocalAuth({
-      dataPath: path.join(__dirname, '.wwebjs_auth'),
-    }),
+    authStrategy: new SafeLocalAuth(authOptions),
     webVersionCache: {
       type: 'remote',
       remotePath: `https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/${targetVersion}.html`,
@@ -301,10 +335,11 @@ function attachClientListeners(targetClient) {
 }
 
 // Function to start client session with automatic recovery from zombie browser locks
-async function startClientSession() {
+async function startClientSession(forceFreshSession = false) {
   cleanupStaleSessionLocks();
   const targetVer = await resolveLatestWaVersion();
-  client = createClient(targetVer);
+  const customClientId = forceFreshSession ? 'session_' + Date.now() : undefined;
+  client = createClient(targetVer, customClientId);
   stepStatus = 'Starting Chromium browser & preparing WhatsApp Web...';
 
   try {
@@ -329,10 +364,21 @@ async function startClientSession() {
         await client.initialize();
         return;
       } catch (retryErr) {
-        lastError = retryErr?.message || String(retryErr);
-        stepStatus = `Init Error: ${lastError}`;
-        console.error('❌ Retry initialization failed:', retryErr);
-        return;
+        console.warn('⚠️ Standard session folder locked by system. Falling back to fresh session to unblock QR generation...');
+        stepStatus = 'Generating fresh session QR...';
+        try {
+          if (client) {
+            await client.destroy().catch(() => {});
+          }
+          client = createClient(targetVer, 'session_' + Date.now());
+          await client.initialize();
+          return;
+        } catch (freshErr) {
+          lastError = freshErr?.message || String(freshErr);
+          stepStatus = `Init Error: ${lastError}`;
+          console.error('❌ Fresh session retry failed:', freshErr);
+          return;
+        }
       }
     }
 
@@ -366,7 +412,7 @@ async function resetWhatsAppSession() {
 
   // Force-kill any orphaned headless Chrome/Edge processes locking .wwebjs_auth
   terminateOrphanedWwebjsBrowser();
-  await new Promise((r) => setTimeout(r, 1200));
+  await new Promise((r) => setTimeout(r, 1500));
   cleanupStaleSessionLocks();
 
   // Remove .wwebjs_auth directory safely
@@ -380,7 +426,7 @@ async function resetWhatsAppSession() {
     }
   }
 
-  await startClientSession();
+  await startClientSession(true);
   isResetting = false;
 }
 
@@ -688,7 +734,7 @@ app.post('/send-text', async (req, res) => {
 });
 
 // Start Express server and initialize WhatsApp client
-app.listen(PORT, '0.0.0.0', async () => {
+const server = app.listen(PORT, '0.0.0.0', async () => {
   console.log(`\n======================================================`);
   console.log(`🚀 Zamzam WhatsApp Bridge running at: http://localhost:${PORT}`);
   console.log(`📱 QR Code Web Page: http://localhost:${PORT}/qr`);
@@ -700,4 +746,11 @@ app.listen(PORT, '0.0.0.0', async () => {
   terminateOrphanedWwebjsBrowser();
   cleanupStaleSessionLocks();
   startClientSession();
+});
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.warn(`⚠️ [WhatsApp Bridge] Port ${PORT} is already in use by an active instance. Exiting secondary process to prevent conflicts.`);
+    process.exit(0);
+  }
 });

@@ -1527,8 +1527,12 @@ class BackgroundServicesView(APIView):
 
         action = request.data.get("action", "start_services")
         project_root = Path(settings.BASE_DIR).parent
+        if not (project_root / "run_all_hidden.vbs").exists() and (Path(settings.BASE_DIR) / "run_all_hidden.vbs").exists():
+            project_root = Path(settings.BASE_DIR)
+
         is_windows = sys.platform == "win32"
         is_mac = sys.platform == "darwin"
+        creation_flags = 0x08000000 if is_windows else 0
 
         try:
             if action in ["start_services", "start_whatsapp"]:
@@ -1543,12 +1547,12 @@ class BackgroundServicesView(APIView):
                             break
 
                     if action == "start_services" and vbs_path.exists():
-                        subprocess.Popen(f'"{wscript_bin}" "{str(vbs_path)}"', cwd=str(project_root), shell=True)
+                        subprocess.Popen([wscript_bin, str(vbs_path)], cwd=str(project_root), creationflags=creation_flags)
                     elif bat_path.exists():
-                        subprocess.Popen(f'cmd.exe /c "{str(bat_path)}" /silent', cwd=str(project_root), shell=True)
+                        subprocess.Popen(["cmd.exe", "/c", str(bat_path), "/silent"], cwd=str(project_root), creationflags=creation_flags)
                     else:
                         wa_dir = project_root / "whatsapp-bridge"
-                        subprocess.Popen("node server.js", cwd=str(wa_dir), shell=True)
+                        subprocess.Popen(["cmd.exe", "/c", "node", "server.js"], cwd=str(wa_dir), creationflags=creation_flags)
                 elif is_mac:
                     sh_path = project_root / "start_whatsapp_bridge_mac.sh"
                     if sh_path.exists():
@@ -1614,7 +1618,7 @@ class BackgroundServicesView(APIView):
                     script_path = project_root / script
                     if script_path.exists():
                         try:
-                            subprocess.Popen(f'cmd.exe /c "{str(script_path)}" /silent', cwd=str(project_root), shell=True)
+                            subprocess.Popen(["cmd.exe", "/c", str(script_path), "/silent"], cwd=str(project_root), creationflags=creation_flags)
                         except Exception:
                             pass
                 elif is_mac:
@@ -1633,5 +1637,5 @@ class BackgroundServicesView(APIView):
 
             return Response({"error": f"Unknown action '{action}'"}, status=400)
         except Exception as e:
-            return Response({"error": f"Failed to execute {action}: {str(e)}"}, status=500)
+            return Response({"error": f"Failed to execute {action}: {str(e)}", "detail": str(e)}, status=500)
 

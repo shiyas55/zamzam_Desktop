@@ -53,12 +53,9 @@ if %errorlevel% neq 0 (
 :: Ensure WhatsApp Bridge is also running
 powershell -NoProfile -Command "$c = New-Object System.Net.Sockets.TcpClient; try { $c.Connect('127.0.0.1', 3005); Write-Host 'OPEN'; $c.Close() } catch { Write-Host 'CLOSED' }" 2>nul | findstr "OPEN" >nul 2>&1
 if %errorlevel% neq 0 (
-    if exist "%~dp0whatsapp-bridge\server.js" (
-        echo Starting WhatsApp Web Bridge service silently in the background...
-        wscript.exe "%~dp0run_all_hidden.vbs"
-    )
+    echo [INFO] WhatsApp Bridge is initializing in the background...
 ) else (
-    echo [INFO] WhatsApp Bridge is already running on port 3005.
+    echo [INFO] WhatsApp Bridge is active on port 3005.
 )
 
 echo.

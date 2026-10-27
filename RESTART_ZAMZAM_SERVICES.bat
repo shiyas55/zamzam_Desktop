@@ -13,7 +13,7 @@ echo.
 cd /d "%~dp0"
 
 :: 1. Force-terminate existing port 8000 (Django Backend) and 3005 (WhatsApp Bridge)
-powershell -NoProfile -Command "
+powershell -NoProfile -ExecutionPolicy Bypass -Command "
 $ports = @(8000, 3005);
 foreach ($p in $ports) {
     $conns = Get-NetTCPConnection -LocalPort $p -ErrorAction SilentlyContinue;
@@ -27,8 +27,16 @@ foreach ($p in $ports) {
         }
     }
 }
-Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like '*wwebjs_auth*' } | Stop-Process -Force -ErrorAction SilentlyContinue;
+$procs = Get-CimInstance Win32_Process -Filter \"Name = 'chrome.exe' OR Name = 'msedge.exe'\" -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like '*headless*' -or $_.CommandLine -like '*wwebjs_auth*' -or $_.CommandLine -like '*whatsapp-bridge*' };
+if ($procs) { $procs | Stop-Process -Force -ErrorAction SilentlyContinue; }
 " >nul 2>&1
+
+wmic process where "(name='chrome.exe' or name='msedge.exe') and (commandline like '%%headless%%' or commandline like '%%wwebjs_auth%%' or commandline like '%%whatsapp-bridge%%')" call terminate >nul 2>&1
+
+:: Clean stale lockfiles left by terminated browsers
+del /f /q /s "whatsapp-bridge\.wwebjs_auth\*lock*" >nul 2>&1
+del /f /q /s "whatsapp-bridge\.wwebjs_auth\*DevToolsActivePort*" >nul 2>&1
+del /f /q /s "whatsapp-bridge\.wwebjs_auth\*Singleton*" >nul 2>&1
 
 timeout /t 2 /nobreak >nul
 
