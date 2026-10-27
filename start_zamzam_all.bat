@@ -5,6 +5,12 @@ color 0B
 
 cd /d "%~dp0"
 
+:: Auto-pull latest updates from GitHub if git is installed
+where git >nul 2>&1
+if %errorlevel% equ 0 (
+    git pull origin main >nul 2>&1
+)
+
 :: Auto-Create or Update Desktop Shortcut to current folder location
 powershell -NoProfile -Command "
 $desktop = [System.IO.Path]::Combine([Environment]::GetFolderPath('Desktop'), 'Zamzam Foods.lnk');
@@ -50,10 +56,24 @@ if %errorlevel% neq 0 (
 )
 :BACKEND_UP
 
-:: Ensure WhatsApp Bridge is also running
-powershell -NoProfile -Command "$c = New-Object System.Net.Sockets.TcpClient; try { $c.Connect('127.0.0.1', 3005); Write-Host 'OPEN'; $c.Close() } catch { Write-Host 'CLOSED' }" 2>nul | findstr "OPEN" >nul 2>&1
-if %errorlevel% neq 0 (
-    echo [INFO] WhatsApp Bridge is initializing in the background...
+:: Ensure WhatsApp Bridge is also running and healthy
+powershell -NoProfile -Command "
+try {
+    $res = Invoke-RestMethod -Uri 'http://localhost:3005/status' -TimeoutSec 2 -ErrorAction Stop;
+    if ($res.lastError) {
+        Write-Host 'UNHEALTHY';
+    } else {
+        Write-Host 'HEALTHY';
+    }
+} catch {
+    Write-Host 'DOWN';
+}
+" 2>nul | findstr "UNHEALTHY" >nul 2>&1
+if %errorlevel% equ 0 (
+    echo [INFO] Detected frozen WhatsApp Bridge. Auto-restarting fresh...
+    powershell -NoProfile -Command "$conns = Get-NetTCPConnection -LocalPort 3005 -ErrorAction SilentlyContinue; if ($conns) { $conns | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue } }" >nul 2>&1
+    timeout /t 1 /nobreak >nul
+    wscript.exe "%~dp0run_all_hidden.vbs"
 ) else (
     echo [INFO] WhatsApp Bridge is active on port 3005.
 )
