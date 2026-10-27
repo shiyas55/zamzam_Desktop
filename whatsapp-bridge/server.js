@@ -35,6 +35,41 @@ class SafeLocalAuth extends LocalAuth {
   }
 }
 
+// Kill orphaned headless Chrome/Edge processes holding the .wwebjs_auth session lock
+function terminateOrphanedWwebjsBrowser() {
+  if (process.platform === 'win32') {
+    try {
+      const { execSync } = require('child_process');
+      execSync(
+        `powershell -NoProfile -Command "Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like '*wwebjs_auth*' } | Stop-Process -Force -ErrorAction SilentlyContinue"`,
+        { timeout: 6000, stdio: 'ignore' }
+      );
+      console.log('🧹 Cleaned up any orphaned WhatsApp Chrome background processes.');
+    } catch (e) {
+      // Non-fatal if no process or command timeout
+    }
+  }
+}
+
+// Delete stale lock files that Chromium leaves behind if terminated abruptly
+function cleanupStaleSessionLocks() {
+  const sessionPath = path.join(__dirname, '.wwebjs_auth', 'session');
+  if (fs.existsSync(sessionPath)) {
+    const lockFiles = ['SingletonLock', 'SingletonCookie', 'SingletonSocket', 'lockfile', 'DevToolsActivePort'];
+    for (const f of lockFiles) {
+      try {
+        const fullPath = path.join(sessionPath, f);
+        if (fs.existsSync(fullPath)) {
+          fs.unlinkSync(fullPath);
+          console.log(`🧹 Removed stale browser lock: ${f}`);
+        }
+      } catch (e) {
+        // File may be locked if process is still running
+      }
+    }
+  }
+}
+
 const app = express();
 const PORT = process.env.PORT || process.env.WHATSAPP_PORT || 3005;
 
@@ -265,6 +300,47 @@ function attachClientListeners(targetClient) {
   });
 }
 
+// Function to start client session with automatic recovery from zombie browser locks
+async function startClientSession() {
+  cleanupStaleSessionLocks();
+  const targetVer = await resolveLatestWaVersion();
+  client = createClient(targetVer);
+  stepStatus = 'Starting Chromium browser & preparing WhatsApp Web...';
+
+  try {
+    await client.initialize();
+  } catch (err) {
+    const errMsg = err?.message || String(err);
+    console.error('❌ Error initializing WhatsApp client:', errMsg);
+
+    // Auto-heal if browser is already running or directory locked
+    if (errMsg.includes('The browser is already running') || errMsg.includes('userDataDir')) {
+      console.log('🔄 Browser lock detected. Auto-clearing zombie processes and retrying in 2s...');
+      stepStatus = 'Stale browser lock detected. Clearing and auto-retrying...';
+      terminateOrphanedWwebjsBrowser();
+      await new Promise((r) => setTimeout(r, 2000));
+      cleanupStaleSessionLocks();
+
+      try {
+        if (client) {
+          await client.destroy().catch(() => {});
+        }
+        client = createClient(targetVer);
+        await client.initialize();
+        return;
+      } catch (retryErr) {
+        lastError = retryErr?.message || String(retryErr);
+        stepStatus = `Init Error: ${lastError}`;
+        console.error('❌ Retry initialization failed:', retryErr);
+        return;
+      }
+    }
+
+    lastError = errMsg;
+    stepStatus = `Init Error: ${lastError}`;
+  }
+}
+
 // Function to cleanly reset WhatsApp session (destroys client, clears cache, creates fresh instance)
 async function resetWhatsAppSession() {
   if (isResetting) return;
@@ -288,30 +364,23 @@ async function resetWhatsAppSession() {
     client = null;
   }
 
-  // Allow OS time to release file locks on Windows
-  await new Promise((r) => setTimeout(r, 1500));
+  // Force-kill any orphaned headless Chrome/Edge processes locking .wwebjs_auth
+  terminateOrphanedWwebjsBrowser();
+  await new Promise((r) => setTimeout(r, 1200));
+  cleanupStaleSessionLocks();
 
   // Remove .wwebjs_auth directory safely
   const authPath = path.join(__dirname, '.wwebjs_auth');
   if (fs.existsSync(authPath)) {
     try {
-      fs.rmSync(authPath, { recursive: true, force: true });
+      fs.rmSync(authPath, { recursive: true, force: true, maxRetries: 3 });
       console.log('🗑️ .wwebjs_auth deleted successfully.');
     } catch (rmErr) {
       console.warn('Note: .wwebjs_auth locked, continuing with clean session reset.');
     }
   }
 
-  // Re-resolve version and reinitialize
-  const ver = await resolveLatestWaVersion();
-  client = createClient(ver);
-  stepStatus = 'Starting fresh browser session...';
-  client.initialize().catch((err) => {
-    lastError = err.message || String(err);
-    stepStatus = `Init Error: ${lastError}`;
-    console.error('❌ Error initializing fresh client:', err);
-  });
-
+  await startClientSession();
   isResetting = false;
 }
 
@@ -628,11 +697,7 @@ app.listen(PORT, '0.0.0.0', async () => {
   console.log(`======================================================\n`);
 
   console.log('⏳ Starting WhatsApp Web browser session...');
-  const targetVer = await resolveLatestWaVersion();
-  client = createClient(targetVer);
-  client.initialize().catch((err) => {
-    lastError = err.message || String(err);
-    stepStatus = `Init Error: ${lastError}`;
-    console.error('❌ Error initializing WhatsApp client:', err);
-  });
+  terminateOrphanedWwebjsBrowser();
+  cleanupStaleSessionLocks();
+  startClientSession();
 });

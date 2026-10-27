@@ -17,7 +17,7 @@ pause >nul
 
 cd /d "%~dp0"
 
-echo [1/3] Stopping WhatsApp Bridge processes...
+echo [1/3] Stopping WhatsApp Bridge processes & zombie browser locks...
 powershell -NoProfile -Command "
 $connections = Get-NetTCPConnection -LocalPort 3005 -ErrorAction SilentlyContinue;
 if ($connections) {
@@ -29,6 +29,7 @@ if ($connections) {
         }
     }
 }
+Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like '*wwebjs_auth*' } | Stop-Process -Force -ErrorAction SilentlyContinue;
 " >nul 2>&1
 
 timeout /t 2 /nobreak >nul
