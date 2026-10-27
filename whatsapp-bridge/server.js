@@ -334,11 +334,34 @@ function attachClientListeners(targetClient) {
   });
 }
 
+// Helper to detect if standard session directory is held by another process
+function isSessionDirectoryLocked() {
+  const sessionPath = path.join(__dirname, '.wwebjs_auth', 'session');
+  if (!fs.existsSync(sessionPath)) return false;
+
+  const lockFiles = ['DevToolsActivePort', 'SingletonLock', 'SingletonCookie', 'SingletonSocket', 'lockfile'];
+  for (const f of lockFiles) {
+    const full = path.join(sessionPath, f);
+    if (fs.existsSync(full)) {
+      try {
+        fs.unlinkSync(full);
+      } catch (e) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 // Function to start client session with automatic recovery from zombie browser locks
 async function startClientSession(forceFreshSession = false) {
   cleanupStaleSessionLocks();
   const targetVer = await resolveLatestWaVersion();
-  const customClientId = forceFreshSession ? 'session_' + Date.now() : undefined;
+  const isLocked = !forceFreshSession && isSessionDirectoryLocked();
+  const customClientId = (forceFreshSession || isLocked) ? 'session_' + Date.now() : undefined;
+  if (isLocked) {
+    console.warn('⚠️ Stale browser lock detected on standard session. Instantly launching with clean isolated session directory to bypass lock!');
+  }
   client = createClient(targetVer, customClientId);
   stepStatus = 'Starting Chromium browser & preparing WhatsApp Web...';
 
