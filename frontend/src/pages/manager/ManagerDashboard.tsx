@@ -32,6 +32,7 @@ import {
   Users,
   BarChart2,
   Zap,
+  Calculator,
 } from 'lucide-react';
 
 export const ManagerDashboard: React.FC = () => {
@@ -419,6 +420,271 @@ export const ManagerDashboard: React.FC = () => {
         </div>
       ) : (
         <>
+          {/* ═══════════════════════════════════════════════════════════════════════
+              NET CALCULATION & CUMULATIVE BALANCE BOX
+              Formula: (Period Collection − Total Expenses) = Today's Net  →  + Last Total Net = Grand Total
+          ═══════════════════════════════════════════════════════════════════════ */}
+          {data && (
+            <div
+              className="card"
+              style={{
+                padding: '1.25rem 1.35rem',
+                marginBottom: '1.5rem',
+                background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
+                border: '1.5px solid #cbd5e1',
+                borderRadius: '12px',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -2px rgba(0, 0, 0, 0.04)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid #e2e8f0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <div style={{ width: 34, height: 34, borderRadius: '8px', background: '#ecfdf5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Calculator size={18} />
+                  </div>
+                  <div>
+                    <h4 style={{ fontSize: '1.05rem', fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-0.01em' }}>
+                      Net Collection & Cumulative Balance Flow
+                    </h4>
+                    <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>
+                      Formula: (Period Collection − Total Expenses) = Today Net Amount + Last Total Net = Grand Total
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                      padding: '0.2rem 0.65rem',
+                      borderRadius: '6px',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      background: '#eff6ff',
+                      color: '#1d4ed8',
+                      border: '1px solid #bfdbfe',
+                    }}
+                  >
+                    Active Date: {todayStr}
+                  </span>
+                </div>
+              </div>
+
+              {/* 5-Step Calculation Grid */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '0.85rem',
+                  alignItems: 'stretch',
+                }}
+              >
+                {/* 1. Period Collection */}
+                <div
+                  style={{
+                    background: '#ffffff',
+                    border: '1.5px solid #10b981',
+                    borderRadius: '10px',
+                    padding: '0.95rem 1rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                  }}
+                >
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#047857', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        1. Period Collection
+                      </span>
+                      <span style={{ fontSize: '0.68rem', fontWeight: 700, background: '#ecfdf5', color: '#059669', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
+                        Inflow
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#065f46', lineHeight: 1.15 }}>
+                      {formatCurrency(data.total_collected || '0.00')}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', fontSize: '0.72rem', marginTop: '0.65rem', paddingTop: '0.45rem', borderTop: '1px dashed #d1fae5' }}>
+                    <span style={{ color: '#059669', fontWeight: 700 }}>💵 Cash: {formatCurrency(data.cash_collected || '0.00')}</span>
+                    <span style={{ color: '#2563eb', fontWeight: 700 }}>📱 UPI: {formatCurrency(data.upi_collected || '0.00')}</span>
+                  </div>
+                </div>
+
+                {/* 2. Total Expenses */}
+                <div
+                  style={{
+                    background: '#ffffff',
+                    border: '1.5px solid #ef4444',
+                    borderRadius: '10px',
+                    padding: '0.95rem 1rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                  }}
+                >
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#b91c1c', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        2. Total Expenses
+                      </span>
+                      <span style={{ fontSize: '0.68rem', fontWeight: 700, background: '#fef2f2', color: '#dc2626', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
+                        − Deduct
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#b91c1c', lineHeight: 1.15 }}>
+                      {formatCurrency(data.today_expenses || '0.00')}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', fontSize: '0.72rem', marginTop: '0.65rem', paddingTop: '0.45rem', borderTop: '1px dashed #fee2e2' }}>
+                    <span style={{ color: '#b91c1c', fontWeight: 700 }}>💵 Cash: {formatCurrency(data.today_cash_expenses || '0.00')}</span>
+                    <span style={{ color: 'var(--primary)', fontWeight: 700 }}>📱 GPay: {formatCurrency(data.today_upi_expenses || '0.00')}</span>
+                  </div>
+                </div>
+
+                {/* 3. Today's Net Amount */}
+                <div
+                  style={{
+                    background: '#ffffff',
+                    border: '1.5px solid #f59e0b',
+                    borderRadius: '10px',
+                    padding: '0.95rem 1rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                  }}
+                >
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#b45309', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        3. Today's Net Amount
+                      </span>
+                      <span style={{ fontSize: '0.68rem', fontWeight: 700, background: '#fffbeb', color: '#b45309', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
+                        = Period Net
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#92400e', lineHeight: 1.15 }}>
+                      {formatCurrency(data.net_collection || '0.00')}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: '#78350f', fontWeight: 600, marginTop: '0.65rem', paddingTop: '0.45rem', borderTop: '1px dashed #fef3c7' }}>
+                    Collection − Total Expenses
+                  </div>
+                </div>
+
+                {/* 4. Last Total Net Collection */}
+                <div
+                  style={{
+                    background: '#ffffff',
+                    border: '1.5px solid #3b82f6',
+                    borderRadius: '10px',
+                    padding: '0.95rem 1rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                  }}
+                >
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#1d4ed8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        4. Last Total Net
+                      </span>
+                      <span style={{ fontSize: '0.68rem', fontWeight: 700, background: '#eff6ff', color: '#2563eb', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
+                        + Previous
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#1e40af', lineHeight: 1.15 }}>
+                      {formatCurrency(data.last_day_net_collection || '0.00')}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: '#1e3a8a', fontWeight: 600, marginTop: '0.65rem', paddingTop: '0.45rem', borderTop: '1px dashed #dbeafe' }}>
+                    Previous days total net balance
+                  </div>
+                </div>
+
+                {/* 5. Grand Total Net Collection */}
+                <div
+                  style={{
+                    background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+                    border: '1.5px solid #0f172a',
+                    borderRadius: '10px',
+                    padding: '0.95rem 1rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    color: '#ffffff',
+                    boxShadow: '0 4px 6px -1px rgba(15, 23, 42, 0.2)',
+                  }}
+                >
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        5. Grand Total Net
+                      </span>
+                      <span style={{ fontSize: '0.68rem', fontWeight: 700, background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '0.1rem 0.4rem', borderRadius: '4px', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
+                        = Cumulative
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '1.55rem', fontWeight: 900, color: '#ffffff', lineHeight: 1.15 }}>
+                      {formatCurrency(
+                        data.total_net_collection ??
+                        (parseFloat(data.last_day_net_collection || '0') + parseFloat(data.net_collection || '0')).toFixed(2)
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600, marginTop: '0.65rem', paddingTop: '0.45rem', borderTop: '1px dashed rgba(255,255,255,0.15)' }}>
+                    Today's Net + Last Total Net
+                  </div>
+                </div>
+              </div>
+
+              {/* Visual Formula Strip */}
+              <div
+                style={{
+                  marginTop: '0.95rem',
+                  padding: '0.65rem 0.95rem',
+                  background: '#f1f5f9',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexWrap: 'wrap',
+                  gap: '0.45rem',
+                  fontSize: '0.76rem',
+                  fontWeight: 700,
+                  color: '#334155',
+                }}
+              >
+                <span style={{ color: '#047857', background: '#ecfdf5', padding: '0.15rem 0.45rem', borderRadius: '4px' }}>
+                  {formatCurrency(data.total_collected || '0.00')} (Collection)
+                </span>
+                <span style={{ color: '#dc2626', fontWeight: 900 }}>−</span>
+                <span style={{ color: '#b91c1c', background: '#fef2f2', padding: '0.15rem 0.45rem', borderRadius: '4px' }}>
+                  {formatCurrency(data.today_expenses || '0.00')} (Expenses)
+                </span>
+                <span style={{ color: '#64748b', fontWeight: 900 }}>=</span>
+                <span style={{ color: '#b45309', background: '#fffbeb', padding: '0.15rem 0.45rem', borderRadius: '4px' }}>
+                  {formatCurrency(data.net_collection || '0.00')} (Today Net)
+                </span>
+                <span style={{ color: '#2563eb', fontWeight: 900 }}>+</span>
+                <span style={{ color: '#1d4ed8', background: '#eff6ff', padding: '0.15rem 0.45rem', borderRadius: '4px' }}>
+                  {formatCurrency(data.last_day_net_collection || '0.00')} (Last Total Net)
+                </span>
+                <span style={{ color: '#0f172a', fontWeight: 900 }}>=</span>
+                <span style={{ color: '#0f172a', background: '#e2e8f0', padding: '0.15rem 0.55rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}>
+                  {formatCurrency(
+                    data.total_net_collection ??
+                    (parseFloat(data.last_day_net_collection || '0') + parseFloat(data.net_collection || '0')).toFixed(2)
+                  )} (Grand Total Net Collection)
+                </span>
+              </div>
+            </div>
+          )}
+
           <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <BarChart2 size={12} />
             Live Operational KPIs
