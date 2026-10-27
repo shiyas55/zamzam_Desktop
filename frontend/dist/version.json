@@ -1,7 +1,7 @@
 {
-  "version": "3.4.0",
-  "buildTimestamp": "2026-10-26T15:35:00.000Z",
-  "lastWebsiteUpdate": "October 26, 2026, 03:35 PM IST",
+  "version": "3.4.1",
+  "buildTimestamp": "2026-10-27T11:27:00.000Z",
+  "lastWebsiteUpdate": "October 27, 2026, 04:57 PM IST",
   "environment": "production",
-  "releaseNotes": "Wholesale sheet product box size toggle, red & white theme, route abbreviation, staff wages auto-sync to expenses, and dashboard KPI card reordering."
+  "releaseNotes": "Update dashboard label names for Net Collection and Total Amount."
 }
