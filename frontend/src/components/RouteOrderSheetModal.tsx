@@ -124,10 +124,12 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
   const [rowDensity, setRowDensity] = useState<'compact' | 'standard' | 'spacious'>('standard');
   const [showSummaryTotals, setShowSummaryTotals] = useState<boolean>(true);
   const [extraBlankRowsCount, setExtraBlankRowsCount] = useState<number>(0);
+  const [lineThickness, setLineThickness] = useState<'THIN' | 'HAIRLINE' | 'STANDARD'>('THIN');
 
   // 7. Column Visibility Toggles ("only name add there coulem")
   const [showPhone, setShowPhone] = useState<boolean>(false);
   const [showPrevDue, setShowPrevDue] = useState<boolean>(true);
+  const [prevDueBlank, setPrevDueBlank] = useState<boolean>(false);
   const [showCash, setShowCash] = useState<boolean>(true);
   const [showGPay, setShowGPay] = useState<boolean>(true);
   const [showTotalBill, setShowTotalBill] = useState<boolean>(true);
@@ -563,22 +565,55 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                 color: #000000;
                 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
                 font-size: ${rowDensity === 'compact' ? '9px' : rowDensity === 'spacious' ? '12px' : '10.5px'};
-                line-height: 1.25;
+                line-height: 1.2;
                 width: 100%;
               }
               table {
                 width: 100%;
                 border-collapse: collapse;
+                table-layout: fixed;
               }
               th, td {
-                border: 1px solid #000000;
+                border: ${
+                  lineThickness === 'THIN'
+                    ? '0.5pt solid #555555'
+                    : lineThickness === 'HAIRLINE'
+                    ? '0.4pt solid #888888'
+                    : '1pt solid #000000'
+                } !important;
                 color: #000000;
+                height: ${rowDensity === 'compact' ? '20px' : rowDensity === 'spacious' ? '32px' : '25px'} !important;
+                max-height: ${rowDensity === 'compact' ? '20px' : rowDensity === 'spacious' ? '32px' : '25px'} !important;
+                padding: 0 4px !important;
+                box-sizing: border-box !important;
+                vertical-align: middle !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
               }
               th {
                 background-color: ${sheetTheme === 'BW' ? '#ffffff' : '#1e293b'};
                 color: ${sheetTheme === 'BW' ? '#000000' : '#ffffff'};
-                border-bottom: 2px solid #000000;
+                border-bottom: ${
+                  lineThickness === 'THIN'
+                    ? '1.5pt solid #222222'
+                    : lineThickness === 'HAIRLINE'
+                    ? '1pt solid #444444'
+                    : '2pt solid #000000'
+                } !important;
                 font-weight: 800;
+              }
+              tr {
+                height: ${rowDensity === 'compact' ? '20px' : rowDensity === 'spacious' ? '32px' : '25px'} !important;
+                max-height: ${rowDensity === 'compact' ? '20px' : rowDensity === 'spacious' ? '32px' : '25px'} !important;
+                box-sizing: border-box !important;
+              }
+              .shop-name-cell {
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                font-weight: 800 !important;
+                line-height: 1.2 !important;
               }
               .print-no-break {
                 page-break-inside: avoid;
@@ -1447,6 +1482,47 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                   <span>Previous Due</span>
                 </label>
 
+                {showPrevDue && (
+                  <div style={{ gridColumn: 'span 2', display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.2rem 0.45rem', backgroundColor: '#f8fafc', borderRadius: '4px', border: '1px solid #e2e8f0', marginTop: '0.05rem', marginBottom: '0.1rem' }}>
+                    <span style={{ fontSize: '0.67rem', fontWeight: 700, color: '#334155' }}>Prev Due Mode:</span>
+                    <div style={{ display: 'flex', gap: '3px' }}>
+                      <button
+                        type="button"
+                        onClick={() => setPrevDueBlank(false)}
+                        style={{
+                          padding: '0.12rem 0.35rem',
+                          fontSize: '0.66rem',
+                          fontWeight: !prevDueBlank ? 800 : 500,
+                          borderRadius: '3px',
+                          border: !prevDueBlank ? '1px solid #2563eb' : '1px solid #cbd5e1',
+                          backgroundColor: !prevDueBlank ? '#eff6ff' : '#ffffff',
+                          color: !prevDueBlank ? '#1d4ed8' : '#64748b',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        ₹ Show Dues
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPrevDueBlank(true)}
+                        style={{
+                          padding: '0.12rem 0.35rem',
+                          fontSize: '0.66rem',
+                          fontWeight: prevDueBlank ? 800 : 500,
+                          borderRadius: '3px',
+                          border: prevDueBlank ? '1.5px solid #d97706' : '1px solid #cbd5e1',
+                          backgroundColor: prevDueBlank ? '#fffbeb' : '#ffffff',
+                          color: prevDueBlank ? '#b45309' : '#64748b',
+                          cursor: 'pointer',
+                        }}
+                        title="Leave Prev Due column completely blank for handwriting"
+                      >
+                        ✍️ Blank Box
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.72rem', color: '#334155', cursor: 'pointer' }}>
                   <input type="checkbox" checked={showPhone} onChange={(e) => setShowPhone(e.target.checked)} style={{ accentColor: '#2563eb' }} />
                   <span>Owner / Phone</span>
@@ -1788,6 +1864,39 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                 </div>
               </div>
 
+              {/* Grid Lines Thickness ("low line thin") */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '0.7rem', color: '#475569', fontWeight: 600 }}>Grid Lines:</span>
+                <div style={{ display: 'flex', gap: '2px' }}>
+                  {(
+                    [
+                      { id: 'THIN', label: 'Thin (Fine)' },
+                      { id: 'HAIRLINE', label: 'Hairline' },
+                      { id: 'STANDARD', label: 'Standard' },
+                    ] as const
+                  ).map((l) => (
+                    <button
+                      key={l.id}
+                      type="button"
+                      onClick={() => setLineThickness(l.id)}
+                      style={{
+                        padding: '0.15rem 0.35rem',
+                        fontSize: '0.66rem',
+                        fontWeight: lineThickness === l.id ? 800 : 500,
+                        borderRadius: '3px',
+                        border: 'none',
+                        cursor: 'pointer',
+                        backgroundColor: lineThickness === l.id ? '#0f172a' : '#f1f5f9',
+                        color: lineThickness === l.id ? '#ffffff' : '#475569',
+                      }}
+                      title={l.id === 'THIN' ? 'Crisp thin lines (recommended)' : l.id === 'HAIRLINE' ? 'Ultra light hairline' : 'Dark thick borders'}
+                    >
+                      {l.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.7rem', color: '#334155', cursor: 'pointer' }}>
                 <input type="checkbox" checked={showSummaryTotals} onChange={(e) => setShowSummaryTotals(e.target.checked)} style={{ accentColor: '#2563eb' }} />
                 <span>Show Totals / Summary Row</span>
@@ -1962,216 +2071,565 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
               {/* If headerStyle === 'NONE', NOTHING IS RENDERED ABOVE THE TABLE! Pure Grid Sheet! */}
 
               {/* Main Data Table */}
-              <div style={{ flex: 1 }}>
-                <table
-                  style={{
-                    width: '100%',
-                    borderCollapse: 'collapse',
-                    fontSize: 'inherit',
-                  }}
-                >
-                  <thead>
-                    <tr
+              <div style={{ flex: 1, width: '100%' }}>
+                {/* Dynamic styling constants */}
+                {(() => {
+                  const rowHeight = rowDensity === 'compact' ? '20px' : rowDensity === 'spacious' ? '32px' : '25px';
+
+                  const cellBorder =
+                    lineThickness === 'THIN'
+                      ? '0.5px solid #555555'
+                      : lineThickness === 'HAIRLINE'
+                      ? '0.4px solid #888888'
+                      : sheetTheme === 'BW'
+                      ? '1px solid #000000'
+                      : '1px solid #334155';
+
+                  const headerBorder =
+                    lineThickness === 'THIN'
+                      ? '0.75px solid #333333'
+                      : lineThickness === 'HAIRLINE'
+                      ? '0.5px solid #555555'
+                      : sheetTheme === 'BW'
+                      ? '1.5px solid #000000'
+                      : '1px solid #0f172a';
+
+                  const headerBottom =
+                    lineThickness === 'THIN'
+                      ? '1.5px solid #111111'
+                      : lineThickness === 'HAIRLINE'
+                      ? '1px solid #333333'
+                      : sheetTheme === 'BW'
+                      ? '2.5px solid #000000'
+                      : '1.5px solid #0f172a';
+
+                  const totalsBorder =
+                    lineThickness === 'THIN'
+                      ? '1.5px solid #111111'
+                      : lineThickness === 'HAIRLINE'
+                      ? '1px solid #333333'
+                      : '2.5px solid #000000';
+
+                  return (
+                    <table
                       style={{
-                        backgroundColor: sheetTheme === 'BW' ? '#ffffff' : '#1e293b',
-                        color: sheetTheme === 'BW' ? '#000000' : '#ffffff',
-                        borderBottom: sheetTheme === 'BW' ? '2.5px solid #000000' : '1px solid #0f172a',
+                        width: '100%',
+                        borderCollapse: 'collapse',
+                        tableLayout: 'fixed',
+                        fontSize: 'inherit',
                       }}
                     >
-                      <th style={{ width: '28px', padding: '4px 2px', textAlign: 'center', border: sheetTheme === 'BW' ? '1.5px solid #000000' : '1px solid #0f172a', fontWeight: 900 }}>
-                        #
-                      </th>
-                      <th style={{ padding: '4px 6px', textAlign: 'left', border: sheetTheme === 'BW' ? '1.5px solid #000000' : '1px solid #0f172a', fontWeight: 900 }}>
-                        Shop Name
-                      </th>
-                      {showPhone && (
-                        <th style={{ width: '85px', padding: '4px', textAlign: 'left', border: sheetTheme === 'BW' ? '1.5px solid #000000' : '1px solid #0f172a', fontWeight: 800 }}>
-                          Phone
-                        </th>
-                      )}
-                      {showPrevDue && (
-                        <th style={{ width: '70px', padding: '4px', textAlign: 'right', border: sheetTheme === 'BW' ? '1.5px solid #000000' : '1px solid #0f172a', fontWeight: 800 }}>
-                          Prev Due
-                        </th>
-                      )}
-
-                      {/* Dynamic Product Columns */}
-                      {allDynamicProducts
-                        .filter((p) => selectedProductIds.has(p.id))
-                        .map((p) => (
-                          <th
-                            key={p.id}
-                            style={{
-                              width: selectedProductIds.size > 5 ? '48px' : '56px',
-                              padding: '4px 2px',
-                              textAlign: 'center',
-                              border: sheetTheme === 'BW' ? '1.5px solid #000000' : '1px solid #0f172a',
-                              fontWeight: 900,
-                            }}
-                          >
-                            {p.name}
-                          </th>
-                        ))}
-
-                      {showTotalBill && sheetMode === 'FILLED' && (
-                        <th style={{ width: '68px', padding: '4px', textAlign: 'right', border: sheetTheme === 'BW' ? '1.5px solid #000000' : '1px solid #0f172a', fontWeight: 800 }}>
-                          Total Bill
-                        </th>
-                      )}
-
-                      {showCash && (
-                        <th style={{ width: '64px', padding: '4px', textAlign: 'right', border: sheetTheme === 'BW' ? '1.5px solid #000000' : '1px solid #0f172a', fontWeight: 800 }}>
-                          Cash (₹)
-                        </th>
-                      )}
-
-                      {showGPay && (
-                        <th style={{ width: '64px', padding: '4px', textAlign: 'right', border: sheetTheme === 'BW' ? '1.5px solid #000000' : '1px solid #0f172a', fontWeight: 800 }}>
-                          GPay (₹)
-                        </th>
-                      )}
-
-                      {showBalance && (
-                        <th style={{ width: '72px', padding: '4px', textAlign: 'right', border: sheetTheme === 'BW' ? '1.5px solid #000000' : '1px solid #0f172a', fontWeight: 900 }}>
-                          Balance
-                        </th>
-                      )}
-
-                      {showSignatureCol && (
-                        <th style={{ width: '85px', padding: '4px', textAlign: 'center', border: sheetTheme === 'BW' ? '1.5px solid #000000' : '1px solid #0f172a', fontWeight: 800 }}>
-                          Signature
-                        </th>
-                      )}
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {printableShops.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={12}
+                      <thead>
+                        <tr
                           style={{
-                            padding: '2rem',
-                            textAlign: 'center',
-                            color: '#000000',
-                            border: '1px solid #000000',
+                            backgroundColor: sheetTheme === 'BW' ? '#ffffff' : '#1e293b',
+                            color: sheetTheme === 'BW' ? '#000000' : '#ffffff',
+                            borderBottom: headerBottom,
+                            height: rowHeight,
                           }}
                         >
-                          No shops selected for printing. Check one or more shops on the left panel.
-                        </td>
-                      </tr>
-                    ) : (
-                      printableShops.map((customer, idx) => {
-                        const rowData = rowsByCustomerId.get(String(customer.id));
-                        const prevDueVal = parseFloat(rowData?.customerBalance || String(customer.current_balance || '0')) || 0;
-                        const cashVal = parseFloat(rowData?.cashAmount || '0') || 0;
-                        const gpayVal = parseFloat(rowData?.gpayAmount || '0') || 0;
-                        const discVal = parseFloat(rowData?.discountAmount || '0') || 0;
+                          <th style={{ width: '26px', padding: '0 2px', textAlign: 'center', border: headerBorder, fontWeight: 900, height: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }}>
+                            #
+                          </th>
+                          <th style={{ width: '200px', padding: '0 6px', textAlign: 'left', border: headerBorder, fontWeight: 900, height: rowHeight, verticalAlign: 'middle', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', boxSizing: 'border-box' }}>
+                            Shop Name
+                          </th>
+                          {showPhone && (
+                            <th style={{ width: '80px', padding: '0 4px', textAlign: 'left', border: headerBorder, fontWeight: 800, height: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }}>
+                              Phone
+                            </th>
+                          )}
+                          {showPrevDue && (
+                            <th style={{ width: '65px', padding: '0 4px', textAlign: 'right', border: headerBorder, fontWeight: 800, height: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }}>
+                              Prev Due
+                            </th>
+                          )}
 
-                        let rowBill = 0;
-                        const productQuantities: Record<string, number> = {};
-                        allDynamicProducts.forEach((p) => {
-                          if (p.isCustom) return;
-                          let qStr = rowData?.productQuantities?.[p.id];
-                          if (qStr === undefined) {
-                            const pNameLower = p.name.toLowerCase();
-                            const pCodeLower = (p.code || '').toLowerCase();
-                            if (pNameLower.includes('kubbus') || pCodeLower.includes('kub') || pCodeLower === 'kbs') {
-                              qStr = rowData?.kubbusQty;
-                            } else if (pNameLower.includes('romali') || pCodeLower.includes('rom') || pCodeLower === 'pri') {
-                              qStr = rowData?.romaliQty;
-                            }
-                          }
-                          const qty = parseInt(qStr || '0', 10) || 0;
-                          productQuantities[p.id] = qty;
-                          if (qty > 0) {
-                            rowBill += qty * (p.unitPrice || 0);
-                          }
-                        });
+                          {/* Dynamic Product Columns */}
+                          {allDynamicProducts
+                            .filter((p) => selectedProductIds.has(p.id))
+                            .map((p) => (
+                              <th
+                                key={p.id}
+                                style={{
+                                  width: selectedProductIds.size > 5 ? '48px' : '56px',
+                                  padding: '0 2px',
+                                  textAlign: 'center',
+                                  border: headerBorder,
+                                  fontWeight: 900,
+                                  height: rowHeight,
+                                  verticalAlign: 'middle',
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  boxSizing: 'border-box',
+                                }}
+                              >
+                                {p.name}
+                              </th>
+                            ))}
 
-                        const netBill = Math.max(0, rowBill - discVal);
-                        const rowBalance = prevDueVal + (sheetMode === 'FILLED' ? netBill - (cashVal + gpayVal) : 0);
+                          {showTotalBill && sheetMode === 'FILLED' && (
+                            <th style={{ width: '65px', padding: '0 4px', textAlign: 'right', border: headerBorder, fontWeight: 800, height: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }}>
+                              Total Bill
+                            </th>
+                          )}
 
-                        const rowHeight = rowDensity === 'compact' ? '20px' : rowDensity === 'spacious' ? '32px' : '24px';
-                        const cellBorder = sheetTheme === 'BW' ? '1px solid #000000' : '1px solid #334155';
+                          {showCash && (
+                            <th style={{ width: '56px', padding: '0 4px', textAlign: 'right', border: headerBorder, fontWeight: 800, height: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }}>
+                              Cash (₹)
+                            </th>
+                          )}
 
-                        return (
+                          {showGPay && (
+                            <th style={{ width: '56px', padding: '0 4px', textAlign: 'right', border: headerBorder, fontWeight: 800, height: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }}>
+                              GPay (₹)
+                            </th>
+                          )}
+
+                          {showBalance && (
+                            <th style={{ width: '68px', padding: '0 4px', textAlign: 'right', border: headerBorder, fontWeight: 900, height: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }}>
+                              Balance
+                            </th>
+                          )}
+
+                          {showSignatureCol && (
+                            <th style={{ width: '70px', padding: '0 4px', textAlign: 'center', border: headerBorder, fontWeight: 800, height: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }}>
+                              Signature
+                            </th>
+                          )}
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        {printableShops.length === 0 ? (
+                          <tr>
+                            <td
+                              colSpan={12}
+                              style={{
+                                padding: '2rem',
+                                textAlign: 'center',
+                                color: '#000000',
+                                border: cellBorder,
+                              }}
+                            >
+                              No shops selected for printing. Check one or more shops on the left panel.
+                            </td>
+                          </tr>
+                        ) : (
+                          printableShops.map((customer, idx) => {
+                            const rowData = rowsByCustomerId.get(String(customer.id));
+                            const prevDueVal = parseFloat(rowData?.customerBalance || String(customer.current_balance || '0')) || 0;
+                            const cashVal = parseFloat(rowData?.cashAmount || '0') || 0;
+                            const gpayVal = parseFloat(rowData?.gpayAmount || '0') || 0;
+                            const discVal = parseFloat(rowData?.discountAmount || '0') || 0;
+
+                            let rowBill = 0;
+                            const productQuantities: Record<string, number> = {};
+                            allDynamicProducts.forEach((p) => {
+                              if (p.isCustom) return;
+                              let qStr = rowData?.productQuantities?.[p.id];
+                              if (qStr === undefined) {
+                                const pNameLower = p.name.toLowerCase();
+                                const pCodeLower = (p.code || '').toLowerCase();
+                                if (pNameLower.includes('kubbus') || pCodeLower.includes('kub') || pCodeLower === 'kbs') {
+                                  qStr = rowData?.kubbusQty;
+                                } else if (pNameLower.includes('romali') || pCodeLower.includes('rom') || pCodeLower === 'pri') {
+                                  qStr = rowData?.romaliQty;
+                                }
+                              }
+                              const qty = parseInt(qStr || '0', 10) || 0;
+                              productQuantities[p.id] = qty;
+                              if (qty > 0) {
+                                rowBill += qty * (p.unitPrice || 0);
+                              }
+                            });
+
+                            const netBill = Math.max(0, rowBill - discVal);
+                            const rowBalance = prevDueVal + (sheetMode === 'FILLED' ? netBill - (cashVal + gpayVal) : 0);
+
+                            return (
+                              <tr
+                                key={customer.id}
+                                style={{
+                                  height: rowHeight,
+                                  maxHeight: rowHeight,
+                                  backgroundColor: '#ffffff',
+                                  color: '#000000',
+                                  boxSizing: 'border-box',
+                                }}
+                              >
+                                <td
+                                  style={{
+                                    textAlign: 'center',
+                                    padding: '0 2px',
+                                    border: cellBorder,
+                                    fontWeight: 700,
+                                    height: rowHeight,
+                                    maxHeight: rowHeight,
+                                    verticalAlign: 'middle',
+                                    boxSizing: 'border-box',
+                                  }}
+                                >
+                                  {idx + 1}
+                                </td>
+
+                                {/* Shop Name - Strictly single line, uniform height, no wrapping */}
+                                <td
+                                  style={{
+                                    width: '200px',
+                                    padding: '0 6px',
+                                    border: cellBorder,
+                                    height: rowHeight,
+                                    maxHeight: rowHeight,
+                                    verticalAlign: 'middle',
+                                    overflow: 'hidden',
+                                    boxSizing: 'border-box',
+                                  }}
+                                >
+                                  <div
+                                    className="shop-name-cell"
+                                    style={{
+                                      fontWeight: 800,
+                                      color: '#000000',
+                                      whiteSpace: 'nowrap',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      lineHeight: '1.2',
+                                    }}
+                                    title={customer.name}
+                                  >
+                                    {customer.name}
+                                  </div>
+                                </td>
+
+                                {showPhone && (
+                                  <td
+                                    style={{
+                                      padding: '0 4px',
+                                      border: cellBorder,
+                                      color: '#000000',
+                                      fontSize: '9px',
+                                      height: rowHeight,
+                                      maxHeight: rowHeight,
+                                      verticalAlign: 'middle',
+                                      whiteSpace: 'nowrap',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      boxSizing: 'border-box',
+                                    }}
+                                  >
+                                    {customer.phone || customer.owner_name || '-'}
+                                  </td>
+                                )}
+
+                                {showPrevDue && (
+                                  <td
+                                    style={{
+                                      textAlign: 'right',
+                                      padding: '0 4px',
+                                      border: cellBorder,
+                                      fontWeight: 700,
+                                      color: '#000000',
+                                      height: rowHeight,
+                                      maxHeight: rowHeight,
+                                      verticalAlign: 'middle',
+                                      boxSizing: 'border-box',
+                                    }}
+                                  >
+                                    {prevDueBlank ? (
+                                      <div style={{ height: '100%', width: '100%', minHeight: '14px' }} />
+                                    ) : prevDueVal > 0 ? (
+                                      `₹${prevDueVal.toFixed(0)}`
+                                    ) : (
+                                      '-'
+                                    )}
+                                  </td>
+                                )}
+
+                                {/* Product cells */}
+                                {allDynamicProducts
+                                  .filter((p) => selectedProductIds.has(p.id))
+                                  .map((p) => {
+                                    const qty = productQuantities[p.id] || 0;
+                                    return (
+                                      <td
+                                        key={p.id}
+                                        style={{
+                                          textAlign: 'center',
+                                          padding: '0 2px',
+                                          border: cellBorder,
+                                          fontWeight: 800,
+                                          color: '#000000',
+                                          height: rowHeight,
+                                          maxHeight: rowHeight,
+                                          verticalAlign: 'middle',
+                                          boxSizing: 'border-box',
+                                        }}
+                                      >
+                                        {sheetMode === 'FILLED' && !p.isCustom ? (
+                                          qty > 0 ? qty : '-'
+                                        ) : (
+                                          <div style={{ height: '100%', width: '100%', minHeight: '14px' }} />
+                                        )}
+                                      </td>
+                                    );
+                                  })}
+
+                                {showTotalBill && sheetMode === 'FILLED' && (
+                                  <td
+                                    style={{
+                                      textAlign: 'right',
+                                      padding: '0 4px',
+                                      border: cellBorder,
+                                      fontWeight: 800,
+                                      height: rowHeight,
+                                      maxHeight: rowHeight,
+                                      verticalAlign: 'middle',
+                                      boxSizing: 'border-box',
+                                    }}
+                                  >
+                                    {netBill > 0 ? `₹${netBill.toFixed(0)}` : '-'}
+                                  </td>
+                                )}
+
+                                {showCash && (
+                                  <td
+                                    style={{
+                                      textAlign: 'right',
+                                      padding: '0 4px',
+                                      border: cellBorder,
+                                      fontWeight: 700,
+                                      height: rowHeight,
+                                      maxHeight: rowHeight,
+                                      verticalAlign: 'middle',
+                                      boxSizing: 'border-box',
+                                    }}
+                                  >
+                                    {sheetMode === 'FILLED' ? (cashVal > 0 ? `₹${cashVal.toFixed(0)}` : '-') : ''}
+                                  </td>
+                                )}
+
+                                {showGPay && (
+                                  <td
+                                    style={{
+                                      textAlign: 'right',
+                                      padding: '0 4px',
+                                      border: cellBorder,
+                                      fontWeight: 700,
+                                      height: rowHeight,
+                                      maxHeight: rowHeight,
+                                      verticalAlign: 'middle',
+                                      boxSizing: 'border-box',
+                                    }}
+                                  >
+                                    {sheetMode === 'FILLED' ? (gpayVal > 0 ? `₹${gpayVal.toFixed(0)}` : '-') : ''}
+                                  </td>
+                                )}
+
+                                {showBalance && (
+                                  <td
+                                    style={{
+                                      textAlign: 'right',
+                                      padding: '0 4px',
+                                      border: cellBorder,
+                                      fontWeight: 800,
+                                      color: '#000000',
+                                      height: rowHeight,
+                                      maxHeight: rowHeight,
+                                      verticalAlign: 'middle',
+                                      boxSizing: 'border-box',
+                                    }}
+                                  >
+                                    {sheetMode === 'FILLED' ? (rowBalance > 0 ? `₹${rowBalance.toFixed(0)}` : '0') : ''}
+                                  </td>
+                                )}
+
+                                {showSignatureCol && (
+                                  <td
+                                    style={{
+                                      border: cellBorder,
+                                      height: rowHeight,
+                                      maxHeight: rowHeight,
+                                      verticalAlign: 'middle',
+                                      boxSizing: 'border-box',
+                                    }}
+                                  >
+                                    <div style={{ height: '100%', width: '100%', minHeight: '14px' }} />
+                                  </td>
+                                )}
+                              </tr>
+                            );
+                          })
+                        )}
+
+                        {/* Extra Blank Rows */}
+                        {extraBlankRowsCount > 0 &&
+                          Array.from({ length: extraBlankRowsCount }).map((_, extraIdx) => {
+                            const rowNum = printableShops.length + extraIdx + 1;
+
+                            return (
+                              <tr
+                                key={`extra-${extraIdx}`}
+                                style={{
+                                  height: rowHeight,
+                                  maxHeight: rowHeight,
+                                  backgroundColor: '#ffffff',
+                                  boxSizing: 'border-box',
+                                }}
+                              >
+                                <td
+                                  style={{
+                                    textAlign: 'center',
+                                    padding: '0 2px',
+                                    border: cellBorder,
+                                    fontWeight: 600,
+                                    color: '#666666',
+                                    height: rowHeight,
+                                    maxHeight: rowHeight,
+                                    verticalAlign: 'middle',
+                                    boxSizing: 'border-box',
+                                  }}
+                                >
+                                  {rowNum}
+                                </td>
+                                <td
+                                  style={{
+                                    padding: '0 6px',
+                                    border: cellBorder,
+                                    height: rowHeight,
+                                    maxHeight: rowHeight,
+                                    verticalAlign: 'middle',
+                                    boxSizing: 'border-box',
+                                  }}
+                                >
+                                  <div style={{ height: '1px', borderBottom: '1px dashed #999999', width: '80%' }} />
+                                </td>
+                                {showPhone && <td style={{ border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />}
+                                {showPrevDue && <td style={{ border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />}
+                                {allDynamicProducts
+                                  .filter((p) => selectedProductIds.has(p.id))
+                                  .map((p) => (
+                                    <td key={p.id} style={{ border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />
+                                  ))}
+                                {showTotalBill && sheetMode === 'FILLED' && <td style={{ border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />}
+                                {showCash && <td style={{ border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />}
+                                {showGPay && <td style={{ border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />}
+                                {showBalance && <td style={{ border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />}
+                                {showSignatureCol && <td style={{ border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />}
+                              </tr>
+                            );
+                          })}
+                      </tbody>
+
+                      {/* Totals Summary Row */}
+                      {showSummaryTotals && printableShops.length > 0 && (
+                        <tfoot>
                           <tr
-                            key={customer.id}
                             style={{
-                              height: rowHeight,
                               backgroundColor: '#ffffff',
+                              fontWeight: 900,
+                              borderTop: totalsBorder,
+                              borderBottom: totalsBorder,
                               color: '#000000',
+                              height: rowHeight,
+                              maxHeight: rowHeight,
+                              boxSizing: 'border-box',
                             }}
                           >
-                            <td style={{ textAlign: 'center', padding: '2px', border: cellBorder, fontWeight: 700 }}>
-                              {idx + 1}
+                            <td
+                              colSpan={2 + (showPhone ? 1 : 0)}
+                              style={{
+                                padding: '0 6px',
+                                border: totalsBorder,
+                                textAlign: 'right',
+                                height: rowHeight,
+                                verticalAlign: 'middle',
+                                boxSizing: 'border-box',
+                              }}
+                            >
+                              TOTALS:
                             </td>
-
-                            {/* Shop Name ("only name add there coulem") */}
-                            <td style={{ padding: '2px 6px', border: cellBorder }}>
-                              <div style={{ fontWeight: 800, color: '#000000' }}>
-                                {customer.name}
-                              </div>
-                              {(isAllRoutesSelected || selectedRouteIds.size > 1) && customer.route_details?.name && (
-                                <div style={{ fontSize: '8px', color: '#444444' }}>
-                                  ({customer.route_details.name})
-                                </div>
-                              )}
-                            </td>
-
-                            {showPhone && (
-                              <td style={{ padding: '2px 4px', border: cellBorder, color: '#000000', fontSize: '9px' }}>
-                                {customer.phone || customer.owner_name || '-'}
-                              </td>
-                            )}
 
                             {showPrevDue && (
-                              <td style={{ textAlign: 'right', padding: '2px 4px', border: cellBorder, fontWeight: 700, color: '#000000' }}>
-                                {prevDueVal > 0 ? `₹${prevDueVal.toFixed(0)}` : '0'}
+                              <td
+                                style={{
+                                  textAlign: 'right',
+                                  padding: '0 4px',
+                                  border: totalsBorder,
+                                  height: rowHeight,
+                                  verticalAlign: 'middle',
+                                  boxSizing: 'border-box',
+                                }}
+                              >
+                                {prevDueBlank ? '-' : `₹${calculatedTotals.totalPrevDue.toFixed(0)}`}
                               </td>
                             )}
 
-                            {/* Product cells */}
+                            {/* Product sums */}
                             {allDynamicProducts
                               .filter((p) => selectedProductIds.has(p.id))
                               .map((p) => {
-                                const qty = productQuantities[p.id] || 0;
+                                const sumQty = calculatedTotals.productSums[p.id] || 0;
                                 return (
                                   <td
                                     key={p.id}
                                     style={{
                                       textAlign: 'center',
-                                      padding: '2px',
-                                      border: cellBorder,
-                                      fontWeight: 800,
-                                      color: '#000000',
+                                      padding: '0 2px',
+                                      border: totalsBorder,
+                                      height: rowHeight,
+                                      verticalAlign: 'middle',
+                                      boxSizing: 'border-box',
                                     }}
                                   >
-                                    {sheetMode === 'FILLED' && !p.isCustom ? (
-                                      qty > 0 ? qty : '-'
-                                    ) : (
-                                      <div style={{ height: '100%', width: '100%', minHeight: '16px' }} />
-                                    )}
+                                    {sheetMode === 'FILLED' && !p.isCustom ? (sumQty > 0 ? sumQty : '') : ''}
                                   </td>
                                 );
                               })}
 
                             {showTotalBill && sheetMode === 'FILLED' && (
-                              <td style={{ textAlign: 'right', padding: '2px 4px', border: cellBorder, fontWeight: 800 }}>
-                                {netBill > 0 ? `₹${netBill.toFixed(0)}` : '-'}
+                              <td
+                                style={{
+                                  textAlign: 'right',
+                                  padding: '0 4px',
+                                  border: totalsBorder,
+                                  height: rowHeight,
+                                  verticalAlign: 'middle',
+                                  boxSizing: 'border-box',
+                                }}
+                              >
+                                ₹{calculatedTotals.totalNetBill.toFixed(0)}
                               </td>
                             )}
 
                             {showCash && (
-                              <td style={{ textAlign: 'right', padding: '2px 4px', border: cellBorder, fontWeight: 700 }}>
-                                {sheetMode === 'FILLED' ? (cashVal > 0 ? `₹${cashVal.toFixed(0)}` : '-') : ''}
+                              <td
+                                style={{
+                                  textAlign: 'right',
+                                  padding: '0 4px',
+                                  border: totalsBorder,
+                                  height: rowHeight,
+                                  verticalAlign: 'middle',
+                                  boxSizing: 'border-box',
+                                }}
+                              >
+                                {sheetMode === 'FILLED' ? `₹${calculatedTotals.totalCash.toFixed(0)}` : ''}
                               </td>
                             )}
 
                             {showGPay && (
-                              <td style={{ textAlign: 'right', padding: '2px 4px', border: cellBorder, fontWeight: 700 }}>
-                                {sheetMode === 'FILLED' ? (gpayVal > 0 ? `₹${gpayVal.toFixed(0)}` : '-') : ''}
+                              <td
+                                style={{
+                                  textAlign: 'right',
+                                  padding: '0 4px',
+                                  border: totalsBorder,
+                                  height: rowHeight,
+                                  verticalAlign: 'middle',
+                                  boxSizing: 'border-box',
+                                }}
+                              >
+                                {sheetMode === 'FILLED' ? `₹${calculatedTotals.totalGPay.toFixed(0)}` : ''}
                               </td>
                             )}
 
@@ -2179,121 +2637,33 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                               <td
                                 style={{
                                   textAlign: 'right',
-                                  padding: '2px 4px',
-                                  border: cellBorder,
-                                  fontWeight: 800,
-                                  color: '#000000',
+                                  padding: '0 4px',
+                                  border: totalsBorder,
+                                  height: rowHeight,
+                                  verticalAlign: 'middle',
+                                  boxSizing: 'border-box',
                                 }}
                               >
-                                {sheetMode === 'FILLED' ? (rowBalance > 0 ? `₹${rowBalance.toFixed(0)}` : '0') : ''}
+                                {sheetMode === 'FILLED' ? `₹${calculatedTotals.totalBalance.toFixed(0)}` : ''}
                               </td>
                             )}
 
                             {showSignatureCol && (
-                              <td style={{ border: cellBorder }}>
-                                <div style={{ height: '100%', width: '100%', minHeight: '16px' }} />
-                              </td>
+                              <td
+                                style={{
+                                  border: totalsBorder,
+                                  height: rowHeight,
+                                  verticalAlign: 'middle',
+                                  boxSizing: 'border-box',
+                                }}
+                              />
                             )}
                           </tr>
-                        );
-                      })
-                    )}
-
-                    {/* Extra Blank Rows */}
-                    {extraBlankRowsCount > 0 &&
-                      Array.from({ length: extraBlankRowsCount }).map((_, extraIdx) => {
-                        const rowNum = printableShops.length + extraIdx + 1;
-                        const rowHeight = rowDensity === 'compact' ? '20px' : rowDensity === 'spacious' ? '32px' : '24px';
-                        const cellBorder = sheetTheme === 'BW' ? '1px solid #000000' : '1px solid #334155';
-
-                        return (
-                          <tr key={`extra-${extraIdx}`} style={{ height: rowHeight, backgroundColor: '#ffffff' }}>
-                            <td style={{ textAlign: 'center', padding: '2px', border: cellBorder, fontWeight: 600, color: '#666666' }}>
-                              {rowNum}
-                            </td>
-                            <td style={{ padding: '2px 6px', border: cellBorder }}>
-                              <div style={{ height: '1px', borderBottom: '1px dashed #999999', width: '80%', marginTop: '12px' }} />
-                            </td>
-                            {showPhone && <td style={{ border: cellBorder }} />}
-                            {showPrevDue && <td style={{ border: cellBorder }} />}
-                            {allDynamicProducts
-                              .filter((p) => selectedProductIds.has(p.id))
-                              .map((p) => (
-                                <td key={p.id} style={{ border: cellBorder }} />
-                              ))}
-                            {showTotalBill && sheetMode === 'FILLED' && <td style={{ border: cellBorder }} />}
-                            {showCash && <td style={{ border: cellBorder }} />}
-                            {showGPay && <td style={{ border: cellBorder }} />}
-                            {showBalance && <td style={{ border: cellBorder }} />}
-                            {showSignatureCol && <td style={{ border: cellBorder }} />}
-                          </tr>
-                        );
-                      })}
-                  </tbody>
-
-                  {/* Totals Summary Row */}
-                  {showSummaryTotals && printableShops.length > 0 && (
-                    <tfoot>
-                      <tr
-                        style={{
-                          backgroundColor: '#ffffff',
-                          fontWeight: 900,
-                          borderTop: '2.5px solid #000000',
-                          borderBottom: '2.5px solid #000000',
-                          color: '#000000',
-                        }}
-                      >
-                        <td colSpan={2 + (showPhone ? 1 : 0)} style={{ padding: '4px 6px', border: sheetTheme === 'BW' ? '1.5px solid #000000' : '1px solid #334155', textAlign: 'right' }}>
-                          TOTALS:
-                        </td>
-
-                        {showPrevDue && (
-                          <td style={{ textAlign: 'right', padding: '4px', border: sheetTheme === 'BW' ? '1.5px solid #000000' : '1px solid #334155' }}>
-                            ₹{calculatedTotals.totalPrevDue.toFixed(0)}
-                          </td>
-                        )}
-
-                        {/* Product sums */}
-                        {allDynamicProducts
-                          .filter((p) => selectedProductIds.has(p.id))
-                          .map((p) => {
-                            const sumQty = calculatedTotals.productSums[p.id] || 0;
-                            return (
-                              <td key={p.id} style={{ textAlign: 'center', padding: '4px 2px', border: sheetTheme === 'BW' ? '1.5px solid #000000' : '1px solid #334155' }}>
-                                {sheetMode === 'FILLED' && !p.isCustom ? (sumQty > 0 ? sumQty : '') : ''}
-                              </td>
-                            );
-                          })}
-
-                        {showTotalBill && sheetMode === 'FILLED' && (
-                          <td style={{ textAlign: 'right', padding: '4px', border: sheetTheme === 'BW' ? '1.5px solid #000000' : '1px solid #334155' }}>
-                            ₹{calculatedTotals.totalNetBill.toFixed(0)}
-                          </td>
-                        )}
-
-                        {showCash && (
-                          <td style={{ textAlign: 'right', padding: '4px', border: sheetTheme === 'BW' ? '1.5px solid #000000' : '1px solid #334155' }}>
-                            {sheetMode === 'FILLED' ? `₹${calculatedTotals.totalCash.toFixed(0)}` : ''}
-                          </td>
-                        )}
-
-                        {showGPay && (
-                          <td style={{ textAlign: 'right', padding: '4px', border: sheetTheme === 'BW' ? '1.5px solid #000000' : '1px solid #334155' }}>
-                            {sheetMode === 'FILLED' ? `₹${calculatedTotals.totalGPay.toFixed(0)}` : ''}
-                          </td>
-                        )}
-
-                        {showBalance && (
-                          <td style={{ textAlign: 'right', padding: '4px', border: sheetTheme === 'BW' ? '1.5px solid #000000' : '1px solid #334155' }}>
-                            {sheetMode === 'FILLED' ? `₹${calculatedTotals.totalBalance.toFixed(0)}` : ''}
-                          </td>
-                        )}
-
-                        {showSignatureCol && <td style={{ border: sheetTheme === 'BW' ? '1.5px solid #000000' : '1px solid #334155' }} />}
-                      </tr>
-                    </tfoot>
-                  )}
-                </table>
+                        </tfoot>
+                      )}
+                    </table>
+                  );
+                })()}
               </div>
 
               {/* Sheet Footer & Signatures ("not footer" - disabled by default!) */}
