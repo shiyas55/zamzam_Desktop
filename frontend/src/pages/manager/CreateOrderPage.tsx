@@ -61,6 +61,7 @@ import { useSettings } from '../../context/SettingsContext';
 import { draftOrderStorage } from '../../utils/draftOrderStorage';
 import { BulkSendWhatsAppBillsModal, BulkBillItem } from '../../components/BulkSendWhatsAppBillsModal';
 import { BulkSendWhatsAppReminderModal, PendingCustomerReminderItem } from '../../components/BulkSendWhatsAppReminderModal';
+import { RouteOrderSheetModal } from '../../components/RouteOrderSheetModal';
 
 export interface WhatsAppCustomerContext {
   id: string;
@@ -245,6 +246,7 @@ export const CreateOrderPage: React.FC = () => {
   const [invoiceModalOrder, setInvoiceModalOrder] = useState<{ order: Order; customer?: Customer | null } | null>(null);
   const [isBulkWhatsAppModalOpen, setIsBulkWhatsAppModalOpen] = useState(false);
   const [isPendingReminderModalOpen, setIsPendingReminderModalOpen] = useState(false);
+  const [isRoutePrintSheetModalOpen, setIsRoutePrintSheetModalOpen] = useState(false);
 
   // Customer Details Edit Modal State
   const [isEditCustomerModalOpen, setIsEditCustomerModalOpen] = useState(false);
@@ -3349,6 +3351,32 @@ export const CreateOrderPage: React.FC = () => {
             <BellRing size={14} />
             <span>Ask Pending Orders ({pendingCustomers.length})</span>
           </button>
+
+          {/* Print Route Order & Delivery Sheet Button (A4 PDF / Print Sheet) */}
+          <button
+            type="button"
+            onClick={() => setIsRoutePrintSheetModalOpen(true)}
+            style={{
+              height: '28px',
+              padding: '0 0.75rem',
+              fontWeight: 800,
+              fontSize: '0.78rem',
+              background: '#2563eb',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '6px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              cursor: 'pointer',
+              boxShadow: '0 1px 3px rgba(37, 99, 235, 0.35)',
+              transition: 'all 0.15s ease',
+            }}
+            title="Print A4 Route Delivery Sheet, Blank Order Sheet, or Route Collection Sheet (PDF / Print)"
+          >
+            <Printer size={14} />
+            <span>Print Sheet</span>
+          </button>
         </div>
       </div>
 
@@ -3502,6 +3530,33 @@ export const CreateOrderPage: React.FC = () => {
             );
           })}
         </select>
+
+        {/* Route Sheet Quick Print Button */}
+        <button
+          type="button"
+          onClick={() => setIsRoutePrintSheetModalOpen(true)}
+          style={{
+            height: '26px',
+            padding: '0 0.45rem',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.25rem',
+            fontWeight: 700,
+            fontSize: '0.72rem',
+            borderRadius: 'var(--radius)',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
+            flex: '0 0 auto',
+            background: '#eff6ff',
+            color: '#1d4ed8',
+            border: '1px solid #bfdbfe',
+            transition: 'all 0.15s ease',
+          }}
+          title="Print A4 Delivery / Order Sheet for Selected Route"
+        >
+          <Printer size={12} color="#1d4ed8" />
+          <span>Print {routeFilter !== 'ALL' ? 'Route' : 'Sheet'}</span>
+        </button>
 
         {/* Date Selector - Guaranteed DD/MM/YYYY on all devices and locales */}
         <UniversalDatePicker
@@ -7358,6 +7413,21 @@ export const CreateOrderPage: React.FC = () => {
           onClose={() => setIsPendingReminderModalOpen(false)}
           orderDate={orderDate}
           pendingCustomers={pendingCustomers}
+        />
+      )}
+
+      {/* Route Order & Delivery Sheet Modal (A4 Print / Save PDF / Blank & Filled Sheets) */}
+      {isRoutePrintSheetModalOpen && (
+        <RouteOrderSheetModal
+          isOpen={isRoutePrintSheetModalOpen}
+          onClose={() => setIsRoutePrintSheetModalOpen(false)}
+          orderDate={orderDate}
+          routes={routes}
+          customers={customers}
+          products={products}
+          rows={rows}
+          initialRouteFilter={routeFilter}
+          drivers={drivers}
         />
       )}
     </div>
