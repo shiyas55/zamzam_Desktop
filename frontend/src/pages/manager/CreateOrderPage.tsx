@@ -1272,6 +1272,31 @@ export const CreateOrderPage: React.FC = () => {
     return [...afterOrderFilter].sort(sortByShopRegisteredOldest);
   }, [rows, routeFilter, sourceFilter, searchQuery, orderSort, routes, customers, customSortOrder, showOrdersOnly, getCustomerSearchScore]);
 
+  // Exact on-screen display order of shops in Fast Wholesale Order Entry (passed to RouteOrderSheetModal)
+  const sortedOrderRows = useMemo(() => {
+    const sortByShopRegisteredOldest = (a: OrderRow, b: OrderRow) => {
+      const tA = new Date(a.customerCreatedAt || 0).getTime();
+      const tB = new Date(b.customerCreatedAt || 0).getTime();
+      if (tA !== 0 && tB !== 0 && tA !== tB) return tA - tB;
+      if (tA !== 0 && tB === 0) return -1;
+      if (tA === 0 && tB !== 0) return 1;
+      return a.customerName.localeCompare(b.customerName);
+    };
+
+    if (orderSort === 'CUSTOM' && customSortOrder.length > 0) {
+      return [...rows].sort((a, b) => {
+        const iA = customSortOrder.indexOf(a.rowId);
+        const iB = customSortOrder.indexOf(b.rowId);
+        if (iA !== -1 && iB !== -1) return iA - iB;
+        if (iA !== -1) return -1;
+        if (iB !== -1) return 1;
+        return sortByShopRegisteredOldest(a, b);
+      });
+    }
+
+    return [...rows].sort(sortByShopRegisteredOldest);
+  }, [rows, orderSort, customSortOrder]);
+
   // Synchronize single shared search state: auto-highlight matching customer across billing and WhatsApp
   useEffect(() => {
     if (searchQuery.trim()) {
@@ -7425,7 +7450,7 @@ export const CreateOrderPage: React.FC = () => {
           routes={routes}
           customers={customers}
           products={products}
-          rows={rows}
+          rows={sortedOrderRows}
           initialRouteFilter={routeFilter}
           drivers={drivers}
         />

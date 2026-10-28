@@ -125,7 +125,7 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
   const [fitToOnePage, setFitToOnePage] = useState<boolean>(false); // Multi-page A4 enabled by default so all shops show across pages without cutting off
   const [showSummaryTotals, setShowSummaryTotals] = useState<boolean>(true);
   const [extraBlankRowsCount, setExtraBlankRowsCount] = useState<number>(0);
-  const [lineThickness, setLineThickness] = useState<'THIN' | 'HAIRLINE' | 'STANDARD'>('THIN');
+  const [lineThickness, setLineThickness] = useState<'THIN' | 'HAIRLINE' | 'STANDARD'>('STANDARD'); // Uniform 1px solid grid lines across all client PCs
 
   // 7. Column Visibility Toggles ("only name add there coulem")
   const [showPhone, setShowPhone] = useState<boolean>(false);
@@ -230,34 +230,51 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
     });
   };
 
-  // 8. Robust Effective Customers List (Merges customers + rows so shops are NEVER 0)
+  // 8. Robust Effective Customers List (Matches EXACT order of Fast Wholesale Order Entry)
   const effectiveCustomers = useMemo(() => {
-    const map = new Map<string, Customer>();
+    const customerById = new Map<string, Customer>();
 
-    // Add from master customers
+    // Index master customers by id
     customers.forEach((c) => {
       if (c && c.id) {
-        map.set(String(c.id), c);
+        customerById.set(String(c.id), c);
       }
     });
 
-    // Merge any customer present in current order rows
+    const result: Customer[] = [];
+    const addedIds = new Set<string>();
+
+    // 1. First, iterate through order rows to preserve their exact display order from Fast Wholesale Order Entry
     rows.forEach((r) => {
-      if (r.customerId && !map.has(String(r.customerId))) {
-        map.set(String(r.customerId), {
-          id: r.customerId,
-          name: r.customerName || 'Shop',
-          owner_name: r.customerOwner || '',
-          phone: r.customerPhone || '',
-          route: r.customerRouteId,
-          route_details: r.customerRoute ? { id: r.customerRouteId || '', name: r.customerRoute } : undefined,
-          current_balance: r.customerBalance || '0',
-          is_active: true,
-        } as Customer);
+      if (r.customerId && !addedIds.has(String(r.customerId))) {
+        const masterCust = customerById.get(String(r.customerId));
+        if (masterCust) {
+          result.push(masterCust);
+        } else {
+          result.push({
+            id: r.customerId,
+            name: r.customerName || 'Shop',
+            owner_name: r.customerOwner || '',
+            phone: r.customerPhone || '',
+            route: r.customerRouteId,
+            route_details: r.customerRoute ? { id: r.customerRouteId || '', name: r.customerRoute } : undefined,
+            current_balance: r.customerBalance || '0',
+            is_active: true,
+          } as Customer);
+        }
+        addedIds.add(String(r.customerId));
       }
     });
 
-    return Array.from(map.values());
+    // 2. Append any master customers not present in order rows
+    customers.forEach((c) => {
+      if (c && c.id && !addedIds.has(String(c.id))) {
+        result.push(c);
+        addedIds.add(String(c.id));
+      }
+    });
+
+    return result;
   }, [customers, rows]);
 
   // 9. Multiple Route Selection Logic
@@ -2400,38 +2417,26 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                   const rowHeight = `${effectiveRowHeightPx}px`;
 
                   const cellBorder =
-                    lineThickness === 'THIN'
-                      ? '0.5px solid #555555'
-                      : lineThickness === 'HAIRLINE'
-                      ? '0.4px solid #888888'
-                      : sheetTheme === 'BW'
-                      ? '1px solid #000000'
-                      : '1px solid #334155';
+                    lineThickness === 'HAIRLINE'
+                      ? '1px solid #94a3b8'
+                      : lineThickness === 'THIN'
+                      ? '1px solid #444444'
+                      : '1px solid #000000';
 
                   const headerBorder =
-                    lineThickness === 'THIN'
-                      ? '0.75px solid #333333'
-                      : lineThickness === 'HAIRLINE'
-                      ? '0.5px solid #555555'
-                      : sheetTheme === 'BW'
-                      ? '1.5px solid #000000'
-                      : '1px solid #0f172a';
+                    lineThickness === 'HAIRLINE'
+                      ? '1px solid #64748b'
+                      : '1px solid #000000';
 
                   const headerBottom =
-                    lineThickness === 'THIN'
-                      ? '1.5px solid #111111'
-                      : lineThickness === 'HAIRLINE'
-                      ? '1px solid #333333'
-                      : sheetTheme === 'BW'
-                      ? '2.5px solid #000000'
-                      : '1.5px solid #0f172a';
+                    lineThickness === 'HAIRLINE'
+                      ? '1px solid #475569'
+                      : '2px solid #000000';
 
                   const totalsBorder =
-                    lineThickness === 'THIN'
-                      ? '1.5px solid #111111'
-                      : lineThickness === 'HAIRLINE'
-                      ? '1px solid #333333'
-                      : '2.5px solid #000000';
+                    lineThickness === 'HAIRLINE'
+                      ? '1px solid #475569'
+                      : '2px solid #000000';
 
                   return (
                     <table
@@ -2583,6 +2588,7 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                                 key={customer.id}
                                 style={{
                                   height: rowHeight,
+                                  minHeight: rowHeight,
                                   maxHeight: rowHeight,
                                   backgroundColor: '#ffffff',
                                   color: '#000000',
@@ -2873,6 +2879,7 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                                 key={`extra-${extraIdx}`}
                                 style={{
                                   height: rowHeight,
+                                  minHeight: rowHeight,
                                   maxHeight: rowHeight,
                                   backgroundColor: '#ffffff',
                                   boxSizing: 'border-box',
