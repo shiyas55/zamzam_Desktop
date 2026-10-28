@@ -122,7 +122,7 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
   // 6. Page Layout & A4 Size Selection
   const [pageOrientation, setPageOrientation] = useState<'portrait' | 'landscape'>('portrait');
   const [rowDensity, setRowDensity] = useState<'compact' | 'standard' | 'spacious' | 'auto'>('standard');
-  const [fitToOnePage, setFitToOnePage] = useState<boolean>(true); // Strictly 1 A4 Page ("pdf make a4 size next page not show")
+  const [fitToOnePage, setFitToOnePage] = useState<boolean>(false); // Multi-page A4 enabled by default so all shops show across pages without cutting off
   const [showSummaryTotals, setShowSummaryTotals] = useState<boolean>(true);
   const [extraBlankRowsCount, setExtraBlankRowsCount] = useState<number>(0);
   const [lineThickness, setLineThickness] = useState<'THIN' | 'HAIRLINE' | 'STANDARD'>('THIN');
@@ -520,28 +520,86 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
     return pageOrientation === 'landscape' ? 794 : 1122; // 210mm vs 297mm in standard CSS 96dpi
   }, [pageOrientation]);
 
+  // Clean A4 Pagination filling the page with comfortable footer margin ("in footer add sum space")
+  const shopsPerPage = useMemo(() => {
+    if (fitToOnePage) return Math.max(1, printableShops.length);
+
+    if (pageOrientation === 'landscape') {
+      if (rowDensity === 'compact') return 24;
+      if (rowDensity === 'spacious') return 16;
+      return 20; // standard landscape with comfortable footer space
+    }
+
+    // Portrait (A4 297mm height = ~1122.5px @ 96dpi)
+    if (headerStyle === 'NONE') {
+      if (rowDensity === 'compact') return 36;
+      if (rowDensity === 'spacious') return 26;
+      return 34; // 34 rows leaves ~40mm of comfortable footer space so rows are never jammed at bottom!
+    }
+
+    if (headerStyle === 'MINIMAL') {
+      if (rowDensity === 'compact') return 35;
+      if (rowDensity === 'spacious') return 25;
+      return 32;
+    }
+
+    // headerStyle === 'FULL'
+    if (rowDensity === 'compact') return 32;
+    if (rowDensity === 'spacious') return 24;
+    return 30;
+  }, [rowDensity, pageOrientation, fitToOnePage, printableShops.length, headerStyle]);
+
+  const actualExtraRowsCount = useMemo(() => {
+    if (extraBlankRowsCount === -1) {
+      // Auto-fill to page bottom
+      const lastPageCount = printableShops.length % shopsPerPage || shopsPerPage;
+      const totalsReserved = showSummaryTotals ? 1 : 0;
+      return Math.max(0, shopsPerPage - lastPageCount - totalsReserved);
+    }
+    return extraBlankRowsCount;
+  }, [extraBlankRowsCount, printableShops.length, shopsPerPage, showSummaryTotals]);
+
+  const pagedShops = useMemo(() => {
+    if (printableShops.length === 0) return [[]];
+    if (fitToOnePage) return [printableShops];
+    const chunks: Customer[][] = [];
+    for (let i = 0; i < printableShops.length; i += shopsPerPage) {
+      chunks.push(printableShops.slice(i, i + shopsPerPage));
+    }
+    return chunks;
+  }, [printableShops, shopsPerPage, fitToOnePage]);
+
   const effectiveRowHeightPx = useMemo(() => {
-    if (rowDensity === 'compact') return 20;
-    if (rowDensity === 'spacious') return 32;
-    if (rowDensity === 'standard' && (!fitToOnePage || printableShops.length <= 32)) return 24;
+    if (rowDensity === 'auto' || (fitToOnePage && printableShops.length > 0)) {
+      const headerHeight = headerStyle === 'FULL' ? 115 : headerStyle === 'MINIMAL' ? 32 : 0;
+      const footerHeight = showSignatures ? 60 : 0;
+      const totalsHeight = showSummaryTotals ? 26 : 0;
+      const paddingHeight = headerStyle === 'NONE' ? 30 : 50;
+      const tableHeaderHeight = 24;
 
-    // Auto-fit to 1 A4 page so table NEVER overflows past bottom edge
-    const headerHeight = headerStyle === 'FULL' ? 115 : headerStyle === 'MINIMAL' ? 32 : 0;
-    const footerHeight = showSignatures ? 60 : 0;
-    const totalsHeight = showSummaryTotals ? 26 : 0;
-    const paddingHeight = headerStyle === 'NONE' ? 35 : 55;
-    const tableHeaderHeight = 26;
+      const availableHeightForRows = a4PageHeightPx - (headerHeight + footerHeight + totalsHeight + paddingHeight + tableHeaderHeight);
+      const totalRowCount = Math.max(1, (fitToOnePage ? printableShops.length : Math.min(shopsPerPage, printableShops.length)) + actualExtraRowsCount);
 
-    const availableHeightForRows = a4PageHeightPx - (headerHeight + footerHeight + totalsHeight + paddingHeight + tableHeaderHeight);
-    const totalRowCount = Math.max(1, printableShops.length + extraBlankRowsCount);
+      const calculatedH = Math.floor(availableHeightForRows / totalRowCount);
+      return Math.min(32, Math.max(11, calculatedH));
+    }
 
-    const calculatedH = Math.floor(availableHeightForRows / totalRowCount);
-    return Math.min(26, Math.max(11, calculatedH));
+    if (pageOrientation === 'landscape') {
+      if (rowDensity === 'compact') return 22;
+      if (rowDensity === 'spacious') return 31;
+      return 26;
+    }
+
+    if (rowDensity === 'compact') return 23;
+    if (rowDensity === 'spacious') return 31;
+    return 26; // Standard 26px ensures rows fill the page cleanly with handwriting comfort
   }, [
     rowDensity,
+    pageOrientation,
     fitToOnePage,
     printableShops.length,
-    extraBlankRowsCount,
+    actualExtraRowsCount,
+    shopsPerPage,
     headerStyle,
     showSignatures,
     showSummaryTotals,
@@ -549,15 +607,73 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
   ]);
 
   const effectiveFontSize = useMemo(() => {
-    if (effectiveRowHeightPx >= 24) return '10px';
-    if (effectiveRowHeightPx >= 20) return '9px';
+    if (effectiveRowHeightPx >= 24) return '9px';
+    if (effectiveRowHeightPx >= 20) return '8.5px';
     if (effectiveRowHeightPx >= 16) return '8px';
     return '7.5px';
   }, [effectiveRowHeightPx]);
 
+  // Proportional column widths calculation guaranteeing 100% table width with ZERO side-cutting
+  const activeProductList = useMemo(() => {
+    return allDynamicProducts.filter((p) => selectedProductIds.has(p.id));
+  }, [allDynamicProducts, selectedProductIds]);
+
+  const columnWidths = useMemo(() => {
+    const prodCount = Math.max(1, activeProductList.length);
+    const prodPercent =
+      prodCount === 1 ? '9.0%' :
+      prodCount === 2 ? '7.5%' :
+      prodCount === 3 ? '6.5%' :
+      prodCount === 4 ? '6.0%' :
+      prodCount === 5 ? '5.4%' :
+      prodCount === 6 ? '4.8%' : '4.2%';
+
+    const numProdPercent = parseFloat(prodPercent);
+
+    let fixedTotal = 3.5; // # column (3.5%)
+    if (showPhone) fixedTotal += 8.5;
+    if (showPrevDue) fixedTotal += 7.5;
+    fixedTotal += prodCount * numProdPercent;
+    if (showTotalBill && sheetMode === 'FILLED') fixedTotal += 7.0;
+    if (showDiscount) fixedTotal += 5.8;
+    if (showCash) fixedTotal += 6.5;
+    if (showGPay) fixedTotal += 6.5;
+    if (showBalance) fixedTotal += 7.5;
+    if (showSignatureCol) fixedTotal += 7.5;
+
+    // Remaining percentage goes to Shop Name
+    const shopNamePercent = `${Math.max(12, 100 - fixedTotal).toFixed(1)}%`;
+
+    return {
+      index: '3.5%',
+      shopName: shopNamePercent,
+      phone: '8.5%',
+      prevDue: '7.5%',
+      product: prodPercent,
+      totalBill: '7.0%',
+      discount: '5.8%',
+      cash: '6.5%',
+      gpay: '6.5%',
+      balance: '7.5%',
+      signature: '7.5%',
+    };
+  }, [
+    activeProductList.length,
+    showPhone,
+    showPrevDue,
+    showTotalBill,
+    sheetMode,
+    showDiscount,
+    showCash,
+    showGPay,
+    showBalance,
+    showSignatureCol,
+  ]);
+
   // Printable Iframe Action ("print pdf get")
   const [isPrinting, setIsPrinting] = useState(false);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const [pdfProgress, setPdfProgress] = useState<string>('');
 
   const handlePrint = () => {
     if (!printSheetRef.current) return;
@@ -597,7 +713,7 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
             <style>
               @page {
                 size: A4 ${pageOrientation};
-                margin: ${headerStyle === 'NONE' ? '4mm 5mm' : '5mm 6mm'};
+                margin: ${headerStyle === 'NONE' ? '3mm 4mm' : '4mm 5mm'};
               }
               * {
                 box-sizing: border-box;
@@ -615,20 +731,27 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                 width: 100% !important;
                 height: auto !important;
               }
-              #route-sheet-printable-area {
+              .route-sheet-page {
                 width: 100% !important;
+                height: 100% !important;
                 min-height: 0 !important;
-                height: auto !important;
-                max-width: 100% !important;
-                padding: 0 !important;
+                max-height: 100% !important;
+                padding: 2mm 3mm !important;
                 margin: 0 !important;
                 box-shadow: none !important;
                 border: none !important;
+                page-break-after: always !important;
+                break-after: page !important;
+              }
+              .route-sheet-page:last-child {
+                page-break-after: auto !important;
+                break-after: auto !important;
               }
               table {
-                width: 100%;
-                border-collapse: collapse;
-                table-layout: fixed;
+                width: 100% !important;
+                max-width: 100% !important;
+                border-collapse: collapse !important;
+                table-layout: auto !important;
               }
               th, td {
                 border: ${
@@ -642,7 +765,7 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                 height: ${effectiveRowHeightPx}px !important;
                 max-height: ${effectiveRowHeightPx}px !important;
                 font-size: ${effectiveFontSize} !important;
-                padding: 0 4px !important;
+                padding: 0 2px !important;
                 box-sizing: border-box !important;
                 vertical-align: middle !important;
                 white-space: nowrap !important;
@@ -650,8 +773,8 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                 text-overflow: ellipsis !important;
               }
               th {
-                background-color: ${sheetTheme === 'BW' ? '#ffffff' : '#1e293b'};
-                color: ${sheetTheme === 'BW' ? '#000000' : '#ffffff'};
+                background-color: ${sheetTheme === 'BW' ? '#ffffff' : '#1e293b'} !important;
+                color: ${sheetTheme === 'BW' ? '#000000' : '#ffffff'} !important;
                 border-bottom: ${
                   lineThickness === 'THIN'
                     ? '1.5pt solid #222222'
@@ -659,7 +782,7 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                     ? '1pt solid #444444'
                     : '2pt solid #000000'
                 } !important;
-                font-weight: 800;
+                font-weight: 800 !important;
               }
               tr {
                 height: ${effectiveRowHeightPx}px !important;
@@ -671,31 +794,7 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                 overflow: hidden !important;
                 text-overflow: ellipsis !important;
                 font-weight: 800 !important;
-                line-height: 1.2 !important;
-              }
-              ${
-                fitToOnePage
-                  ? `
-              @media print {
-                html, body {
-                  height: 100% !important;
-                  max-height: 100% !important;
-                  overflow: hidden !important;
-                }
-                #route-sheet-printable-area {
-                  height: 100% !important;
-                  max-height: 100% !important;
-                  overflow: hidden !important;
-                  page-break-after: avoid !important;
-                  page-break-inside: avoid !important;
-                }
-                table, tr, td {
-                  page-break-inside: avoid !important;
-                  page-break-after: avoid !important;
-                }
-              }
-              `
-                  : ''
+                line-height: 1.15 !important;
               }
               .print-no-break {
                 page-break-inside: avoid;
@@ -724,73 +823,65 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
     }
   };
 
-  // Direct PDF Download using html2canvas & jsPDF ("adn pdf make a4 size next page not show")
+  // Direct PDF Download using html2canvas & jsPDF ("next page not slow")
   const handleDownloadPdf = async () => {
     if (!printSheetRef.current) return;
     setIsDownloadingPdf(true);
+    setPdfProgress('Preparing...');
 
     try {
-      const element = printSheetRef.current;
       const isLandscape = pageOrientation === 'landscape';
-
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-      });
-
       const pdf = new jsPDF({
         orientation: isLandscape ? 'landscape' : 'portrait',
         unit: 'mm',
         format: 'a4',
+        compress: true,
       });
 
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const canvasWidth = canvas.width;
-      const canvasHeight = canvas.height;
-      const ratio = canvasWidth / canvasHeight;
 
-      let printWidth = pdfWidth;
-      let printHeight = pdfWidth / ratio;
+      const pageElements = printSheetRef.current.querySelectorAll<HTMLElement>('.route-sheet-page');
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.98);
-
-      if (fitToOnePage || printHeight <= pdfHeight + 5) {
-        // STRICTLY 1 SINGLE PAGE - NEVER SHOW A NEXT PAGE!
-        if (printHeight > pdfHeight) {
-          // Scale down proportionally so it fits the exact single A4 page
-          printHeight = pdfHeight;
-          printWidth = pdfHeight * ratio;
-          const xOffset = Math.max(0, (pdfWidth - printWidth) / 2);
-          pdf.addImage(imgData, 'JPEG', xOffset, 0, printWidth, printHeight);
-        } else {
-          pdf.addImage(imgData, 'JPEG', 0, 0, printWidth, printHeight);
-        }
+      if (pageElements.length === 0) {
+        const canvas = await html2canvas(printSheetRef.current, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff',
+        });
+        const imgData = canvas.toDataURL('image/png');
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
       } else {
-        // Multi-page only if fitToOnePage is unchecked AND content genuinely spans multiple pages
-        let position = 0;
-        let remainingHeight = printHeight;
+        for (let i = 0; i < pageElements.length; i++) {
+          setPdfProgress(`${i + 1}/${pageElements.length}`);
+          // Small yield to let browser update the UI and prevent page freeze ("loading over issus fix full")
+          await new Promise((resolve) => setTimeout(resolve, 40));
 
-        pdf.addImage(imgData, 'JPEG', 0, position, printWidth, printHeight);
-        remainingHeight -= pdfHeight;
-
-        while (remainingHeight > 8) {
-          position = position - pdfHeight;
-          pdf.addPage();
-          pdf.addImage(imgData, 'JPEG', 0, position, printWidth, printHeight);
-          remainingHeight -= pdfHeight;
+          const pageEl = pageElements[i];
+          const canvas = await html2canvas(pageEl, {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#ffffff',
+          });
+          const imgData = canvas.toDataURL('image/png');
+          if (i > 0) {
+            pdf.addPage();
+          }
+          pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
         }
       }
 
+      setPdfProgress('Saving...');
       const fileName = `Route_Sheet_${selectedRouteNamesString.replace(/[^a-zA-Z0-9]/g, '_')}_${orderDate}.pdf`;
       pdf.save(fileName);
     } catch (err) {
       console.error('Failed to download PDF:', err);
-      alert('Failed to generate PDF download. You can use the "Print / Save PDF" button to save as PDF via your browser.');
+      alert('Failed to generate PDF download. You can use the "Print Sheet / PDF" button to print or save via browser.');
     } finally {
       setIsDownloadingPdf(false);
+      setPdfProgress('');
     }
   };
 
@@ -940,7 +1031,7 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
               title="Download direct PDF file"
             >
               <Download size={14} />
-              <span>{isDownloadingPdf ? 'Generating...' : 'Get PDF'}</span>
+              <span>{isDownloadingPdf ? (pdfProgress ? `PDF (${pdfProgress})...` : 'Generating...') : 'Get PDF'}</span>
             </button>
 
             <button
@@ -1882,6 +1973,7 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                   style={{ height: '24px', fontSize: '0.7rem', padding: '0 0.3rem' }}
                 >
                   <option value={0}>None</option>
+                  <option value={-1}>⚡ Auto-Fill Page Bottom</option>
                   <option value={3}>+3 Rows</option>
                   <option value={5}>+5 Rows</option>
                   <option value={10}>+10 Rows</option>
@@ -2009,7 +2101,7 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                   style={{ accentColor: '#059669', cursor: 'pointer' }}
                 />
                 <span style={{ color: fitToOnePage ? '#065f46' : '#475569' }}>
-                  🎯 Fit to 1 A4 Page (No Next Page)
+                  🎯 Force Single Page (Fit to 1 Page)
                 </span>
               </label>
 
@@ -2087,6 +2179,7 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                 <span>
                   Live A4 Preview ({pageOrientation.toUpperCase()}) • <strong>{printableShops.length} Shops</strong>
                   {headerStyle === 'NONE' && ' • (No Title/Header)'}
+                  {pagedShops.length > 1 && ` • ${pagedShops.length} Pages (Scroll down to view)`}
                 </span>
               </div>
               <div style={{ fontSize: '0.7rem' }}>
@@ -2094,133 +2187,211 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
               </div>
             </div>
 
-            {/* The A4 Printable Paper Element */}
+            {/* The A4 Printable Paper Container with Multi-Page Support */}
             <div
               ref={printSheetRef}
               id="route-sheet-printable-area"
               style={{
-                width: pageOrientation === 'landscape' ? '297mm' : '210mm',
-                minHeight: pageOrientation === 'landscape' ? '210mm' : '297mm',
-                height: fitToOnePage ? (pageOrientation === 'landscape' ? '210mm' : '297mm') : 'auto',
-                maxHeight: fitToOnePage ? (pageOrientation === 'landscape' ? '210mm' : '297mm') : undefined,
-                overflow: fitToOnePage ? 'hidden' : 'visible',
-                backgroundColor: '#ffffff',
-                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
-                padding: headerStyle === 'NONE' ? (pageOrientation === 'landscape' ? '4mm 6mm' : '5mm 7mm') : pageOrientation === 'landscape' ? '5mm 7mm' : '7mm 9mm',
-                boxSizing: 'border-box',
-                color: '#000000',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-                fontSize: effectiveFontSize,
                 display: 'flex',
                 flexDirection: 'column',
+                alignItems: 'center',
+                gap: '24px',
+                width: '100%',
               }}
             >
-              {/* Optional Header 1: FULL LETTERHEAD BANNER */}
+              {pagedShops.map((pageShops, pageIdx) => {
+                const isFirstPage = pageIdx === 0;
+                const isLastPage = pageIdx === pagedShops.length - 1;
+                const pageStartIdx = pageIdx * shopsPerPage;
+
+                return (
+                  <div
+                    key={`sheet-page-${pageIdx}`}
+                    className="route-sheet-page"
+                    style={{
+                      width: pageOrientation === 'landscape' ? '297mm' : '210mm',
+                      minHeight: pageOrientation === 'landscape' ? '210mm' : '297mm',
+                      height: pageOrientation === 'landscape' ? '210mm' : '297mm',
+                      maxHeight: pageOrientation === 'landscape' ? '210mm' : '297mm',
+                      overflow: 'hidden',
+                      backgroundColor: '#ffffff',
+                      boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                      padding:
+                        headerStyle === 'NONE'
+                          ? pageOrientation === 'landscape'
+                            ? '5mm 6mm 10mm 6mm'
+                            : '6mm 7mm 12mm 7mm'
+                          : pageOrientation === 'landscape'
+                          ? '5mm 7mm 10mm 7mm'
+                          : '6mm 7mm 12mm 7mm',
+                      boxSizing: 'border-box',
+                      color: '#000000',
+                      fontFamily: 'Helvetica, Arial, sans-serif',
+                      fontSize: effectiveFontSize,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'flex-start',
+                      pageBreakAfter: isLastPage ? 'auto' : 'always',
+                      breakAfter: isLastPage ? 'auto' : 'page',
+                    }}
+                  >
+              {/* Header 1: FULL LETTERHEAD BANNER */}
               {headerStyle === 'FULL' && (
-                <div style={{ borderBottom: '2px solid #000000', paddingBottom: '0.35rem', marginBottom: '0.45rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                      <h1
-                        style={{
-                          margin: 0,
-                          fontSize: '17px',
-                          fontWeight: 900,
-                          letterSpacing: '-0.02em',
-                          color: '#000000',
-                          textTransform: 'uppercase',
-                        }}
-                      >
-                        {businessName || settings?.business_name || 'Zamzam Foods Wholesale'}
-                      </h1>
-                      <div style={{ fontSize: '9.5px', color: '#333333', marginTop: '1px', lineHeight: 1.3 }}>
-                        {settings?.address || 'Main Road, Pandikkad, Malappuram, Kerala'}
-                        {businessPhone && <span> • Ph: {businessPhone}</span>}
-                        {gstNumber && <span> • GSTIN: {gstNumber}</span>}
+                isFirstPage ? (
+                  <div style={{ borderBottom: '2px solid #000000', paddingBottom: '0.35rem', marginBottom: '0.45rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div>
+                        <h1
+                          style={{
+                            margin: 0,
+                            fontSize: '17px',
+                            fontWeight: 900,
+                            letterSpacing: 'normal',
+                            color: '#000000',
+                            textTransform: 'uppercase',
+                          }}
+                        >
+                          {businessName || settings?.business_name || 'Zamzam Foods Wholesale'}
+                        </h1>
+                        <div style={{ fontSize: '9.5px', color: '#333333', marginTop: '1px', lineHeight: 1.3 }}>
+                          {settings?.address || 'Main Road, Pandikkad, Malappuram, Kerala'}
+                          {businessPhone && <span> • Ph: {businessPhone}</span>}
+                          {gstNumber && <span> • GSTIN: {gstNumber}</span>}
+                        </div>
+                      </div>
+
+                      <div style={{ textAlign: 'right' }}>
+                        <div
+                          style={{
+                            fontSize: '12px',
+                            fontWeight: 800,
+                            color: '#000000',
+                            letterSpacing: 'normal',
+                            textTransform: 'uppercase',
+                          }}
+                        >
+                          {sheetMode === 'FILLED' ? 'Route Delivery Sheet' : 'Route Order Sheet'}
+                        </div>
+                        <div style={{ fontSize: '9.5px', fontWeight: 700, color: '#333333', marginTop: '1px' }}>
+                          Date: {formatDate(orderDate) || orderDate}
+                        </div>
                       </div>
                     </div>
 
-                    <div style={{ textAlign: 'right' }}>
-                      <div
-                        style={{
-                          fontSize: '12px',
-                          fontWeight: 800,
-                          color: '#000000',
-                          letterSpacing: '0.04em',
-                          textTransform: 'uppercase',
-                        }}
-                      >
-                        {sheetMode === 'FILLED' ? 'Route Delivery Sheet' : 'Route Order Sheet'}
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        backgroundColor: sheetTheme === 'BW' ? '#ffffff' : '#f1f5f9',
+                        padding: '0.2rem 0.4rem',
+                        marginTop: '0.3rem',
+                        fontSize: '9.5px',
+                        fontWeight: 700,
+                        border: '1px solid #000000',
+                      }}
+                    >
+                      <div style={{ flex: 1, minWidth: 0, marginRight: '10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <span>ROUTE: </span>
+                        <strong style={{ color: '#000000' }}>
+                          {selectedRouteNamesString.toUpperCase()}
+                        </strong>
+                        {assignedDriversString && (
+                          <span style={{ marginLeft: '12px' }}>
+                            DRIVER: <strong>{assignedDriversString}</strong>
+                          </span>
+                        )}
                       </div>
-                      <div style={{ fontSize: '9.5px', fontWeight: 700, color: '#333333', marginTop: '1px' }}>
-                        Date: {formatDate(orderDate) || orderDate}
+
+                      <div style={{ flexShrink: 0, whiteSpace: 'nowrap' }}>
+                        <span>TOTAL STOPS: </span>
+                        <strong style={{ color: '#000000' }}>{printableShops.length} SHOPS</strong>
+                        {sheetMode === 'FILLED' && calculatedTotals.totalPieces > 0 && (
+                          <span style={{ marginLeft: '10px' }}>
+                            • TOTAL: <strong>{calculatedTotals.totalPieces} ps</strong>
+                          </span>
+                        )}
+                        {pagedShops.length > 1 && (
+                          <span style={{ marginLeft: '10px', fontWeight: 800 }}>
+                            • PAGE 1/{pagedShops.length}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
-
+                ) : (
                   <div
                     style={{
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      backgroundColor: sheetTheme === 'BW' ? '#ffffff' : '#f1f5f9',
-                      padding: '0.2rem 0.4rem',
-                      marginTop: '0.3rem',
-                      fontSize: '9.5px',
+                      paddingBottom: '0.2rem',
+                      marginBottom: '0.3rem',
+                      borderBottom: '1px solid #000000',
+                      fontSize: '8.5px',
                       fontWeight: 700,
-                      border: '1px solid #000000',
                     }}
                   >
-                    <div>
-                      <span>ROUTE: </span>
-                      <strong style={{ color: '#000000' }}>
-                        {selectedRouteNamesString.toUpperCase()}
-                      </strong>
-                      {assignedDriversString && (
-                        <span style={{ marginLeft: '12px' }}>
-                          DRIVER: <strong>{assignedDriversString}</strong>
-                        </span>
-                      )}
+                    <div style={{ flex: 1, minWidth: 0, marginRight: '10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <strong>{businessName || settings?.business_name || 'Zamzam Foods Wholesale'}</strong>
+                      <span style={{ marginLeft: '10px' }}>
+                        ROUTE: <strong>{selectedRouteNamesString.toUpperCase()}</strong>
+                      </span>
                     </div>
-
-                    <div>
-                      <span>TOTAL STOPS: </span>
-                      <strong style={{ color: '#000000' }}>{printableShops.length} SHOPS</strong>
-                      {sheetMode === 'FILLED' && calculatedTotals.totalPieces > 0 && (
-                        <span style={{ marginLeft: '10px' }}>
-                          • TOTAL: <strong>{calculatedTotals.totalPieces} ps</strong>
-                        </span>
-                      )}
+                    <div style={{ flexShrink: 0, whiteSpace: 'nowrap' }}>
+                      <span>DATE: {formatDate(orderDate) || orderDate}</span>
+                      <span style={{ marginLeft: '10px', fontWeight: 800 }}>
+                        PAGE {pageIdx + 1} OF {pagedShops.length}
+                      </span>
                     </div>
                   </div>
-                </div>
+                )
               )}
 
-              {/* Optional Header 2: MINIMAL 1-LINE HEADER */}
+              {/* Header 2: MINIMAL 1-LINE HEADER */}
               {headerStyle === 'MINIMAL' && (
                 <div
                   style={{
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    paddingBottom: '0.3rem',
-                    marginBottom: '0.35rem',
+                    paddingBottom: '0.25rem',
+                    marginBottom: '0.3rem',
                     borderBottom: '1.5px solid #000000',
-                    fontSize: '10px',
+                    fontSize: '9.5px',
                     fontWeight: 800,
                     color: '#000000',
                   }}
                 >
-                  <div>
+                  <div style={{ flex: 1, minWidth: 0, marginRight: '10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     ROUTE: <strong>{selectedRouteNamesString.toUpperCase()}</strong>
-                    {assignedDriversString && <span style={{ marginLeft: '12px' }}>DRIVER: {assignedDriversString}</span>}
+                    {assignedDriversString && <span style={{ marginLeft: '10px' }}>DRIVER: {assignedDriversString}</span>}
                   </div>
-                  <div>
+                  <div style={{ flexShrink: 0, whiteSpace: 'nowrap' }}>
                     DATE: <strong>{formatDate(orderDate) || orderDate}</strong> • STOPS: <strong>{printableShops.length}</strong>
+                    {pagedShops.length > 1 && (
+                      <span style={{ marginLeft: '8px' }}>• PAGE {pageIdx + 1}/{pagedShops.length}</span>
+                    )}
                   </div>
                 </div>
               )}
 
-              {/* If headerStyle === 'NONE', NOTHING IS RENDERED ABOVE THE TABLE! Pure Grid Sheet! */}
+              {/* Header 3: NONE - pure grid sheet with minimal page index if multi-page */}
+              {headerStyle === 'NONE' && pagedShops.length > 1 && (
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    fontSize: '7.5px',
+                    fontWeight: 700,
+                    color: '#555555',
+                    marginBottom: '2px',
+                    lineHeight: 1,
+                  }}
+                >
+                  Page {pageIdx + 1} of {pagedShops.length}
+                </div>
+              )}
 
               {/* Main Data Table */}
               <div style={{ flex: 1, width: '100%' }}>
@@ -2280,90 +2451,90 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                             height: rowHeight,
                           }}
                         >
-                          <th style={{ width: '26px', padding: '0 2px', textAlign: 'center', border: headerBorder, fontWeight: 900, height: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }}>
+                          <th style={{ width: columnWidths.index, padding: '0 2px', textAlign: 'center', border: headerBorder, fontWeight: 900, fontSize: '8px', height: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }}>
                             #
                           </th>
-                          <th style={{ width: '200px', padding: '0 6px', textAlign: 'left', border: headerBorder, fontWeight: 900, height: rowHeight, verticalAlign: 'middle', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', boxSizing: 'border-box' }}>
+                          <th style={{ width: columnWidths.shopName, padding: '0 4px', textAlign: 'left', border: headerBorder, fontWeight: 900, fontSize: '8.5px', height: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             Shop Name
                           </th>
                           {showPhone && (
-                            <th style={{ width: '80px', padding: '0 4px', textAlign: 'left', border: headerBorder, fontWeight: 800, height: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }}>
+                            <th style={{ width: columnWidths.phone, padding: '0 2px', textAlign: 'left', border: headerBorder, fontWeight: 800, fontSize: '8px', height: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }}>
                               Phone
                             </th>
                           )}
                           {showPrevDue && (
-                            <th style={{ width: '65px', padding: '0 4px', textAlign: 'right', border: headerBorder, fontWeight: 800, height: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }}>
+                            <th style={{ width: columnWidths.prevDue, padding: '0 2px', textAlign: 'right', border: headerBorder, fontWeight: 800, fontSize: '8px', height: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }}>
                               Prev Due
                             </th>
                           )}
 
                           {/* Dynamic Product Columns */}
-                          {allDynamicProducts
-                            .filter((p) => selectedProductIds.has(p.id))
-                            .map((p) => (
-                              <th
-                                key={p.id}
-                                style={{
-                                  width: selectedProductIds.size > 5 ? '48px' : '56px',
-                                  padding: '0 2px',
-                                  textAlign: 'center',
-                                  border: headerBorder,
-                                  fontWeight: 900,
-                                  height: rowHeight,
-                                  verticalAlign: 'middle',
-                                  whiteSpace: 'nowrap',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  boxSizing: 'border-box',
-                                }}
-                              >
-                                {p.name}
-                              </th>
-                            ))}
+                          {activeProductList.map((p) => (
+                            <th
+                              key={p.id}
+                              style={{
+                                width: columnWidths.product,
+                                padding: '0 1px',
+                                textAlign: 'center',
+                                border: headerBorder,
+                                fontWeight: 900,
+                                fontSize: '8px',
+                                height: rowHeight,
+                                verticalAlign: 'middle',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                boxSizing: 'border-box',
+                              }}
+                              title={p.name}
+                            >
+                              {p.name}
+                            </th>
+                          ))}
 
                           {showTotalBill && sheetMode === 'FILLED' && (
-                            <th style={{ width: '65px', padding: '0 4px', textAlign: 'right', border: headerBorder, fontWeight: 800, height: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }}>
-                              Total Bill
+                            <th style={{ width: columnWidths.totalBill, padding: '0 2px', textAlign: 'right', border: headerBorder, fontWeight: 800, fontSize: '8px', height: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }}>
+                              Bill
                             </th>
                           )}
 
                           {showDiscount && (
-                            <th style={{ width: '56px', padding: '0 4px', textAlign: 'right', border: headerBorder, fontWeight: 800, height: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }}>
-                              Disc (₹)
+                            <th style={{ width: columnWidths.discount, padding: '0 2px', textAlign: 'right', border: headerBorder, fontWeight: 800, fontSize: '8px', height: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }}>
+                              Disc
                             </th>
                           )}
 
                           {showCash && (
-                            <th style={{ width: '56px', padding: '0 4px', textAlign: 'right', border: headerBorder, fontWeight: 800, height: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }}>
-                              Cash (₹)
+                            <th style={{ width: columnWidths.cash, padding: '0 2px', textAlign: 'right', border: headerBorder, fontWeight: 800, fontSize: '8px', height: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }}>
+                              Cash
                             </th>
                           )}
 
                           {showGPay && (
-                            <th style={{ width: '56px', padding: '0 4px', textAlign: 'right', border: headerBorder, fontWeight: 800, height: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }}>
-                              GPay (₹)
+                            <th style={{ width: columnWidths.gpay, padding: '0 2px', textAlign: 'right', border: headerBorder, fontWeight: 800, fontSize: '8px', height: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }}>
+                              GPay
                             </th>
                           )}
 
                           {showBalance && (
-                            <th style={{ width: '68px', padding: '0 4px', textAlign: 'right', border: headerBorder, fontWeight: 900, height: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }}>
+                            <th style={{ width: columnWidths.balance, padding: '0 2px', textAlign: 'right', border: headerBorder, fontWeight: 900, fontSize: '8px', height: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }}>
                               Balance
                             </th>
                           )}
 
                           {showSignatureCol && (
-                            <th style={{ width: '70px', padding: '0 4px', textAlign: 'center', border: headerBorder, fontWeight: 800, height: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }}>
-                              Signature
+                            <th style={{ width: columnWidths.signature, padding: '0 2px', textAlign: 'center', border: headerBorder, fontWeight: 800, fontSize: '8px', height: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }}>
+                              Sign
                             </th>
                           )}
                         </tr>
                       </thead>
 
                       <tbody>
-                        {printableShops.length === 0 ? (
+                        {pageShops.length === 0 ? (
                           <tr>
                             <td
-                              colSpan={12}
+                              colSpan={15}
                               style={{
                                 padding: '2rem',
                                 textAlign: 'center',
@@ -2375,7 +2546,8 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                             </td>
                           </tr>
                         ) : (
-                          printableShops.map((customer, idx) => {
+                          pageShops.map((customer, pageRowIdx) => {
+                            const globalIdx = pageStartIdx + pageRowIdx + 1;
                             const rowData = rowsByCustomerId.get(String(customer.id));
                             const prevDueVal = parseFloat(rowData?.customerBalance || String(customer.current_balance || '0')) || 0;
                             const cashVal = parseFloat(rowData?.cashAmount || '0') || 0;
@@ -2419,6 +2591,7 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                               >
                                 <td
                                   style={{
+                                    width: columnWidths.index,
                                     textAlign: 'center',
                                     padding: '0 2px',
                                     border: cellBorder,
@@ -2427,16 +2600,17 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                                     maxHeight: rowHeight,
                                     verticalAlign: 'middle',
                                     boxSizing: 'border-box',
+                                    overflow: 'hidden',
                                   }}
                                 >
-                                  {idx + 1}
+                                  {globalIdx}
                                 </td>
 
                                 {/* Shop Name - Strictly single line, uniform height, no wrapping */}
                                 <td
                                   style={{
-                                    width: '200px',
-                                    padding: '0 6px',
+                                    width: columnWidths.shopName,
+                                    padding: '0 4px',
                                     border: cellBorder,
                                     height: rowHeight,
                                     maxHeight: rowHeight,
@@ -2453,7 +2627,7 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                                       whiteSpace: 'nowrap',
                                       overflow: 'hidden',
                                       textOverflow: 'ellipsis',
-                                      lineHeight: '1.15',
+                                      lineHeight: '1.2',
                                       fontSize: effectiveFontSize,
                                     }}
                                     title={customer.name}
@@ -2480,10 +2654,11 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                                 {showPhone && (
                                   <td
                                     style={{
-                                      padding: '0 4px',
+                                      width: columnWidths.phone,
+                                      padding: '0 2px',
                                       border: cellBorder,
                                       color: '#000000',
-                                      fontSize: '9px',
+                                      fontSize: '8px',
                                       height: rowHeight,
                                       maxHeight: rowHeight,
                                       verticalAlign: 'middle',
@@ -2500,8 +2675,9 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                                 {showPrevDue && (
                                   <td
                                     style={{
+                                      width: columnWidths.prevDue,
                                       textAlign: 'right',
-                                      padding: '0 4px',
+                                      padding: '0 2px',
                                       border: cellBorder,
                                       fontWeight: 700,
                                       color: '#000000',
@@ -2509,10 +2685,14 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                                       maxHeight: rowHeight,
                                       verticalAlign: 'middle',
                                       boxSizing: 'border-box',
+                                      overflow: 'hidden',
+                                      whiteSpace: 'nowrap',
+                                      textOverflow: 'ellipsis',
+                                      fontSize: '8px',
                                     }}
                                   >
                                     {prevDueBlank ? (
-                                      <div style={{ height: '100%', width: '100%', minHeight: '14px' }} />
+                                      <div style={{ height: '100%', width: '100%', minHeight: '12px' }} />
                                     ) : prevDueVal > 0 ? (
                                       `₹${prevDueVal.toFixed(0)}`
                                     ) : (
@@ -2522,45 +2702,53 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                                 )}
 
                                 {/* Product cells */}
-                                {allDynamicProducts
-                                  .filter((p) => selectedProductIds.has(p.id))
-                                  .map((p) => {
-                                    const qty = productQuantities[p.id] || 0;
-                                    return (
-                                      <td
-                                        key={p.id}
-                                        style={{
-                                          textAlign: 'center',
-                                          padding: '0 2px',
-                                          border: cellBorder,
-                                          fontWeight: 800,
-                                          color: '#000000',
-                                          height: rowHeight,
-                                          maxHeight: rowHeight,
-                                          verticalAlign: 'middle',
-                                          boxSizing: 'border-box',
-                                        }}
-                                      >
-                                        {sheetMode === 'FILLED' && !p.isCustom ? (
-                                          qty > 0 ? qty : '-'
-                                        ) : (
-                                          <div style={{ height: '100%', width: '100%', minHeight: '14px' }} />
-                                        )}
-                                      </td>
-                                    );
-                                  })}
+                                {activeProductList.map((p) => {
+                                  const qty = productQuantities[p.id] || 0;
+                                  return (
+                                    <td
+                                      key={p.id}
+                                      style={{
+                                        width: columnWidths.product,
+                                        textAlign: 'center',
+                                        padding: '0 1px',
+                                        border: cellBorder,
+                                        fontWeight: 800,
+                                        color: '#000000',
+                                        height: rowHeight,
+                                        maxHeight: rowHeight,
+                                        verticalAlign: 'middle',
+                                        boxSizing: 'border-box',
+                                        overflow: 'hidden',
+                                        whiteSpace: 'nowrap',
+                                        textOverflow: 'ellipsis',
+                                        fontSize: '8.5px',
+                                      }}
+                                    >
+                                      {sheetMode === 'FILLED' && !p.isCustom ? (
+                                        qty > 0 ? qty : '-'
+                                      ) : (
+                                        <div style={{ height: '100%', width: '100%', minHeight: '12px' }} />
+                                      )}
+                                    </td>
+                                  );
+                                })}
 
                                 {showTotalBill && sheetMode === 'FILLED' && (
                                   <td
                                     style={{
+                                      width: columnWidths.totalBill,
                                       textAlign: 'right',
-                                      padding: '0 4px',
+                                      padding: '0 2px',
                                       border: cellBorder,
                                       fontWeight: 800,
                                       height: rowHeight,
                                       maxHeight: rowHeight,
                                       verticalAlign: 'middle',
                                       boxSizing: 'border-box',
+                                      overflow: 'hidden',
+                                      whiteSpace: 'nowrap',
+                                      textOverflow: 'ellipsis',
+                                      fontSize: '8px',
                                     }}
                                   >
                                     {netBill > 0 ? `₹${netBill.toFixed(0)}` : '-'}
@@ -2570,14 +2758,19 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                                 {showDiscount && (
                                   <td
                                     style={{
+                                      width: columnWidths.discount,
                                       textAlign: 'right',
-                                      padding: '0 4px',
+                                      padding: '0 2px',
                                       border: cellBorder,
                                       fontWeight: 700,
                                       height: rowHeight,
                                       maxHeight: rowHeight,
                                       verticalAlign: 'middle',
                                       boxSizing: 'border-box',
+                                      overflow: 'hidden',
+                                      whiteSpace: 'nowrap',
+                                      textOverflow: 'ellipsis',
+                                      fontSize: '8px',
                                     }}
                                   >
                                     {sheetMode === 'FILLED' ? (discVal > 0 ? `₹${discVal.toFixed(0)}` : '-') : ''}
@@ -2587,14 +2780,19 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                                 {showCash && (
                                   <td
                                     style={{
+                                      width: columnWidths.cash,
                                       textAlign: 'right',
-                                      padding: '0 4px',
+                                      padding: '0 2px',
                                       border: cellBorder,
                                       fontWeight: 700,
                                       height: rowHeight,
                                       maxHeight: rowHeight,
                                       verticalAlign: 'middle',
                                       boxSizing: 'border-box',
+                                      overflow: 'hidden',
+                                      whiteSpace: 'nowrap',
+                                      textOverflow: 'ellipsis',
+                                      fontSize: '8px',
                                     }}
                                   >
                                     {sheetMode === 'FILLED' ? (cashVal > 0 ? `₹${cashVal.toFixed(0)}` : '-') : ''}
@@ -2604,14 +2802,19 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                                 {showGPay && (
                                   <td
                                     style={{
+                                      width: columnWidths.gpay,
                                       textAlign: 'right',
-                                      padding: '0 4px',
+                                      padding: '0 2px',
                                       border: cellBorder,
                                       fontWeight: 700,
                                       height: rowHeight,
                                       maxHeight: rowHeight,
                                       verticalAlign: 'middle',
                                       boxSizing: 'border-box',
+                                      overflow: 'hidden',
+                                      whiteSpace: 'nowrap',
+                                      textOverflow: 'ellipsis',
+                                      fontSize: '8px',
                                     }}
                                   >
                                     {sheetMode === 'FILLED' ? (gpayVal > 0 ? `₹${gpayVal.toFixed(0)}` : '-') : ''}
@@ -2621,8 +2824,9 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                                 {showBalance && (
                                   <td
                                     style={{
+                                      width: columnWidths.balance,
                                       textAlign: 'right',
-                                      padding: '0 4px',
+                                      padding: '0 2px',
                                       border: cellBorder,
                                       fontWeight: 800,
                                       color: '#000000',
@@ -2630,6 +2834,10 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                                       maxHeight: rowHeight,
                                       verticalAlign: 'middle',
                                       boxSizing: 'border-box',
+                                      overflow: 'hidden',
+                                      whiteSpace: 'nowrap',
+                                      textOverflow: 'ellipsis',
+                                      fontSize: '8px',
                                     }}
                                   >
                                     {sheetMode === 'FILLED' ? (rowBalance > 0 ? `₹${rowBalance.toFixed(0)}` : '0') : ''}
@@ -2639,6 +2847,7 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                                 {showSignatureCol && (
                                   <td
                                     style={{
+                                      width: columnWidths.signature,
                                       border: cellBorder,
                                       height: rowHeight,
                                       maxHeight: rowHeight,
@@ -2646,7 +2855,7 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                                       boxSizing: 'border-box',
                                     }}
                                   >
-                                    <div style={{ height: '100%', width: '100%', minHeight: '14px' }} />
+                                    <div style={{ height: '100%', width: '100%', minHeight: '12px' }} />
                                   </td>
                                 )}
                               </tr>
@@ -2654,9 +2863,9 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                           })
                         )}
 
-                        {/* Extra Blank Rows */}
-                        {extraBlankRowsCount > 0 &&
-                          Array.from({ length: extraBlankRowsCount }).map((_, extraIdx) => {
+                        {/* Extra Blank Rows - only on last page */}
+                        {isLastPage && actualExtraRowsCount > 0 &&
+                          Array.from({ length: actualExtraRowsCount }).map((_, extraIdx) => {
                             const rowNum = printableShops.length + extraIdx + 1;
 
                             return (
@@ -2671,6 +2880,7 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                               >
                                 <td
                                   style={{
+                                    width: columnWidths.index,
                                     textAlign: 'center',
                                     padding: '0 2px',
                                     border: cellBorder,
@@ -2686,7 +2896,8 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                                 </td>
                                 <td
                                   style={{
-                                    padding: '0 6px',
+                                    width: columnWidths.shopName,
+                                    padding: '0 4px',
                                     border: cellBorder,
                                     height: rowHeight,
                                     maxHeight: rowHeight,
@@ -2696,26 +2907,24 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                                 >
                                   <div style={{ height: '1px', borderBottom: '1px dashed #999999', width: '80%' }} />
                                 </td>
-                                {showPhone && <td style={{ border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />}
-                                {showPrevDue && <td style={{ border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />}
-                                {allDynamicProducts
-                                  .filter((p) => selectedProductIds.has(p.id))
-                                  .map((p) => (
-                                    <td key={p.id} style={{ border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />
-                                  ))}
-                                {showTotalBill && sheetMode === 'FILLED' && <td style={{ border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />}
-                                {showDiscount && <td style={{ border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />}
-                                {showCash && <td style={{ border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />}
-                                {showGPay && <td style={{ border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />}
-                                {showBalance && <td style={{ border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />}
-                                {showSignatureCol && <td style={{ border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />}
+                                {showPhone && <td style={{ width: columnWidths.phone, border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />}
+                                {showPrevDue && <td style={{ width: columnWidths.prevDue, border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />}
+                                {activeProductList.map((p) => (
+                                  <td key={p.id} style={{ width: columnWidths.product, border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />
+                                ))}
+                                {showTotalBill && sheetMode === 'FILLED' && <td style={{ width: columnWidths.totalBill, border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />}
+                                {showDiscount && <td style={{ width: columnWidths.discount, border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />}
+                                {showCash && <td style={{ width: columnWidths.cash, border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />}
+                                {showGPay && <td style={{ width: columnWidths.gpay, border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />}
+                                {showBalance && <td style={{ width: columnWidths.balance, border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />}
+                                {showSignatureCol && <td style={{ width: columnWidths.signature, border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />}
                               </tr>
                             );
                           })}
                       </tbody>
 
-                      {/* Totals Summary Row */}
-                      {showSummaryTotals && printableShops.length > 0 && (
+                      {/* Totals Summary Row - only on last page */}
+                      {isLastPage && showSummaryTotals && printableShops.length > 0 && (
                         <tfoot>
                           <tr
                             style={{
@@ -2738,6 +2947,7 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                                 height: rowHeight,
                                 verticalAlign: 'middle',
                                 boxSizing: 'border-box',
+                                fontSize: '8.5px',
                               }}
                             >
                               TOTALS:
@@ -2746,12 +2956,17 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                             {showPrevDue && (
                               <td
                                 style={{
+                                  width: columnWidths.prevDue,
                                   textAlign: 'right',
-                                  padding: '0 4px',
+                                  padding: '0 3px',
                                   border: totalsBorder,
                                   height: rowHeight,
                                   verticalAlign: 'middle',
                                   boxSizing: 'border-box',
+                                  overflow: 'hidden',
+                                  whiteSpace: 'nowrap',
+                                  textOverflow: 'ellipsis',
+                                  fontSize: '8px',
                                 }}
                               >
                                 {prevDueBlank ? '-' : `₹${calculatedTotals.totalPrevDue.toFixed(0)}`}
@@ -2759,36 +2974,44 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                             )}
 
                             {/* Product sums */}
-                            {allDynamicProducts
-                              .filter((p) => selectedProductIds.has(p.id))
-                              .map((p) => {
-                                const sumQty = calculatedTotals.productSums[p.id] || 0;
-                                return (
-                                  <td
-                                    key={p.id}
-                                    style={{
-                                      textAlign: 'center',
-                                      padding: '0 2px',
-                                      border: totalsBorder,
-                                      height: rowHeight,
-                                      verticalAlign: 'middle',
-                                      boxSizing: 'border-box',
-                                    }}
-                                  >
-                                    {sheetMode === 'FILLED' && !p.isCustom ? (sumQty > 0 ? sumQty : '') : ''}
-                                  </td>
-                                );
-                              })}
+                            {activeProductList.map((p) => {
+                              const sumQty = calculatedTotals.productSums[p.id] || 0;
+                              return (
+                                <td
+                                  key={p.id}
+                                  style={{
+                                    width: columnWidths.product,
+                                    textAlign: 'center',
+                                    padding: '0 2px',
+                                    border: totalsBorder,
+                                    height: rowHeight,
+                                    verticalAlign: 'middle',
+                                    boxSizing: 'border-box',
+                                    overflow: 'hidden',
+                                    whiteSpace: 'nowrap',
+                                    textOverflow: 'ellipsis',
+                                    fontSize: '8.5px',
+                                  }}
+                                >
+                                  {sheetMode === 'FILLED' && !p.isCustom ? (sumQty > 0 ? sumQty : '') : ''}
+                                </td>
+                              );
+                            })}
 
                             {showTotalBill && sheetMode === 'FILLED' && (
                               <td
                                 style={{
+                                  width: columnWidths.totalBill,
                                   textAlign: 'right',
-                                  padding: '0 4px',
+                                  padding: '0 3px',
                                   border: totalsBorder,
                                   height: rowHeight,
                                   verticalAlign: 'middle',
                                   boxSizing: 'border-box',
+                                  overflow: 'hidden',
+                                  whiteSpace: 'nowrap',
+                                  textOverflow: 'ellipsis',
+                                  fontSize: '8px',
                                 }}
                               >
                                 ₹{calculatedTotals.totalNetBill.toFixed(0)}
@@ -2798,12 +3021,17 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                             {showDiscount && (
                               <td
                                 style={{
+                                  width: columnWidths.discount,
                                   textAlign: 'right',
-                                  padding: '0 4px',
+                                  padding: '0 2px',
                                   border: totalsBorder,
                                   height: rowHeight,
                                   verticalAlign: 'middle',
                                   boxSizing: 'border-box',
+                                  overflow: 'hidden',
+                                  whiteSpace: 'nowrap',
+                                  textOverflow: 'ellipsis',
+                                  fontSize: '8px',
                                 }}
                               >
                                 {sheetMode === 'FILLED' ? (calculatedTotals.totalDiscount > 0 ? `₹${calculatedTotals.totalDiscount.toFixed(0)}` : '-') : ''}
@@ -2813,12 +3041,17 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                             {showCash && (
                               <td
                                 style={{
+                                  width: columnWidths.cash,
                                   textAlign: 'right',
-                                  padding: '0 4px',
+                                  padding: '0 2px',
                                   border: totalsBorder,
                                   height: rowHeight,
                                   verticalAlign: 'middle',
                                   boxSizing: 'border-box',
+                                  overflow: 'hidden',
+                                  whiteSpace: 'nowrap',
+                                  textOverflow: 'ellipsis',
+                                  fontSize: '8px',
                                 }}
                               >
                                 {sheetMode === 'FILLED' ? `₹${calculatedTotals.totalCash.toFixed(0)}` : ''}
@@ -2828,12 +3061,17 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                             {showGPay && (
                               <td
                                 style={{
+                                  width: columnWidths.gpay,
                                   textAlign: 'right',
-                                  padding: '0 4px',
+                                  padding: '0 2px',
                                   border: totalsBorder,
                                   height: rowHeight,
                                   verticalAlign: 'middle',
                                   boxSizing: 'border-box',
+                                  overflow: 'hidden',
+                                  whiteSpace: 'nowrap',
+                                  textOverflow: 'ellipsis',
+                                  fontSize: '8px',
                                 }}
                               >
                                 {sheetMode === 'FILLED' ? `₹${calculatedTotals.totalGPay.toFixed(0)}` : ''}
@@ -2843,12 +3081,17 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                             {showBalance && (
                               <td
                                 style={{
+                                  width: columnWidths.balance,
                                   textAlign: 'right',
-                                  padding: '0 4px',
+                                  padding: '0 2px',
                                   border: totalsBorder,
                                   height: rowHeight,
                                   verticalAlign: 'middle',
                                   boxSizing: 'border-box',
+                                  overflow: 'hidden',
+                                  whiteSpace: 'nowrap',
+                                  textOverflow: 'ellipsis',
+                                  fontSize: '8.5px',
                                 }}
                               >
                                 {sheetMode === 'FILLED' ? `₹${calculatedTotals.totalBalance.toFixed(0)}` : ''}
@@ -2858,6 +3101,7 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                             {showSignatureCol && (
                               <td
                                 style={{
+                                  width: columnWidths.signature,
                                   border: totalsBorder,
                                   height: rowHeight,
                                   verticalAlign: 'middle',
@@ -2873,23 +3117,23 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                 })()}
               </div>
 
-              {/* Sheet Footer & Signatures ("not footer" - disabled by default!) */}
-              {showSignatures && (
+              {/* Sheet Footer & Signatures - only on last page */}
+              {isLastPage && showSignatures && (
                 <div
                   style={{
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'flex-end',
-                    marginTop: '1rem',
-                    paddingTop: '0.4rem',
+                    marginTop: '0.5rem',
+                    paddingTop: '0.3rem',
                     borderTop: '1px solid #000000',
-                    fontSize: '9.5px',
+                    fontSize: '9px',
                     color: '#000000',
                   }}
                 >
                   <div>
-                    <div style={{ marginBottom: '16px', fontWeight: 700 }}>Driver Signature:</div>
-                    <div style={{ borderBottom: '1px solid #000000', width: '150px' }} />
+                    <div style={{ marginBottom: '14px', fontWeight: 700 }}>Driver Signature:</div>
+                    <div style={{ borderBottom: '1px solid #000000', width: '130px' }} />
                   </div>
 
                   <div style={{ textAlign: 'center', fontSize: '8px', color: '#444444' }}>
@@ -2897,12 +3141,15 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                   </div>
 
                   <div>
-                    <div style={{ marginBottom: '16px', fontWeight: 700, textAlign: 'right' }}>Manager / Verified By:</div>
-                    <div style={{ borderBottom: '1px solid #000000', width: '150px' }} />
+                    <div style={{ marginBottom: '14px', fontWeight: 700, textAlign: 'right' }}>Manager / Verified By:</div>
+                    <div style={{ borderBottom: '1px solid #000000', width: '130px' }} />
                   </div>
                 </div>
               )}
             </div>
+          );
+        })}
+      </div>
           </div>
 
         </div>
