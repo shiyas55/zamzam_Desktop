@@ -121,13 +121,15 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
 
   // 6. Page Layout & A4 Size Selection
   const [pageOrientation, setPageOrientation] = useState<'portrait' | 'landscape'>('portrait');
-  const [rowDensity, setRowDensity] = useState<'compact' | 'standard' | 'spacious'>('standard');
+  const [rowDensity, setRowDensity] = useState<'compact' | 'standard' | 'spacious' | 'auto'>('standard');
+  const [fitToOnePage, setFitToOnePage] = useState<boolean>(true); // Strictly 1 A4 Page ("pdf make a4 size next page not show")
   const [showSummaryTotals, setShowSummaryTotals] = useState<boolean>(true);
   const [extraBlankRowsCount, setExtraBlankRowsCount] = useState<number>(0);
   const [lineThickness, setLineThickness] = useState<'THIN' | 'HAIRLINE' | 'STANDARD'>('THIN');
 
   // 7. Column Visibility Toggles ("only name add there coulem")
   const [showPhone, setShowPhone] = useState<boolean>(false);
+  const [showRouteSubtitle, setShowRouteSubtitle] = useState<boolean>(false); // "remove hide rounte name" - strictly false/hidden by default!
   const [showPrevDue, setShowPrevDue] = useState<boolean>(true);
   const [prevDueBlank, setPrevDueBlank] = useState<boolean>(false);
   const [showCash, setShowCash] = useState<boolean>(true);
@@ -509,6 +511,46 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
     };
   }, [printableShops, rowsByCustomerId, allDynamicProducts, sheetMode]);
 
+  // Dynamic A4 single-page height & row calculation to prevent A4 over issue ("fix a4 over issus fix it")
+  const a4PageHeightPx = useMemo(() => {
+    return pageOrientation === 'landscape' ? 794 : 1122; // 210mm vs 297mm in standard CSS 96dpi
+  }, [pageOrientation]);
+
+  const effectiveRowHeightPx = useMemo(() => {
+    if (rowDensity === 'compact') return 20;
+    if (rowDensity === 'spacious') return 32;
+    if (rowDensity === 'standard' && (!fitToOnePage || printableShops.length <= 32)) return 24;
+
+    // Auto-fit to 1 A4 page so table NEVER overflows past bottom edge
+    const headerHeight = headerStyle === 'FULL' ? 115 : headerStyle === 'MINIMAL' ? 32 : 0;
+    const footerHeight = showSignatures ? 60 : 0;
+    const totalsHeight = showSummaryTotals ? 26 : 0;
+    const paddingHeight = headerStyle === 'NONE' ? 35 : 55;
+    const tableHeaderHeight = 26;
+
+    const availableHeightForRows = a4PageHeightPx - (headerHeight + footerHeight + totalsHeight + paddingHeight + tableHeaderHeight);
+    const totalRowCount = Math.max(1, printableShops.length + extraBlankRowsCount);
+
+    const calculatedH = Math.floor(availableHeightForRows / totalRowCount);
+    return Math.min(26, Math.max(11, calculatedH));
+  }, [
+    rowDensity,
+    fitToOnePage,
+    printableShops.length,
+    extraBlankRowsCount,
+    headerStyle,
+    showSignatures,
+    showSummaryTotals,
+    a4PageHeightPx,
+  ]);
+
+  const effectiveFontSize = useMemo(() => {
+    if (effectiveRowHeightPx >= 24) return '10px';
+    if (effectiveRowHeightPx >= 20) return '9px';
+    if (effectiveRowHeightPx >= 16) return '8px';
+    return '7.5px';
+  }, [effectiveRowHeightPx]);
+
   // Printable Iframe Action ("print pdf get")
   const [isPrinting, setIsPrinting] = useState(false);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
@@ -551,7 +593,7 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
             <style>
               @page {
                 size: A4 ${pageOrientation};
-                margin: ${headerStyle === 'NONE' ? '5mm 6mm' : pageOrientation === 'landscape' ? '6mm 7mm' : '7mm 8mm'};
+                margin: ${headerStyle === 'NONE' ? '4mm 5mm' : '5mm 6mm'};
               }
               * {
                 box-sizing: border-box;
@@ -559,14 +601,25 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                 print-color-adjust: exact !important;
               }
               html, body {
-                margin: 0;
-                padding: 0;
-                background: #ffffff;
-                color: #000000;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #ffffff !important;
+                color: #000000 !important;
                 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                font-size: ${rowDensity === 'compact' ? '9px' : rowDensity === 'spacious' ? '12px' : '10.5px'};
-                line-height: 1.2;
-                width: 100%;
+                font-size: ${effectiveFontSize};
+                line-height: 1.15;
+                width: 100% !important;
+                height: auto !important;
+              }
+              #route-sheet-printable-area {
+                width: 100% !important;
+                min-height: 0 !important;
+                height: auto !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
               }
               table {
                 width: 100%;
@@ -582,8 +635,9 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                     : '1pt solid #000000'
                 } !important;
                 color: #000000;
-                height: ${rowDensity === 'compact' ? '20px' : rowDensity === 'spacious' ? '32px' : '25px'} !important;
-                max-height: ${rowDensity === 'compact' ? '20px' : rowDensity === 'spacious' ? '32px' : '25px'} !important;
+                height: ${effectiveRowHeightPx}px !important;
+                max-height: ${effectiveRowHeightPx}px !important;
+                font-size: ${effectiveFontSize} !important;
                 padding: 0 4px !important;
                 box-sizing: border-box !important;
                 vertical-align: middle !important;
@@ -604,8 +658,8 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                 font-weight: 800;
               }
               tr {
-                height: ${rowDensity === 'compact' ? '20px' : rowDensity === 'spacious' ? '32px' : '25px'} !important;
-                max-height: ${rowDensity === 'compact' ? '20px' : rowDensity === 'spacious' ? '32px' : '25px'} !important;
+                height: ${effectiveRowHeightPx}px !important;
+                max-height: ${effectiveRowHeightPx}px !important;
                 box-sizing: border-box !important;
               }
               .shop-name-cell {
@@ -614,6 +668,30 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                 text-overflow: ellipsis !important;
                 font-weight: 800 !important;
                 line-height: 1.2 !important;
+              }
+              ${
+                fitToOnePage
+                  ? `
+              @media print {
+                html, body {
+                  height: 100% !important;
+                  max-height: 100% !important;
+                  overflow: hidden !important;
+                }
+                #route-sheet-printable-area {
+                  height: 100% !important;
+                  max-height: 100% !important;
+                  overflow: hidden !important;
+                  page-break-after: avoid !important;
+                  page-break-inside: avoid !important;
+                }
+                table, tr, td {
+                  page-break-inside: avoid !important;
+                  page-break-after: avoid !important;
+                }
+              }
+              `
+                  : ''
               }
               .print-no-break {
                 page-break-inside: avoid;
@@ -642,7 +720,7 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
     }
   };
 
-  // Direct PDF Download using html2canvas & jsPDF
+  // Direct PDF Download using html2canvas & jsPDF ("adn pdf make a4 size next page not show")
   const handleDownloadPdf = async () => {
     if (!printSheetRef.current) return;
     setIsDownloadingPdf(true);
@@ -668,21 +746,38 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
       const pdfHeight = pdf.internal.pageSize.getHeight();
       const canvasWidth = canvas.width;
       const canvasHeight = canvas.height;
-      const calculatedHeight = (canvasHeight * pdfWidth) / canvasWidth;
+      const ratio = canvasWidth / canvasHeight;
+
+      let printWidth = pdfWidth;
+      let printHeight = pdfWidth / ratio;
 
       const imgData = canvas.toDataURL('image/jpeg', 0.98);
 
-      let position = 0;
-      let remainingHeight = calculatedHeight;
+      if (fitToOnePage || printHeight <= pdfHeight + 5) {
+        // STRICTLY 1 SINGLE PAGE - NEVER SHOW A NEXT PAGE!
+        if (printHeight > pdfHeight) {
+          // Scale down proportionally so it fits the exact single A4 page
+          printHeight = pdfHeight;
+          printWidth = pdfHeight * ratio;
+          const xOffset = Math.max(0, (pdfWidth - printWidth) / 2);
+          pdf.addImage(imgData, 'JPEG', xOffset, 0, printWidth, printHeight);
+        } else {
+          pdf.addImage(imgData, 'JPEG', 0, 0, printWidth, printHeight);
+        }
+      } else {
+        // Multi-page only if fitToOnePage is unchecked AND content genuinely spans multiple pages
+        let position = 0;
+        let remainingHeight = printHeight;
 
-      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, calculatedHeight);
-      remainingHeight -= pdfHeight;
-
-      while (remainingHeight > 0) {
-        position = position - pdfHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, calculatedHeight);
+        pdf.addImage(imgData, 'JPEG', 0, position, printWidth, printHeight);
         remainingHeight -= pdfHeight;
+
+        while (remainingHeight > 8) {
+          position = position - pdfHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'JPEG', 0, position, printWidth, printHeight);
+          remainingHeight -= pdfHeight;
+        }
       }
 
       const fileName = `Route_Sheet_${selectedRouteNamesString.replace(/[^a-zA-Z0-9]/g, '_')}_${orderDate}.pdf`;
@@ -1477,6 +1572,16 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                   <span>Shop Name (Fixed)</span>
                 </label>
 
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.72rem', color: '#334155', cursor: 'pointer' }} title="Hide/show route name under shop name">
+                  <input
+                    type="checkbox"
+                    checked={showRouteSubtitle}
+                    onChange={(e) => setShowRouteSubtitle(e.target.checked)}
+                    style={{ accentColor: '#2563eb' }}
+                  />
+                  <span>Show Route Subtitle</span>
+                </label>
+
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.72rem', color: '#334155', cursor: 'pointer' }}>
                   <input type="checkbox" checked={showPrevDue} onChange={(e) => setShowPrevDue(e.target.checked)} style={{ accentColor: '#2563eb' }} />
                   <span>Previous Due</span>
@@ -1842,27 +1947,62 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: '0.7rem', color: '#475569', fontWeight: 600 }}>Row Height:</span>
                 <div style={{ display: 'flex', gap: '2px' }}>
-                  {(['compact', 'standard', 'spacious'] as const).map((d) => (
+                  {(
+                    [
+                      { id: 'compact', label: 'Compact' },
+                      { id: 'standard', label: 'Standard' },
+                      { id: 'spacious', label: 'Spacious' },
+                      { id: 'auto', label: '⚡ Auto-Fit' },
+                    ] as const
+                  ).map((d) => (
                     <button
-                      key={d}
+                      key={d.id}
                       type="button"
-                      onClick={() => setRowDensity(d)}
+                      onClick={() => setRowDensity(d.id)}
                       style={{
                         padding: '0.15rem 0.35rem',
                         fontSize: '0.66rem',
-                        fontWeight: rowDensity === d ? 800 : 500,
+                        fontWeight: rowDensity === d.id ? 800 : 500,
                         borderRadius: '3px',
                         border: 'none',
                         cursor: 'pointer',
-                        backgroundColor: rowDensity === d ? '#0f172a' : '#f1f5f9',
-                        color: rowDensity === d ? '#ffffff' : '#475569',
+                        backgroundColor: rowDensity === d.id ? '#0f172a' : '#f1f5f9',
+                        color: rowDensity === d.id ? '#ffffff' : '#475569',
                       }}
+                      title={d.id === 'auto' ? 'Automatically fits all shops onto 1 single page' : undefined}
                     >
-                      {d.charAt(0).toUpperCase() + d.slice(1)}
+                      {d.label}
                     </button>
                   ))}
                 </div>
               </div>
+
+              {/* Fit strictly to 1 A4 page ("adn pdf make a4 size next page not show") */}
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  fontSize: '0.72rem',
+                  color: '#0f172a',
+                  fontWeight: 700,
+                  backgroundColor: fitToOnePage ? '#ecfdf5' : '#f8fafc',
+                  padding: '0.25rem 0.45rem',
+                  borderRadius: '4px',
+                  border: fitToOnePage ? '1px solid #10b981' : '1px solid #cbd5e1',
+                  cursor: 'pointer',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={fitToOnePage}
+                  onChange={(e) => setFitToOnePage(e.target.checked)}
+                  style={{ accentColor: '#059669', cursor: 'pointer' }}
+                />
+                <span style={{ color: fitToOnePage ? '#065f46' : '#475569' }}>
+                  🎯 Fit to 1 A4 Page (No Next Page)
+                </span>
+              </label>
 
               {/* Grid Lines Thickness ("low line thin") */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -1952,13 +2092,16 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
               style={{
                 width: pageOrientation === 'landscape' ? '297mm' : '210mm',
                 minHeight: pageOrientation === 'landscape' ? '210mm' : '297mm',
+                height: fitToOnePage ? (pageOrientation === 'landscape' ? '210mm' : '297mm') : 'auto',
+                maxHeight: fitToOnePage ? (pageOrientation === 'landscape' ? '210mm' : '297mm') : undefined,
+                overflow: fitToOnePage ? 'hidden' : 'visible',
                 backgroundColor: '#ffffff',
                 boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
-                padding: headerStyle === 'NONE' ? (pageOrientation === 'landscape' ? '5mm 7mm' : '6mm 8mm') : pageOrientation === 'landscape' ? '6mm 8mm' : '8mm 10mm',
+                padding: headerStyle === 'NONE' ? (pageOrientation === 'landscape' ? '4mm 6mm' : '5mm 7mm') : pageOrientation === 'landscape' ? '5mm 7mm' : '7mm 9mm',
                 boxSizing: 'border-box',
                 color: '#000000',
                 fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-                fontSize: rowDensity === 'compact' ? '9.5px' : rowDensity === 'spacious' ? '12px' : '10.5px',
+                fontSize: effectiveFontSize,
                 display: 'flex',
                 flexDirection: 'column',
               }}
@@ -2074,7 +2217,7 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
               <div style={{ flex: 1, width: '100%' }}>
                 {/* Dynamic styling constants */}
                 {(() => {
-                  const rowHeight = rowDensity === 'compact' ? '20px' : rowDensity === 'spacious' ? '32px' : '25px';
+                  const rowHeight = `${effectiveRowHeightPx}px`;
 
                   const cellBorder =
                     lineThickness === 'THIN'
@@ -2295,12 +2438,28 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                                       whiteSpace: 'nowrap',
                                       overflow: 'hidden',
                                       textOverflow: 'ellipsis',
-                                      lineHeight: '1.2',
+                                      lineHeight: '1.15',
+                                      fontSize: effectiveFontSize,
                                     }}
                                     title={customer.name}
                                   >
                                     {customer.name}
                                   </div>
+                                  {showRouteSubtitle && customer.route_details?.name && (
+                                    <div
+                                      style={{
+                                        fontSize: '7px',
+                                        color: '#666666',
+                                        whiteSpace: 'nowrap',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        lineHeight: 1,
+                                        marginTop: '1px',
+                                      }}
+                                    >
+                                      ({customer.route_details.name})
+                                    </div>
+                                  )}
                                 </td>
 
                                 {showPhone && (
