@@ -135,6 +135,7 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
   const [showCash, setShowCash] = useState<boolean>(true);
   const [showGPay, setShowGPay] = useState<boolean>(true);
   const [showTotalBill, setShowTotalBill] = useState<boolean>(true);
+  const [showDiscount, setShowDiscount] = useState<boolean>(true); // Disc (₹)
   const [showBalance, setShowBalance] = useState<boolean>(true);
   const [showSignatureCol, setShowSignatureCol] = useState<boolean>(true);
 
@@ -455,6 +456,7 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
     let totalCash = 0;
     let totalGPay = 0;
     let totalNetBill = 0;
+    let totalDiscount = 0;
     let totalBalance = 0;
     let totalPieces = 0;
 
@@ -469,6 +471,7 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
         const discVal = parseFloat(row.discountAmount) || 0;
         totalCash += cashVal;
         totalGPay += gpayVal;
+        totalDiscount += discVal;
 
         let rowBill = 0;
         allDynamicProducts.forEach((p) => {
@@ -506,6 +509,7 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
       totalCash,
       totalGPay,
       totalNetBill,
+      totalDiscount,
       totalBalance,
       totalPieces,
     };
@@ -1649,6 +1653,11 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                 </label>
 
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.72rem', color: '#334155', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={showDiscount} onChange={(e) => setShowDiscount(e.target.checked)} style={{ accentColor: '#2563eb' }} />
+                  <span>Disc (₹)</span>
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.72rem', color: '#334155', cursor: 'pointer' }}>
                   <input type="checkbox" checked={showBalance} onChange={(e) => setShowBalance(e.target.checked)} style={{ accentColor: '#2563eb' }} />
                   <span>Balance Due</span>
                 </label>
@@ -2318,6 +2327,12 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                             </th>
                           )}
 
+                          {showDiscount && (
+                            <th style={{ width: '56px', padding: '0 4px', textAlign: 'right', border: headerBorder, fontWeight: 800, height: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }}>
+                              Disc (₹)
+                            </th>
+                          )}
+
                           {showCash && (
                             <th style={{ width: '56px', padding: '0 4px', textAlign: 'right', border: headerBorder, fontWeight: 800, height: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }}>
                               Cash (₹)
@@ -2552,6 +2567,23 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                                   </td>
                                 )}
 
+                                {showDiscount && (
+                                  <td
+                                    style={{
+                                      textAlign: 'right',
+                                      padding: '0 4px',
+                                      border: cellBorder,
+                                      fontWeight: 700,
+                                      height: rowHeight,
+                                      maxHeight: rowHeight,
+                                      verticalAlign: 'middle',
+                                      boxSizing: 'border-box',
+                                    }}
+                                  >
+                                    {sheetMode === 'FILLED' ? (discVal > 0 ? `₹${discVal.toFixed(0)}` : '-') : ''}
+                                  </td>
+                                )}
+
                                 {showCash && (
                                   <td
                                     style={{
@@ -2672,6 +2704,7 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                                     <td key={p.id} style={{ border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />
                                   ))}
                                 {showTotalBill && sheetMode === 'FILLED' && <td style={{ border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />}
+                                {showDiscount && <td style={{ border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />}
                                 {showCash && <td style={{ border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />}
                                 {showGPay && <td style={{ border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />}
                                 {showBalance && <td style={{ border: cellBorder, height: rowHeight, maxHeight: rowHeight, verticalAlign: 'middle', boxSizing: 'border-box' }} />}
@@ -2759,6 +2792,21 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                                 }}
                               >
                                 ₹{calculatedTotals.totalNetBill.toFixed(0)}
+                              </td>
+                            )}
+
+                            {showDiscount && (
+                              <td
+                                style={{
+                                  textAlign: 'right',
+                                  padding: '0 4px',
+                                  border: totalsBorder,
+                                  height: rowHeight,
+                                  verticalAlign: 'middle',
+                                  boxSizing: 'border-box',
+                                }}
+                              >
+                                {sheetMode === 'FILLED' ? (calculatedTotals.totalDiscount > 0 ? `₹${calculatedTotals.totalDiscount.toFixed(0)}` : '-') : ''}
                               </td>
                             )}
 
