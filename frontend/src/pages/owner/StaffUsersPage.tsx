@@ -1875,14 +1875,22 @@ export const StaffUsersPage: React.FC<StaffUsersPageProps> = ({ defaultTab }) =>
                                     >
                                       <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 700, marginRight: '2px' }}>₹</span>
                                       <input
-                                        type="number"
-                                        min="0"
-                                        step="1"
+                                        type="text"
+                                        inputMode="decimal"
                                         className="hide-arrows"
-                                        value={item.cash_paid ?? '0.00'}
-                                        onChange={(e) => handleUpdatePayment(item.staff_id, 'cash_paid', e.target.value)}
+                                        placeholder="0.00"
+                                        value={item.cash_paid === '0.00' || item.cash_paid === '0' ? '' : (item.cash_paid ?? '')}
+                                        onChange={(e) => {
+                                          const val = e.target.value.replace(/[^0-9.]/g, '');
+                                          handleUpdatePayment(item.staff_id, 'cash_paid', val);
+                                        }}
                                         onFocus={(e) => {
-                                          if (e.target.value === '0' || e.target.value === '0.00') e.target.select();
+                                          e.target.select();
+                                        }}
+                                        onBlur={(e) => {
+                                          const raw = e.target.value.trim();
+                                          const num = parseFloat(raw);
+                                          handleUpdatePayment(item.staff_id, 'cash_paid', isNaN(num) || num <= 0 ? '0.00' : num.toFixed(2));
                                         }}
                                         style={{
                                           width: '58px',
@@ -1895,7 +1903,7 @@ export const StaffUsersPage: React.FC<StaffUsersPageProps> = ({ defaultTab }) =>
                                           outline: 'none',
                                           color: 'var(--text-primary)',
                                         }}
-                                        title="Daily cash wage / advance given today"
+                                        title="Daily cash wage / advance given today (click to enter amount)"
                                       />
                                     </div>
                                   </td>
@@ -1914,14 +1922,22 @@ export const StaffUsersPage: React.FC<StaffUsersPageProps> = ({ defaultTab }) =>
                                     >
                                       <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 700, marginRight: '2px' }}>₹</span>
                                       <input
-                                        type="number"
-                                        min="0"
-                                        step="1"
+                                        type="text"
+                                        inputMode="decimal"
                                         className="hide-arrows"
-                                        value={item.gpay_paid ?? '0.00'}
-                                        onChange={(e) => handleUpdatePayment(item.staff_id, 'gpay_paid', e.target.value)}
+                                        placeholder="0.00"
+                                        value={item.gpay_paid === '0.00' || item.gpay_paid === '0' ? '' : (item.gpay_paid ?? '')}
+                                        onChange={(e) => {
+                                          const val = e.target.value.replace(/[^0-9.]/g, '');
+                                          handleUpdatePayment(item.staff_id, 'gpay_paid', val);
+                                        }}
                                         onFocus={(e) => {
-                                          if (e.target.value === '0' || e.target.value === '0.00') e.target.select();
+                                          e.target.select();
+                                        }}
+                                        onBlur={(e) => {
+                                          const raw = e.target.value.trim();
+                                          const num = parseFloat(raw);
+                                          handleUpdatePayment(item.staff_id, 'gpay_paid', isNaN(num) || num <= 0 ? '0.00' : num.toFixed(2));
                                         }}
                                         style={{
                                           width: '58px',
@@ -1934,7 +1950,7 @@ export const StaffUsersPage: React.FC<StaffUsersPageProps> = ({ defaultTab }) =>
                                           outline: 'none',
                                           color: 'var(--text-primary)',
                                         }}
-                                        title="Daily GPay / online wage payout today"
+                                        title="Daily GPay / online wage payout today (click to enter amount)"
                                       />
                                     </div>
                                   </td>
@@ -2131,6 +2147,26 @@ export const StaffUsersPage: React.FC<StaffUsersPageProps> = ({ defaultTab }) =>
                       {formatCurrency(attendanceStats.netBalance)}
                     </strong>
                   </div>
+
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-sm"
+                    onClick={handleSaveAttendance}
+                    disabled={attendanceSaving}
+                    style={{
+                      height: 32,
+                      padding: '0 1rem',
+                      fontWeight: 800,
+                      fontSize: '0.8rem',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                      boxShadow: '0 2px 4px rgba(185,28,28,0.25)',
+                    }}
+                  >
+                    <Save size={14} />
+                    <span>{attendanceSaving ? 'Saving...' : 'Save Attendance Sheet'}</span>
+                  </button>
                 </div>
               </div>
             </div>

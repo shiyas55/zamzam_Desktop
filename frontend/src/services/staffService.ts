@@ -105,7 +105,8 @@ export const staffService = {
     marked_count: number;
     total_staff: number;
   }> {
-    const params = date ? { date } : undefined;
+    const params: Record<string, any> = { _t: Date.now() };
+    if (date) params.date = date;
     return apiClient.get('/staff-attendance/daily-sheet/', params);
   },
 

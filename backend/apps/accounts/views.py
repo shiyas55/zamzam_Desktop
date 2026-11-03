@@ -615,12 +615,16 @@ class StaffAttendanceViewSet(viewsets.ModelViewSet):
                 "notes": att.notes if att else "",
             })
 
-        return Response({
+        resp = Response({
             "date": str(target_date),
             "sheet": results,
             "marked_count": len(attendances),
             "total_staff": len(staff_list),
         })
+        resp["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        resp["Pragma"] = "no-cache"
+        resp["Expires"] = "0"
+        return resp
 
     @action(detail=False, methods=["post"], url_path="bulk-save")
     def bulk_save(self, request):
@@ -743,10 +747,13 @@ class StaffAttendanceViewSet(viewsets.ModelViewSet):
                     elif existing_gpay:
                         existing_gpay.delete()
 
-        return Response({
+        resp = Response({
             "message": f"Successfully updated attendance and daily wage payouts for {len(saved)} staff members on {target_date}.",
             "count": len(saved),
         })
+        resp["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        resp["Pragma"] = "no-cache"
+        return resp
 
 
 class StaffPayoutViewSet(viewsets.ModelViewSet):
