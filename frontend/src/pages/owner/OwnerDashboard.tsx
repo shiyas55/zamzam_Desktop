@@ -30,6 +30,7 @@ import {
   Plus,
   Minus,
   Equal,
+  UserCheck,
 } from 'lucide-react';
 
 export const OwnerDashboard: React.FC = () => {
@@ -749,12 +750,223 @@ export const OwnerDashboard: React.FC = () => {
 
               <button
                 className="btn btn-secondary btn-sm"
+                onClick={() => navigate('/owner/attendance')}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', padding: '0.6rem' }}
+              >
+                <UserCheck size={14} color="#b91c1c" />
+                <span style={{ fontWeight: 600 }}>Attendance & Wages</span>
+              </button>
+
+              <button
+                className="btn btn-secondary btn-sm"
                 onClick={() => navigate('/owner/activity-history')}
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', padding: '0.6rem' }}
               >
                 <History size={14} color="var(--primary)" />
                 <span style={{ fontWeight: 600 }}>Activity History</span>
               </button>
+            </div>
+          </div>
+
+          {/* Staff Attendance & Wages Dashboard Section */}
+          <div style={{ marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <UserCheck size={20} color="#b91c1c" />
+                <span>Staff Attendance & Wages ({data.date})</span>
+              </h3>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => navigate('/owner/attendance')}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontWeight: 700, fontSize: '0.78rem' }}
+              >
+                <span>Open Roll-Call Sheet</span>
+                <ArrowRight size={13} />
+              </button>
+            </div>
+
+            {/* Attendance & Wages KPI Cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '0.65rem', marginBottom: '1rem' }}>
+              {/* Roll-Call Status */}
+              <div className="card" style={{ padding: '0.85rem 1rem', border: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                    Staff Roll-Call
+                  </span>
+                  <Users size={15} color="#b91c1c" />
+                </div>
+                <div style={{ fontSize: '1.35rem', fontWeight: 900, color: 'var(--text-primary)' }}>
+                  {data.staff_summary?.present_count ?? 0} / {data.staff_summary?.total_staff ?? 0}
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#059669', marginLeft: '6px' }}>Present</span>
+                </div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                  <span>{data.staff_summary?.full_count ?? 0} Full</span> •{' '}
+                  <span>{data.staff_summary?.half_count ?? 0} Half</span> •{' '}
+                  <span style={{ color: '#dc2626', fontWeight: 700 }}>{data.staff_summary?.leave_count ?? 0} Leave</span>
+                </div>
+              </div>
+
+              {/* Earned Wages */}
+              <div className="card" style={{ padding: '0.85rem 1rem', border: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                    Total Wages Earned
+                  </span>
+                  <Wallet size={15} color="#b91c1c" />
+                </div>
+                <div style={{ fontSize: '1.35rem', fontWeight: 900, color: '#b91c1c' }}>
+                  {formatCurrency(data.staff_summary?.total_earned ?? '0.00')}
+                </div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                  Calculated daily wages
+                </div>
+              </div>
+
+              {/* Cash Paid */}
+              <div className="card" style={{ padding: '0.85rem 1rem', border: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                    Cash Paid
+                  </span>
+                  <DollarSign size={15} color="#059669" />
+                </div>
+                <div style={{ fontSize: '1.35rem', fontWeight: 900, color: '#059669' }}>
+                  {formatCurrency(data.staff_summary?.total_cash_paid ?? '0.00')}
+                </div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                  Daily cash wage payouts
+                </div>
+              </div>
+
+              {/* GPay Paid */}
+              <div className="card" style={{ padding: '0.85rem 1rem', border: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                    GPay Paid
+                  </span>
+                  <CreditCard size={15} color="var(--primary)" />
+                </div>
+                <div style={{ fontSize: '1.35rem', fontWeight: 900, color: 'var(--primary)' }}>
+                  {formatCurrency(data.staff_summary?.total_gpay_paid ?? '0.00')}
+                </div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                  UPI / GPay payouts
+                </div>
+              </div>
+
+              {/* Total Paid Today */}
+              <div className="card" style={{ padding: '0.85rem 1rem', border: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                    Total Paid
+                  </span>
+                  <Receipt size={15} color="#d97706" />
+                </div>
+                <div style={{ fontSize: '1.35rem', fontWeight: 900, color: '#d97706' }}>
+                  {formatCurrency(data.staff_summary?.total_paid ?? '0.00')}
+                </div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                  Cash + GPay combined
+                </div>
+              </div>
+
+              {/* Net Due / Balance */}
+              <div
+                className="card"
+                style={{
+                  padding: '0.85rem 1rem',
+                  border: '1px solid #fecaca',
+                  background: '#fef2f2',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#991b1b', textTransform: 'uppercase' }}>
+                    Net Wages Due
+                  </span>
+                  <Scale size={15} color="#dc2626" />
+                </div>
+                <div style={{ fontSize: '1.35rem', fontWeight: 900, color: '#dc2626' }}>
+                  {formatCurrency(data.staff_summary?.net_due ?? '0.00')}
+                </div>
+                <div style={{ fontSize: '0.7rem', color: '#b91c1c', fontWeight: 600, marginTop: '4px' }}>
+                  Earned − Total Paid
+                </div>
+              </div>
+            </div>
+
+            {/* Detailed Staff Breakdown Table */}
+            <div className="table-container">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: 36, textAlign: 'center' }}>#</th>
+                    <th>Personnel / Role</th>
+                    <th>Attendance Status</th>
+                    <th style={{ textAlign: 'right' }}>Wages Earned</th>
+                    <th style={{ textAlign: 'right' }}>Cash Paid</th>
+                    <th style={{ textAlign: 'right' }}>GPay Paid</th>
+                    <th style={{ textAlign: 'right' }}>Total Paid</th>
+                    <th style={{ textAlign: 'right' }}>Net Due</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.staff_summary?.staff_breakdown && data.staff_summary.staff_breakdown.length > 0 ? (
+                    data.staff_summary.staff_breakdown.map((sm, idx) => {
+                      const isPresent = sm.status === 'FULL' || sm.status === 'HALF';
+                      const badgeClass =
+                        sm.status === 'FULL'
+                          ? 'badge badge-success'
+                          : sm.status === 'HALF'
+                          ? 'badge badge-warning'
+                          : 'badge badge-neutral';
+                      const statusLabel =
+                        sm.status === 'FULL'
+                          ? 'Full Day'
+                          : sm.status === 'HALF'
+                          ? 'Half Day'
+                          : 'Leave';
+
+                      return (
+                        <tr key={sm.staff_id}>
+                          <td style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                            {idx + 1}
+                          </td>
+                          <td>
+                            <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{sm.full_name}</div>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                              {sm.designation} {sm.phone_number ? `• ${sm.phone_number}` : ''}
+                            </div>
+                          </td>
+                          <td>
+                            <span className={badgeClass}>{statusLabel}</span>
+                          </td>
+                          <td style={{ textAlign: 'right', fontWeight: 600, color: isPresent ? '#b91c1c' : 'var(--text-muted)' }}>
+                            {formatCurrency(sm.earned)}
+                          </td>
+                          <td style={{ textAlign: 'right', fontWeight: 700, color: parseFloat(sm.cash_paid || '0') > 0 ? '#059669' : 'var(--text-muted)' }}>
+                            {formatCurrency(sm.cash_paid)}
+                          </td>
+                          <td style={{ textAlign: 'right', fontWeight: 700, color: parseFloat(sm.gpay_paid || '0') > 0 ? 'var(--primary)' : 'var(--text-muted)' }}>
+                            {formatCurrency(sm.gpay_paid)}
+                          </td>
+                          <td style={{ textAlign: 'right', fontWeight: 700, color: parseFloat(sm.total_paid || '0') > 0 ? '#d97706' : 'var(--text-muted)' }}>
+                            {formatCurrency(sm.total_paid)}
+                          </td>
+                          <td style={{ textAlign: 'right', fontWeight: 800, color: parseFloat(sm.net_due || '0') > 0 ? '#dc2626' : '#059669' }}>
+                            {formatCurrency(sm.net_due)}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={8} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '1.5rem' }}>
+                        No staff attendance records for this period.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
 

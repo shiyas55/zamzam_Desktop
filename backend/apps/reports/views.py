@@ -14,6 +14,7 @@ from apps.orders.models import Order
 from apps.deliveries.models import Delivery
 from apps.payments.models import Payment
 from apps.products.models import Product
+from apps.accounts.models import StaffMember, StaffAttendance, StaffPayout
 
 
 def resolve_date_range(request):
@@ -241,6 +242,64 @@ class DashboardSummaryView(APIView):
                 "total_receivable": r_receivables,
             })
 
+        # Staff Attendance & Wages in date range
+        active_staff = StaffMember.objects.filter(is_active=True).order_by("full_name")
+        total_staff_count = active_staff.count()
+
+        att_range_qs = StaffAttendance.objects.filter(date__gte=start_date, date__lte=end_date)
+        payouts_range_qs = StaffPayout.objects.filter(date__gte=start_date, date__lte=end_date)
+
+        total_staff_earned = att_range_qs.aggregate(total=Sum("daily_wage"))["total"] or Decimal("0.00")
+        staff_cash_paid = payouts_range_qs.filter(payment_method=StaffPayout.PaymentMethod.CASH).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+        staff_gpay_paid = payouts_range_qs.filter(payment_method=StaffPayout.PaymentMethod.GPAY_UPI).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+        total_staff_paid = staff_cash_paid + staff_gpay_paid
+        staff_net_due = total_staff_earned - total_staff_paid
+
+        full_att_count = att_range_qs.filter(status=StaffAttendance.Status.FULL).count()
+        half_att_count = att_range_qs.filter(status=StaffAttendance.Status.HALF).count()
+        leave_att_count = att_range_qs.filter(status=StaffAttendance.Status.LEAVE).count()
+        present_att_count = full_att_count + half_att_count
+
+        staff_details_list = []
+        for sm in active_staff:
+            sm_att = att_range_qs.filter(staff=sm)
+            sm_payouts = payouts_range_qs.filter(staff=sm)
+
+            sm_status = sm_att.first().status if sm_att.exists() else "LEAVE"
+            sm_earned = sm_att.aggregate(total=Sum("daily_wage"))["total"] or Decimal("0.00")
+            sm_cash = sm_payouts.filter(payment_method=StaffPayout.PaymentMethod.CASH).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+            sm_gpay = sm_payouts.filter(payment_method=StaffPayout.PaymentMethod.GPAY_UPI).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+            sm_paid = sm_cash + sm_gpay
+            sm_due = sm_earned - sm_paid
+
+            staff_details_list.append({
+                "staff_id": str(sm.id),
+                "full_name": sm.full_name,
+                "role_type": sm.role_type,
+                "designation": sm.designation,
+                "phone_number": sm.phone_number,
+                "status": sm_status,
+                "earned": str(sm_earned),
+                "cash_paid": str(sm_cash),
+                "gpay_paid": str(sm_gpay),
+                "total_paid": str(sm_paid),
+                "net_due": str(sm_due),
+            })
+
+        staff_summary = {
+            "total_staff": total_staff_count,
+            "present_count": present_att_count,
+            "full_count": full_att_count,
+            "half_count": half_att_count,
+            "leave_count": leave_att_count,
+            "total_earned": str(total_staff_earned),
+            "total_cash_paid": str(staff_cash_paid),
+            "total_gpay_paid": str(staff_gpay_paid),
+            "total_paid": str(total_staff_paid),
+            "net_due": str(staff_net_due),
+            "staff_breakdown": staff_details_list,
+        }
+
         data = {
             "role": user.role,
             "date": str(start_date) if start_date == end_date else f"{start_date} to {end_date}",
@@ -269,9 +328,18 @@ class DashboardSummaryView(APIView):
             "total_receivable": total_receivable,
             "credit_exceeded_count": credit_exceeded_count,
             "route_breakdown": route_stats,
+            "staff_summary": staff_summary,
+            "staff_total_earned": str(total_staff_earned),
+            "staff_cash_paid": str(staff_cash_paid),
+            "staff_gpay_paid": str(staff_gpay_paid),
+            "staff_total_paid": str(total_staff_paid),
+            "staff_net_due": str(staff_net_due),
         }
 
-        return Response(data)
+        resp = Response(data)
+        resp["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        resp["Pragma"] = "no-cache"
+        return resp
 
 
 class DriverPerformanceReportView(APIView):

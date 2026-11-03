@@ -504,6 +504,37 @@ export interface DashboardSummary {
     completed_deliveries?: number;
     not_delivered_count?: number;
   }>;
+  // Staff Attendance & Wages
+  staff_summary?: {
+    total_staff: number;
+    present_count: number;
+    full_count: number;
+    half_count: number;
+    leave_count: number;
+    total_earned: string;
+    total_cash_paid: string;
+    total_gpay_paid: string;
+    total_paid: string;
+    net_due: string;
+    staff_breakdown: Array<{
+      staff_id: string;
+      full_name: string;
+      role_type: string;
+      designation: string;
+      phone_number: string;
+      status: string;
+      earned: string;
+      cash_paid: string;
+      gpay_paid: string;
+      total_paid: string;
+      net_due: string;
+    }>;
+  };
+  staff_total_earned?: string;
+  staff_cash_paid?: string;
+  staff_gpay_paid?: string;
+  staff_total_paid?: string;
+  staff_net_due?: string;
   // Driver stats
   driver_name?: string;
   route_name?: string;
