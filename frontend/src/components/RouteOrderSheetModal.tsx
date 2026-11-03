@@ -125,7 +125,7 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
   const [fitToOnePage, setFitToOnePage] = useState<boolean>(false); // Multi-page A4 enabled by default so all shops show across pages without cutting off
   const [showSummaryTotals, setShowSummaryTotals] = useState<boolean>(true);
   const [extraBlankRowsCount, setExtraBlankRowsCount] = useState<number>(0);
-  const [lineThickness, setLineThickness] = useState<'THIN' | 'HAIRLINE' | 'STANDARD'>('STANDARD'); // Uniform 1px solid grid lines across all client PCs
+  const [lineThickness, setLineThickness] = useState<'THIN' | 'HAIRLINE' | 'STANDARD'>('THIN');
 
   // 7. Column Visibility Toggles ("only name add there coulem")
   const [showPhone, setShowPhone] = useState<boolean>(false);
@@ -2417,26 +2417,38 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                   const rowHeight = `${effectiveRowHeightPx}px`;
 
                   const cellBorder =
-                    lineThickness === 'HAIRLINE'
-                      ? '1px solid #94a3b8'
-                      : lineThickness === 'THIN'
-                      ? '1px solid #444444'
-                      : '1px solid #000000';
+                    lineThickness === 'THIN'
+                      ? '0.5px solid #555555'
+                      : lineThickness === 'HAIRLINE'
+                      ? '0.4px solid #888888'
+                      : sheetTheme === 'BW'
+                      ? '1px solid #000000'
+                      : '1px solid #334155';
 
                   const headerBorder =
-                    lineThickness === 'HAIRLINE'
-                      ? '1px solid #64748b'
-                      : '1px solid #000000';
+                    lineThickness === 'THIN'
+                      ? '0.75px solid #333333'
+                      : lineThickness === 'HAIRLINE'
+                      ? '0.5px solid #555555'
+                      : sheetTheme === 'BW'
+                      ? '1.5px solid #000000'
+                      : '1px solid #0f172a';
 
                   const headerBottom =
-                    lineThickness === 'HAIRLINE'
-                      ? '1px solid #475569'
-                      : '2px solid #000000';
+                    lineThickness === 'THIN'
+                      ? '1.5px solid #111111'
+                      : lineThickness === 'HAIRLINE'
+                      ? '1px solid #333333'
+                      : sheetTheme === 'BW'
+                      ? '2.5px solid #000000'
+                      : '1.5px solid #0f172a';
 
                   const totalsBorder =
-                    lineThickness === 'HAIRLINE'
-                      ? '1px solid #475569'
-                      : '2px solid #000000';
+                    lineThickness === 'THIN'
+                      ? '1.5px solid #111111'
+                      : lineThickness === 'HAIRLINE'
+                      ? '1px solid #333333'
+                      : '2.5px solid #000000';
 
                   return (
                     <table
@@ -2588,7 +2600,6 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                                 key={customer.id}
                                 style={{
                                   height: rowHeight,
-                                  minHeight: rowHeight,
                                   maxHeight: rowHeight,
                                   backgroundColor: '#ffffff',
                                   color: '#000000',
@@ -2879,7 +2890,6 @@ export const RouteOrderSheetModal: React.FC<RouteOrderSheetModalProps> = ({
                                 key={`extra-${extraIdx}`}
                                 style={{
                                   height: rowHeight,
-                                  minHeight: rowHeight,
                                   maxHeight: rowHeight,
                                   backgroundColor: '#ffffff',
                                   boxSizing: 'border-box',

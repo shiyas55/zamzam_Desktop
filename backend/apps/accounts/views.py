@@ -607,9 +607,9 @@ class StaffAttendanceViewSet(viewsets.ModelViewSet):
                 "tenure_slab_label": staff.tenure_slab_label,
                 "base_daily_wage": str(base_wage),
                 "attendance_id": str(att.id) if att else None,
-                "status": att.status if att else "FULL", # default to FULL for convenience
+                "status": att.status if att else "LEAVE", # default to LEAVE on open
                 "is_marked": att is not None,
-                "calculated_wage": str(att.daily_wage) if att else str(base_wage),
+                "calculated_wage": str(att.daily_wage) if att else "0.00",
                 "cash_paid": str(cash_payouts.get(str(staff.id), Decimal("0.00"))),
                 "gpay_paid": str(gpay_payouts.get(str(staff.id), Decimal("0.00"))),
                 "notes": att.notes if att else "",
@@ -653,7 +653,7 @@ class StaffAttendanceViewSet(viewsets.ModelViewSet):
         with transaction.atomic():
             for item in records:
                 staff_id = item.get("staff_id")
-                att_status = item.get("status", "FULL")
+                att_status = item.get("status", "LEAVE")
                 notes = item.get("notes", "")
                 if not staff_id:
                     continue

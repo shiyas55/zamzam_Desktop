@@ -158,6 +158,7 @@ class StaffMember(TimeStampedUUIDModel):
     notes = models.TextField(blank=True, help_text="Address, remarks, emergency contact")
     created_by = models.ForeignKey(
         User,
+        
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -281,7 +282,7 @@ class StaffAttendance(TimeStampedUUIDModel):
     status = models.CharField(
         max_length=20,
         choices=Status.choices,
-        default=Status.FULL,
+        default=Status.LEAVE,
         db_index=True
     )
     daily_wage = models.DecimalField(
