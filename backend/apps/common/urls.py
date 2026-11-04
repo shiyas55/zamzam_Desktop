@@ -11,6 +11,7 @@ from .views import (
     DatabaseBackupView,
     DatabaseRestoreView,
     DatabaseClearAllView,
+    DatabaseClearDateView,
     BusinessDocumentViewSet,
     BackgroundServicesView,
 )
@@ -31,5 +32,6 @@ urlpatterns = [
     path("database/backup/", DatabaseBackupView.as_view(), name="database_backup"),
     path("database/restore/", DatabaseRestoreView.as_view(), name="database_restore"),
     path("database/clear-all/", DatabaseClearAllView.as_view(), name="database_clear_all"),
+    path("database/clear-date/", DatabaseClearDateView.as_view(), name="database_clear_date"),
 ] + router.urls
 

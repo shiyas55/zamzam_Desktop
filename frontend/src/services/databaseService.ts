@@ -66,6 +66,36 @@ export interface ClearAllResult {
   cleared_at: string;
 }
 
+export interface DateClearCounts {
+  orders: number;
+  order_items: number;
+  deliveries: number;
+  payments: number;
+  driver_expenses: number;
+  driver_shifts: number;
+  staff_attendance: number;
+  staff_payouts: number;
+  daily_closing: number;
+}
+
+export interface DateClearPreviewResult {
+  start_date: string;
+  end_date: string;
+  is_single_day: boolean;
+  counts: DateClearCounts;
+  total_records: number;
+}
+
+export interface DateClearResult {
+  success: boolean;
+  message: string;
+  date: string;
+  deleted_counts: Record<string, number>;
+  total_deleted: number;
+  affected_customers_count: number;
+  cleared_at: string;
+}
+
 export const databaseService = {
   async getStats(): Promise<DatabaseStats> {
     return apiClient.get<DatabaseStats>('/database/stats/');
@@ -148,6 +178,28 @@ export const databaseService = {
       formData.append('format', format);
     }
     return apiClient.post<RestoreResult>('/database/restore/', formData);
+  },
+
+  async previewClearDate(date: string, endDate?: string): Promise<DateClearPreviewResult> {
+    const params = new URLSearchParams({ date });
+    if (endDate && endDate !== date) {
+      params.append('end_date', endDate);
+    }
+    return apiClient.get<DateClearPreviewResult>(`/database/clear-date/?${params.toString()}`);
+  },
+
+  async clearDateData(payload: {
+    date: string;
+    endDate?: string;
+    pin: string;
+    modules?: string[];
+  }): Promise<DateClearResult> {
+    return apiClient.post<DateClearResult>('/database/clear-date/', {
+      date: payload.date,
+      end_date: payload.endDate || payload.date,
+      pin: payload.pin,
+      modules: payload.modules,
+    });
   },
 
   async clearAllData(pin: string, confirmation: string): Promise<ClearAllResult> {

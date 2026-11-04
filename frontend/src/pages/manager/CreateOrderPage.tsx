@@ -7,6 +7,7 @@ import { routeService } from '../../services/routeService';
 import { paymentService } from '../../services/paymentService';
 import { reportService } from '../../services/reportService';
 import { creditService } from '../../services/creditService';
+import { databaseService } from '../../services/databaseService';
 import { Customer, Product, Route, Driver, Order, Payment } from '../../types';
 import { formatCurrency } from '../../utils/formatters';
 import {
@@ -2826,6 +2827,39 @@ export const CreateOrderPage: React.FC = () => {
       );
       setSuccessBanner('All quantities cleared. Click Submit / Re-submit Orders to save changes to the database.');
       setError(null);
+    }
+  };
+
+  // Clear all database orders & operational data for current date
+  const handleClearDatabaseForDate = async () => {
+    const pin = window.prompt(
+      `⚠️ PERMANENT DATABASE DATE CLEAR for "${orderDate}"\n\n` +
+      `This will permanently delete all orders, deliveries, customer payments, and expenses for ${orderDate} from the database.\n\n` +
+      `Customer balances will be automatically recalibrated.\n\n` +
+      `Enter 4-digit Security PIN (default: 7667) to confirm:`
+    );
+
+    if (pin === null) return; // User cancelled
+
+    if (pin.trim().length !== 4) {
+      alert('Please enter a valid 4-digit security PIN (default: 7667).');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const res = await databaseService.clearDateData({
+        date: orderDate,
+        pin: pin.trim(),
+      });
+      draftOrderStorage.clearAllChromeStorage();
+      setSuccessBanner(`✓ ${res.message} (${res.total_deleted} records deleted)`);
+      setTimeout(() => setSuccessBanner(null), 5000);
+      await loadOrdersForDate(orderDate, customers, drivers, false, true);
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Failed to clear date data from database.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -6307,6 +6341,29 @@ export const CreateOrderPage: React.FC = () => {
             >
               <RotateCcw size={11} />
               <span>Clear Quantities</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleClearDatabaseForDate}
+              style={{
+                height: '26px',
+                padding: '0 0.5rem',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                color: '#991b1b',
+                background: '#fff1f2',
+                border: '1px solid #fecaca',
+                borderRadius: '6px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.3rem',
+                cursor: 'pointer',
+              }}
+              title={`Permanently clear database orders and payments for ${orderDate}`}
+            >
+              <Trash2 size={11} color="#dc2626" />
+              <span>Clear Date in DB</span>
             </button>
 
             <button

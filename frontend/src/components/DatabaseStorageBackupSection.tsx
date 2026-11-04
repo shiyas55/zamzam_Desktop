@@ -42,10 +42,20 @@ import {
   Lock,
   X,
   KeyRound,
+  Calendar,
+  CalendarDays,
+  Filter,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { draftOrderStorage } from '../utils/draftOrderStorage';
-import { databaseService, DatabaseStats, DatabaseModuleStat, ClearAllResult } from '../services/databaseService';
+import {
+  databaseService,
+  DatabaseStats,
+  DatabaseModuleStat,
+  ClearAllResult,
+  DateClearPreviewResult,
+  DateClearResult,
+} from '../services/databaseService';
 import { tauriBackupService, TauriBackupConfig, TauriBackupFileInfo, isTauriEnvironment } from '../services/tauriBackupService';
 import { nativeDbService, LocalDbConfig } from '../services/nativeDbService';
 import { CloudSyncButton } from './CloudSyncButton';
@@ -158,6 +168,78 @@ export const DatabaseStorageBackupSection: React.FC = () => {
       setClearError(err instanceof Error ? err.message : 'Failed to clear database. Please verify your PIN.');
     } finally {
       setIsClearing(false);
+    }
+  };
+
+  // Clear Database Data by Date State
+  const [isDateClearModalOpen, setIsDateClearModalOpen] = useState(false);
+  const [clearTargetDate, setClearTargetDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
+  const [clearEndDate, setClearEndDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
+  const [isDateRangeMode, setIsDateRangeMode] = useState(false);
+  const [selectedClearModules, setSelectedClearModules] = useState<Record<string, boolean>>({
+    orders: true,
+    payments: true,
+    expenses: true,
+    attendance: true,
+    closing: true,
+  });
+  const [dateClearPin, setDateClearPin] = useState('');
+  const [dateClearPreview, setDateClearPreview] = useState<DateClearPreviewResult | null>(null);
+  const [dateClearPreviewLoading, setDateClearPreviewLoading] = useState(false);
+  const [isDateClearing, setIsDateClearing] = useState(false);
+  const [dateClearError, setDateClearError] = useState<string | null>(null);
+  const [dateClearSuccess, setDateClearSuccess] = useState<DateClearResult | null>(null);
+
+  const fetchDateClearPreview = useCallback(async (startD: string, endD?: string) => {
+    try {
+      setDateClearPreviewLoading(true);
+      setDateClearError(null);
+      const res = await databaseService.previewClearDate(startD, endD);
+      setDateClearPreview(res);
+    } catch (err) {
+      console.error('Failed to preview date clear:', err);
+    } finally {
+      setDateClearPreviewLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isDateClearModalOpen) {
+      fetchDateClearPreview(clearTargetDate, isDateRangeMode ? clearEndDate : clearTargetDate);
+    }
+  }, [isDateClearModalOpen, clearTargetDate, clearEndDate, isDateRangeMode, fetchDateClearPreview]);
+
+  const handleClearDateSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (dateClearPin.trim().length !== 4) {
+      setDateClearError('Please enter your 4-digit security PIN (e.g. 7667).');
+      return;
+    }
+
+    const activeModules = Object.keys(selectedClearModules).filter((k) => selectedClearModules[k]);
+    if (activeModules.length === 0) {
+      setDateClearError('Please select at least one module to clear.');
+      return;
+    }
+
+    try {
+      setIsDateClearing(true);
+      setDateClearError(null);
+      const res = await databaseService.clearDateData({
+        date: clearTargetDate,
+        endDate: isDateRangeMode ? clearEndDate : clearTargetDate,
+        pin: dateClearPin.trim(),
+        modules: activeModules,
+      });
+      draftOrderStorage.clearAllChromeStorage();
+      setDateClearSuccess(res);
+      setDateClearPin('');
+      await fetchStats(true);
+      await loadTauriData();
+    } catch (err: unknown) {
+      setDateClearError(err instanceof Error ? err.message : 'Failed to clear date data. Please check PIN.');
+    } finally {
+      setIsDateClearing(false);
     }
   };
 
@@ -1795,6 +1877,177 @@ export const DatabaseStorageBackupSection: React.FC = () => {
           </div>
         </div>
 
+        {/* ── SECTION: TARGETED DANGER ZONE - CLEAR DATABASE DATA BY DATE ── */}
+        <div
+          style={{
+            background: '#ffffff',
+            borderRadius: '16px',
+            border: '1.5px solid #fde68a',
+            overflow: 'hidden',
+            boxShadow: '0 4px 16px rgba(245, 158, 11, 0.08)',
+            marginTop: '1.5rem',
+          }}
+        >
+          <div
+            style={{
+              padding: '1.25rem 1.5rem',
+              background: 'linear-gradient(90deg, #fffbeb 0%, #fef3c7 100%)',
+              borderBottom: '1.5px solid #fde68a',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '1rem',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+              <div
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '12px',
+                  background: '#fef3c7',
+                  color: '#b45309',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 2px 8px rgba(245, 158, 11, 0.18)',
+                  border: '1px solid #fde68a',
+                }}
+              >
+                <CalendarDays size={24} />
+              </div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: '#92400e' }}>
+                    Clear Database Data by Date
+                  </h3>
+                  <span
+                    style={{
+                      fontSize: '0.68rem',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      padding: '3px 9px',
+                      borderRadius: '999px',
+                      background: '#d97706',
+                      color: '#ffffff',
+                    }}
+                  >
+                    Targeted Date Wipe
+                  </span>
+                </div>
+                <p style={{ margin: '3px 0 0', fontSize: '0.82rem', color: '#78350f' }}>
+                  Permanently delete operational records (Orders, Deliveries, Payments, Expenses, Shifts, Staff Attendance, Closings) for a selected date. Preserves all Customer Shops, Product Catalog, Routes, and Staff.
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsDateClearModalOpen(true);
+                  setDateClearError(null);
+                  setDateClearSuccess(null);
+                  setDateClearPin('');
+                  fetchDateClearPreview(clearTargetDate, isDateRangeMode ? clearEndDate : clearTargetDate);
+                }}
+                disabled={!isOwnerOrAdmin}
+                style={{
+                  background: isOwnerOrAdmin ? '#d97706' : '#94a3b8',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '0.65rem 1.35rem',
+                  borderRadius: '10px',
+                  fontWeight: 800,
+                  fontSize: '0.88rem',
+                  cursor: isOwnerOrAdmin ? 'pointer' : 'not-allowed',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  boxShadow: isOwnerOrAdmin ? '0 3px 10px rgba(217, 119, 6, 0.3)' : 'none',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <Calendar size={16} />
+                <span>Clear Data by Date</span>
+              </button>
+            </div>
+          </div>
+
+          <div style={{ padding: '1.25rem 1.5rem', background: '#ffffff' }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+                gap: '1rem',
+                fontSize: '0.82rem',
+              }}
+            >
+              <div
+                style={{
+                  background: '#fffbeb',
+                  border: '1px solid #fde68a',
+                  borderRadius: '10px',
+                  padding: '1rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.4rem',
+                }}
+              >
+                <span style={{ fontWeight: 800, color: '#92400e', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <Calendar size={14} />
+                  Specific Date or Range
+                </span>
+                <span style={{ color: '#78350f', lineHeight: 1.45 }}>
+                  Wipe testing, duplicate, or corrupted entries for a single day without touching the rest of your history.
+                </span>
+              </div>
+
+              <div
+                style={{
+                  background: '#f0fdf4',
+                  border: '1px solid #bbf7d0',
+                  borderRadius: '10px',
+                  padding: '1rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.4rem',
+                }}
+              >
+                <span style={{ fontWeight: 800, color: '#166534', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <ShieldCheck size={14} />
+                  Safe Master Data Retention
+                </span>
+                <span style={{ color: '#14532d', lineHeight: 1.45 }}>
+                  All Customer shops, Wholesale pricing, Products, Delivery routes, Driver profiles, and System settings remain completely safe.
+                </span>
+              </div>
+
+              <div
+                style={{
+                  background: '#eff6ff',
+                  border: '1px solid #bfdbfe',
+                  borderRadius: '10px',
+                  padding: '1rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.4rem',
+                }}
+              >
+                <span style={{ fontWeight: 800, color: '#1e40af', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <CreditCard size={14} />
+                  Automatic Balance Recalibration
+                </span>
+                <span style={{ color: '#1e3a8a', lineHeight: 1.45 }}>
+                  Customer shop balances automatically recalculate by reversing removed orders and payments to maintain 100% financial accuracy.
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* ── SECTION: DANGER ZONE - CLEAR ALL SYSTEM DATA (OWNER & ADMIN ONLY) ── */}
         <div
           style={{
@@ -1975,6 +2228,377 @@ export const DatabaseStorageBackupSection: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* ── MODAL: CLEAR DATABASE DATA BY DATE ── */}
+        {isDateClearModalOpen && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(15, 23, 42, 0.75)',
+              backdropFilter: 'blur(4px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 9999,
+              padding: '1rem',
+            }}
+          >
+            <div
+              style={{
+                background: '#ffffff',
+                borderRadius: '18px',
+                width: '100%',
+                maxWidth: '560px',
+                maxHeight: '90vh',
+                display: 'flex',
+                flexDirection: 'column',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                overflow: 'hidden',
+                border: '1.5px solid #fde68a',
+                animation: 'modalSlideIn 0.2s ease-out',
+              }}
+            >
+              {/* Header */}
+              <div
+                style={{
+                  padding: '1.25rem 1.5rem',
+                  background: dateClearSuccess ? '#f0fdf4' : '#fffbeb',
+                  borderBottom: `1.5px solid ${dateClearSuccess ? '#bbf7d0' : '#fde68a'}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '10px',
+                      background: dateClearSuccess ? '#dcfce7' : '#fef3c7',
+                      color: dateClearSuccess ? '#15803d' : '#b45309',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {dateClearSuccess ? <CheckCircle2 size={22} /> : <Calendar size={22} />}
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: dateClearSuccess ? '#166534' : '#92400e' }}>
+                      {dateClearSuccess ? 'Date Data Cleared' : 'Clear Database Data by Date'}
+                    </h3>
+                    <p style={{ margin: '2px 0 0', fontSize: '0.78rem', color: dateClearSuccess ? '#15803d' : '#78350f' }}>
+                      {dateClearSuccess ? 'Operational records wiped • Balances recalibrated' : 'Targeted date wipe for testing or cleanup'}
+                    </p>
+                  </div>
+                </div>
+
+                {!isDateClearing && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsDateClearModalOpen(false);
+                      setDateClearSuccess(null);
+                    }}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#64748b',
+                      cursor: 'pointer',
+                      padding: '4px',
+                      display: 'flex',
+                    }}
+                  >
+                    <X size={20} />
+                  </button>
+                )}
+              </div>
+
+              {/* Body */}
+              <div style={{ padding: '1.5rem', overflowY: 'auto', flex: 1 }}>
+                {dateClearSuccess ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div
+                      style={{
+                        padding: '1rem',
+                        background: '#f0fdf4',
+                        border: '1px solid #bbf7d0',
+                        borderRadius: '10px',
+                        color: '#166534',
+                        fontSize: '0.85rem',
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      <strong style={{ display: 'block', fontSize: '0.95rem', marginBottom: '0.35rem' }}>
+                        ✓ {dateClearSuccess.message}
+                      </strong>
+                      Removed <strong>{dateClearSuccess.total_deleted}</strong> records for date <strong>{dateClearSuccess.date}</strong>. Recalibrated balances for <strong>{dateClearSuccess.affected_customers_count}</strong> customer shops.
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
+                      {Object.entries(dateClearSuccess.deleted_counts).map(([k, v]) => (
+                        <div
+                          key={k}
+                          style={{
+                            padding: '0.55rem 0.75rem',
+                            background: '#f8fafc',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '8px',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            fontSize: '0.8rem',
+                          }}
+                        >
+                          <span style={{ color: '#64748b', textTransform: 'capitalize' }}>{k.replace(/_/g, ' ')}</span>
+                          <strong style={{ color: '#0f172a' }}>{v}</strong>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={() => {
+                          setIsDateClearModalOpen(false);
+                          setDateClearSuccess(null);
+                        }}
+                        style={{ padding: '0.55rem 1.5rem' }}
+                      >
+                        Done
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <form onSubmit={handleClearDateSubmit}>
+                    {/* Date Selection */}
+                    <div style={{ marginBottom: '1.25rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.45rem' }}>
+                        <label className="form-label" style={{ margin: 0, fontWeight: 700 }}>
+                          Select Date to Clear
+                        </label>
+                        <div style={{ display: 'flex', gap: '0.3rem' }}>
+                          <button
+                            type="button"
+                            onClick={() => setIsDateRangeMode(false)}
+                            style={{
+                              padding: '0.2rem 0.5rem',
+                              fontSize: '0.72rem',
+                              fontWeight: 700,
+                              borderRadius: '4px',
+                              border: !isDateRangeMode ? '1.5px solid #d97706' : '1px solid #cbd5e1',
+                              background: !isDateRangeMode ? '#fef3c7' : '#ffffff',
+                              color: !isDateRangeMode ? '#b45309' : '#64748b',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            Single Day
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setIsDateRangeMode(true)}
+                            style={{
+                              padding: '0.2rem 0.5rem',
+                              fontSize: '0.72rem',
+                              fontWeight: 700,
+                              borderRadius: '4px',
+                              border: isDateRangeMode ? '1.5px solid #d97706' : '1px solid #cbd5e1',
+                              background: isDateRangeMode ? '#fef3c7' : '#ffffff',
+                              color: isDateRangeMode ? '#b45309' : '#64748b',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            Date Range
+                          </button>
+                        </div>
+                      </div>
+
+                      {!isDateRangeMode ? (
+                        <input
+                          type="date"
+                          className="form-input"
+                          value={clearTargetDate}
+                          onChange={(e) => setClearTargetDate(e.target.value)}
+                          required
+                          style={{ fontWeight: 600 }}
+                        />
+                      ) : (
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
+                          <div>
+                            <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block', marginBottom: '2px' }}>Start Date</span>
+                            <input
+                              type="date"
+                              className="form-input"
+                              value={clearTargetDate}
+                              onChange={(e) => setClearTargetDate(e.target.value)}
+                              required
+                            />
+                          </div>
+                          <div>
+                            <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block', marginBottom: '2px' }}>End Date</span>
+                            <input
+                              type="date"
+                              className="form-input"
+                              value={clearEndDate}
+                              onChange={(e) => setClearEndDate(e.target.value)}
+                              required
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Live Preview Card */}
+                    <div
+                      style={{
+                        padding: '0.85rem 1rem',
+                        background: '#f8fafc',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '10px',
+                        marginBottom: '1.25rem',
+                        fontSize: '0.82rem',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.45rem' }}>
+                        <span style={{ fontWeight: 800, color: '#334155' }}>
+                          {dateClearPreviewLoading ? 'Scanning database...' : `Found ${dateClearPreview?.total_records ?? 0} Records`}
+                        </span>
+                        <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                          {isDateRangeMode ? `${clearTargetDate} to ${clearEndDate}` : clearTargetDate}
+                        </span>
+                      </div>
+
+                      {dateClearPreview && (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.4rem', fontSize: '0.75rem', marginTop: '0.4rem' }}>
+                          <div style={{ padding: '0.35rem 0.5rem', background: '#fff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                            <span style={{ color: '#64748b', display: 'block' }}>Orders</span>
+                            <strong style={{ color: '#dc2626' }}>{dateClearPreview.counts.orders}</strong>
+                          </div>
+                          <div style={{ padding: '0.35rem 0.5rem', background: '#fff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                            <span style={{ color: '#64748b', display: 'block' }}>Payments</span>
+                            <strong style={{ color: '#059669' }}>{dateClearPreview.counts.payments}</strong>
+                          </div>
+                          <div style={{ padding: '0.35rem 0.5rem', background: '#fff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                            <span style={{ color: '#64748b', display: 'block' }}>Expenses</span>
+                            <strong style={{ color: '#d97706' }}>{dateClearPreview.counts.driver_expenses}</strong>
+                          </div>
+                          <div style={{ padding: '0.35rem 0.5rem', background: '#fff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                            <span style={{ color: '#64748b', display: 'block' }}>Attendance</span>
+                            <strong style={{ color: '#4f46e5' }}>{dateClearPreview.counts.staff_attendance}</strong>
+                          </div>
+                          <div style={{ padding: '0.35rem 0.5rem', background: '#fff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                            <span style={{ color: '#64748b', display: 'block' }}>Shifts</span>
+                            <strong style={{ color: '#0284c7' }}>{dateClearPreview.counts.driver_shifts}</strong>
+                          </div>
+                          <div style={{ padding: '0.35rem 0.5rem', background: '#fff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                            <span style={{ color: '#64748b', display: 'block' }}>Daily Closing</span>
+                            <strong style={{ color: '#7c3aed' }}>{dateClearPreview.counts.daily_closing}</strong>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Modules to clear */}
+                    <div style={{ marginBottom: '1.25rem' }}>
+                      <label className="form-label" style={{ fontWeight: 700, marginBottom: '0.4rem' }}>
+                        Modules to Clear
+                      </label>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.4rem', fontSize: '0.78rem' }}>
+                        {[
+                          { key: 'orders', label: 'Orders & Deliveries' },
+                          { key: 'payments', label: 'Customer Payments' },
+                          { key: 'expenses', label: 'Driver Expenses & Shifts' },
+                          { key: 'attendance', label: 'Staff Attendance & Wages' },
+                          { key: 'closing', label: 'Daily Closing Records' },
+                        ].map((m) => (
+                          <label key={m.key} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }}>
+                            <input
+                              type="checkbox"
+                              checked={Boolean(selectedClearModules[m.key])}
+                              onChange={(e) => setSelectedClearModules((prev) => ({ ...prev, [m.key]: e.target.checked }))}
+                              style={{ accentColor: '#d97706' }}
+                            />
+                            <span>{m.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* PIN Verification */}
+                    <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+                      <label className="form-label" style={{ fontWeight: 700 }}>
+                        Enter 4-Digit Security PIN *
+                      </label>
+                      <input
+                        type="password"
+                        maxLength={4}
+                        className="form-input"
+                        placeholder="e.g. 7667"
+                        value={dateClearPin}
+                        onChange={(e) => setDateClearPin(e.target.value.replace(/\D/g, ''))}
+                        required
+                        disabled={isDateClearing}
+                        style={{ fontSize: '1.1rem', letterSpacing: '4px', textAlign: 'center', maxWidth: '160px' }}
+                      />
+                      <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px', display: 'block' }}>
+                        Default PIN is <strong>7667</strong> or your Owner account PIN.
+                      </span>
+                    </div>
+
+                    {dateClearError && (
+                      <div
+                        style={{
+                          padding: '0.75rem',
+                          background: '#fee2e2',
+                          border: '1px solid #fca5a5',
+                          borderRadius: '8px',
+                          color: '#b91c1c',
+                          fontSize: '0.8rem',
+                          marginBottom: '1rem',
+                        }}
+                      >
+                        {dateClearError}
+                      </div>
+                    )}
+
+                    <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => setIsDateClearModalOpen(false)}
+                        disabled={isDateClearing}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isDateClearing || dateClearPin.length !== 4}
+                        style={{
+                          background: '#d97706',
+                          color: '#fff',
+                          border: 'none',
+                          padding: '0.55rem 1.25rem',
+                          borderRadius: '8px',
+                          fontWeight: 700,
+                          fontSize: '0.85rem',
+                          cursor: isDateClearing || dateClearPin.length !== 4 ? 'not-allowed' : 'pointer',
+                          opacity: isDateClearing || dateClearPin.length !== 4 ? 0.6 : 1,
+                        }}
+                      >
+                        {isDateClearing ? 'Clearing Records...' : 'Clear Selected Date Data'}
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── MODAL: CLEAR ALL SYSTEM DATA CONFIRMATION & EXECUTION ── */}
         {isClearModalOpen && (
