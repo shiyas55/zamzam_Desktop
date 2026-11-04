@@ -107,7 +107,7 @@ export interface OrderRow {
 
 export function updateCustomerStopNote(currentNotes: string | undefined | null, newStop: number | null): string {
   const notesStr = (currentNotes || '').trim();
-  const stopTagRegex = /\[?(?:Stop|Order)\s*#?\s*\d+\]?/gi;
+  const stopTagRegex = /\[(?:Stop|Order)\s*#?\s*\d+\]/gi;
   const cleanNotes = notesStr.replace(stopTagRegex, '').replace(/\s{2,}/g, ' ').trim();
   if (newStop === null || newStop === undefined || isNaN(newStop) || newStop <= 0) {
     return cleanNotes;
@@ -179,12 +179,23 @@ export const CreateOrderPage: React.FC = () => {
     if (saved === 'CUSTOMER_LINK' || saved === 'MANAGER' || saved === 'ALL') return saved;
     return 'ALL';
   });
-  const [orderSort, setOrderSort] = useState<'STOP_ORDER_ASC' | 'CUSTOM' | 'SHOP_CREATE_ASC' | 'NAME_ASC'>(() => {
+  const [orderSort, setOrderSort] = useState<'SHOP_CREATE_ASC' | 'CUSTOM' | 'STOP_ORDER_ASC' | 'NAME_ASC'>(() => {
     const saved = localStorage.getItem('zamzam_fast_order_sort');
-    if (saved === 'STOP_ORDER_ASC' || saved === 'CUSTOM' || saved === 'SHOP_CREATE_ASC' || saved === 'NAME_ASC') {
-      return saved as 'STOP_ORDER_ASC' | 'CUSTOM' | 'SHOP_CREATE_ASC' | 'NAME_ASC';
+    const customOrderSaved = localStorage.getItem('zamzam_fast_custom_sort_order');
+    let hasCustom = false;
+    try {
+      hasCustom = customOrderSaved ? JSON.parse(customOrderSaved).length > 0 : false;
+    } catch {}
+
+    // If an order is already established on the page (CUSTOM), always preserve it!
+    if (hasCustom && saved !== 'NAME_ASC' && saved !== 'SHOP_CREATE_ASC') {
+      return 'CUSTOM';
     }
-    return 'STOP_ORDER_ASC';
+    if (saved === 'SHOP_CREATE_ASC' || saved === 'NAME_ASC' || saved === 'CUSTOM') {
+      return saved as 'SHOP_CREATE_ASC' | 'CUSTOM' | 'STOP_ORDER_ASC' | 'NAME_ASC';
+    }
+    // Never auto-force STOP_ORDER_ASC as it changes existing order; default to CUSTOM or original SHOP_CREATE_ASC
+    return hasCustom ? 'CUSTOM' : 'SHOP_CREATE_ASC';
   });
 
   // Custom sort order: array of row IDs in user-defined order (drag & drop)
@@ -696,10 +707,10 @@ export const CreateOrderPage: React.FC = () => {
           let gAmt = gpayMap.get(cust.id);
           let dAmt = existingOrder?.shop_expense ? parseFloat(existingOrder.shop_expense) : undefined;
 
-          // Check if customer notes contain a stop number, e.g. [Stop #3], Stop #3, [Order #3]
+          // Check if customer notes contain a stop number, e.g. [Stop #3], [Order #3]
           let parsedStopNumber: number | undefined;
           if (cust.notes) {
-            const stopMatch = cust.notes.match(/(?:\[|\b)(?:Stop|Order)\s*#?\s*(\d+)(?:\]|\b)/i);
+            const stopMatch = cust.notes.match(/\[(?:Stop|Order)\s*#?\s*(\d+)\]/i);
             if (stopMatch && stopMatch[1]) {
               parsedStopNumber = parseInt(stopMatch[1], 10);
             }
@@ -1284,7 +1295,7 @@ export const CreateOrderPage: React.FC = () => {
         if (iA !== -1 && iB !== -1) return iA - iB;
         if (iA !== -1) return -1;
         if (iB !== -1) return 1;
-        return sortByStopOrder(a, b);
+        return sortByShopRegisteredOldest(a, b);
       });
     }
 
@@ -1292,12 +1303,12 @@ export const CreateOrderPage: React.FC = () => {
       return [...afterOrderFilter].sort((a, b) => a.customerName.localeCompare(b.customerName));
     }
 
-    if (orderSort === 'SHOP_CREATE_ASC') {
-      return [...afterOrderFilter].sort(sortByShopRegisteredOldest);
+    if (orderSort === 'STOP_ORDER_ASC') {
+      return [...afterOrderFilter].sort(sortByStopOrder);
     }
 
-    // Default & STOP_ORDER_ASC: sort by Order / Stop # (1 to 100)
-    return [...afterOrderFilter].sort(sortByStopOrder);
+    // Default & SHOP_CREATE_ASC: preserve existing established order (Shop Registered: Oldest)
+    return [...afterOrderFilter].sort(sortByShopRegisteredOldest);
   }, [rows, routeFilter, sourceFilter, searchQuery, orderSort, routes, customers, customSortOrder, showOrdersOnly, getCustomerSearchScore]);
 
   // Exact on-screen display order of shops in Fast Wholesale Order Entry (passed to RouteOrderSheetModal)
@@ -1325,7 +1336,7 @@ export const CreateOrderPage: React.FC = () => {
         if (iA !== -1 && iB !== -1) return iA - iB;
         if (iA !== -1) return -1;
         if (iB !== -1) return 1;
-        return sortByStopOrder(a, b);
+        return sortByShopRegisteredOldest(a, b);
       });
     }
 
@@ -1333,11 +1344,12 @@ export const CreateOrderPage: React.FC = () => {
       return [...rows].sort((a, b) => a.customerName.localeCompare(b.customerName));
     }
 
-    if (orderSort === 'SHOP_CREATE_ASC') {
-      return [...rows].sort(sortByShopRegisteredOldest);
+    if (orderSort === 'STOP_ORDER_ASC') {
+      return [...rows].sort(sortByStopOrder);
     }
 
-    return [...rows].sort(sortByStopOrder);
+    // Default: preserve existing established order
+    return [...rows].sort(sortByShopRegisteredOldest);
   }, [rows, orderSort, customSortOrder]);
 
   // Synchronize single shared search state: auto-highlight matching customer across billing and WhatsApp
@@ -2627,7 +2639,8 @@ export const CreateOrderPage: React.FC = () => {
       // If custom sort order is active, re-sync order
       if (newStop !== undefined) {
         setCustomSortOrder((prev) => {
-          const fresh = prev.filter((id) => id !== row.rowId);
+          const base = prev.length > 0 ? [...prev] : visibleRows.map((r) => r.rowId);
+          const fresh = base.filter((id) => id !== row.rowId);
           const insertIdx = Math.min(newStop! - 1, fresh.length);
           fresh.splice(insertIdx, 0, row.rowId);
           localStorage.setItem('zamzam_fast_custom_sort_order', JSON.stringify(fresh));
@@ -2695,7 +2708,6 @@ export const CreateOrderPage: React.FC = () => {
         return customerService.updateCustomer(row.customerId, { notes: updatedNotes });
       });
 
-      setOrderSort('STOP_ORDER_ASC');
       setSuccessBanner(`✓ Stop #1 to #${visibleRows.length} successfully saved to database for ${visibleRows.length} shops!`);
       setTimeout(() => setSuccessBanner(null), 4000);
 
@@ -3849,7 +3861,7 @@ export const CreateOrderPage: React.FC = () => {
           style={{ width: '138px', minWidth: '120px', flex: '0 0 auto', height: '26px', padding: '0 0.3rem', fontSize: '0.72rem', fontWeight: 700 }}
           value={orderSort}
           onChange={(e) => {
-            const nextSort = e.target.value as 'STOP_ORDER_ASC' | 'CUSTOM' | 'SHOP_CREATE_ASC' | 'NAME_ASC';
+            const nextSort = e.target.value as 'SHOP_CREATE_ASC' | 'CUSTOM' | 'STOP_ORDER_ASC' | 'NAME_ASC';
             if (nextSort === 'CUSTOM') {
               if (customSortOrder.length === 0) {
                 const currentOrder = visibleRows.map((r) => r.rowId);
@@ -3862,15 +3874,15 @@ export const CreateOrderPage: React.FC = () => {
             }
             setOrderSort(nextSort);
           }}
-          title="Sort order rows by Stop/Order # (1-100), oldest registered, name, or custom drag order"
+          title="Sort order rows by oldest registered, custom drag order, Stop #, or name"
         >
-          <option value="STOP_ORDER_ASC">🔢 Sort: Order # (1-100)</option>
+          <option value="SHOP_CREATE_ASC">🏪 Registered (Oldest)</option>
           <option value="CUSTOM">
             {orderSort === 'CUSTOM' && !isCustomEditing
               ? '✋ Custom Order'
               : '✋ Custom (Drag)'}
           </option>
-          <option value="SHOP_CREATE_ASC">⏳ Sort: Oldest</option>
+          <option value="STOP_ORDER_ASC">🔢 Order 1-100 (Stop #)</option>
           <option value="NAME_ASC">🔤 Sort: Name (A-Z)</option>
         </select>
         {orderSort === 'CUSTOM' && isCustomEditing && (
@@ -4768,7 +4780,7 @@ export const CreateOrderPage: React.FC = () => {
                         onClick={() => handleEditShopStopOrder(row)}
                         title={`Click to set/change Order # (1 - 100) for "${row.customerName || 'this shop'}"`}
                       >
-                        {row.listOrder !== undefined ? (
+                        {orderSort === 'STOP_ORDER_ASC' && row.listOrder !== undefined ? (
                           <span
                             title={`Delivery Stop #${row.listOrder} (Click to change 1-100)`}
                             style={{
@@ -4789,7 +4801,7 @@ export const CreateOrderPage: React.FC = () => {
                           </span>
                         ) : orderSort === 'CUSTOM' ? (
                           <span
-                            title={`Custom Stop #${index + 1} (Click to set permanent Stop # 1-100)`}
+                            title={`Custom Position #${index + 1} (Click to set permanent Stop # 1-100)`}
                             style={{
                               fontWeight: 800,
                               color: '#4f46e5',
@@ -4807,7 +4819,7 @@ export const CreateOrderPage: React.FC = () => {
                           </span>
                         ) : (
                           <span
-                            title={`Position #${index + 1} (Click to set permanent Stop # 1-100)`}
+                            title={`Position #${index + 1}${row.listOrder ? ` (Stop #${row.listOrder})` : ''} (Click to set permanent Stop # 1-100)`}
                             style={{
                               display: 'inline-flex',
                               alignItems: 'center',

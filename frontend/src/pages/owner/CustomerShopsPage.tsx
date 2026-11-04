@@ -224,7 +224,7 @@ export const CustomerShopsPage: React.FC = () => {
     setEditCreditLimit(c.credit_limit || '5000.00');
     setEditDueBalance(String(c.current_balance || '0.00'));
     setEditIsActive(c.is_active ?? true);
-    const stopMatch = (c.notes || '').match(/(?:\[|\b)(?:Stop|Order)\s*#?\s*(\d+)(?:\]|\b)/i);
+    const stopMatch = (c.notes || '').match(/\[(?:Stop|Order)\s*#?\s*(\d+)\]/i);
     setEditStopNumber(stopMatch && stopMatch[1] ? stopMatch[1] : '');
     setEditNotes(c.notes || '');
     setEditFormError(null);
@@ -492,7 +492,7 @@ export const CustomerShopsPage: React.FC = () => {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
                         <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{c.name}</span>
                         {(() => {
-                          const stopMatch = c.notes?.match(/(?:\[|\b)(?:Stop|Order)\s*#?\s*(\d+)(?:\]|\b)/i);
+                          const stopMatch = c.notes?.match(/\[(?:Stop|Order)\s*#?\s*(\d+)\]/i);
                           if (stopMatch && stopMatch[1]) {
                             return (
                               <span
