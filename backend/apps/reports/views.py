@@ -257,8 +257,11 @@ class DashboardSummaryView(APIView):
 
         full_att_count = att_range_qs.filter(status=StaffAttendance.Status.FULL).count()
         half_att_count = att_range_qs.filter(status=StaffAttendance.Status.HALF).count()
-        leave_att_count = att_range_qs.filter(status=StaffAttendance.Status.LEAVE).count()
         present_att_count = full_att_count + half_att_count
+        if start_date == end_date:
+            leave_att_count = max(0, total_staff_count - present_att_count)
+        else:
+            leave_att_count = att_range_qs.filter(status=StaffAttendance.Status.LEAVE).count()
 
         staff_details_list = []
         for sm in active_staff:
