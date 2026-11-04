@@ -108,26 +108,33 @@ def get_customers_opening_balances_for_date(target_date, customer_ids=None):
         Opening Balance at start of Date D =
             customer.current_balance
             - Sum(Orders where order_date >= D and status != CANCELLED)
-            + Sum(Payments where received_at__date >= D and status = COMPLETED)
-            - Sum(Standalone Credit Adjustments where created_at__date >= D
-                  and reference_order IS NULL)
-
-    NOTE: ADJUSTMENT transactions that have a reference_order (legacy order-edit
-    adjustments created before the in-place CREDIT_SALE update approach) are
-    intentionally excluded. The order's CREDIT_SALE entry already reflects the
-    current total, so reversing those order-linked adjustments would double-subtract
-    the order-edit delta and produce an incorrect Prev. Due.
+            + Sum(Payments where received_at >= start_dt and status = COMPLETED)
+            - Sum(Subsequent Adjustments:
+                  1. Standalone general adjustments where created_at >= start_dt
+                  2. Plus Fast Wholesale Entry adjustments occurring strictly AFTER end_dt)
 
     Returns: dict { str(customer_id): str(opening_balance_decimal_formatted) }
     """
     import datetime
-    from django.db.models import Sum
+    from decimal import Decimal
+    from django.db.models import Q, Sum
+    from django.utils import timezone
+    import zoneinfo
     from apps.orders.models import Order
     from apps.payments.models import Payment
     from apps.credits.models import CreditTransaction
 
+    kolkata_tz = zoneinfo.ZoneInfo("Asia/Kolkata")
+
     if isinstance(target_date, str):
         target_date = datetime.date.fromisoformat(str(target_date).strip()[:10])
+
+    start_dt = datetime.datetime.combine(target_date, datetime.time.min)
+    if timezone.is_aware(timezone.now()):
+        start_dt = timezone.make_aware(start_dt, kolkata_tz)
+    end_dt = datetime.datetime.combine(target_date, datetime.time.max)
+    if timezone.is_aware(timezone.now()):
+        end_dt = timezone.make_aware(end_dt, kolkata_tz)
 
     customers_qs = Customer.objects.filter(is_active=True)
     if customer_ids:
@@ -146,10 +153,6 @@ def get_customers_opening_balances_for_date(target_date, customer_ids=None):
         for row in orders_agg.values("customer_id").annotate(total=Sum("total_amount"))
     }
 
-    start_dt = datetime.datetime.combine(target_date, datetime.time.min)
-    if timezone.is_aware(timezone.now()):
-        start_dt = timezone.make_aware(start_dt)
-
     payments_agg = (
         Payment.objects.filter(received_at__gte=start_dt, status=Payment.Status.COMPLETED)
     )
@@ -160,16 +163,20 @@ def get_customers_opening_balances_for_date(target_date, customer_ids=None):
         for row in payments_agg.values("customer_id").annotate(total=Sum("amount"))
     }
 
-    # Only include legitimate STANDALONE adjustments (reference_order IS NULL).
-    # Order-edit adjustments (reference_order IS NOT NULL) and legacy Fast Wholesale Entry
-    # balance overrides must be excluded to prevent distorting historical balances.
-    adjustments_agg = (
-        CreditTransaction.objects.filter(
-            transaction_type=CreditTransaction.TransactionType.ADJUSTMENT,
-            created_at__gte=start_dt,
-            reference_order__isnull=True,  # standalone balance corrections only
-        ).exclude(notes__icontains="Fast Wholesale Entry")
+    # Adjustments:
+    # 1. Standalone general adjustments occurring on or after start_dt
+    # 2. Plus Fast Wholesale Entry adjustments occurring strictly AFTER end_dt (future dates)
+    adj_filter = (
+        Q(reference_order__isnull=True) &
+        (
+            (Q(created_at__gte=start_dt) & ~Q(notes__icontains="Fast Wholesale Entry"))
+            |
+            (Q(created_at__gt=end_dt) & Q(notes__icontains="Fast Wholesale Entry"))
+        )
     )
+    adjustments_agg = CreditTransaction.objects.filter(
+        transaction_type=CreditTransaction.TransactionType.ADJUSTMENT
+    ).filter(adj_filter)
     if customer_ids:
         adjustments_agg = adjustments_agg.filter(customer_id__in=customer_ids)
     adjustments_by_cust = {

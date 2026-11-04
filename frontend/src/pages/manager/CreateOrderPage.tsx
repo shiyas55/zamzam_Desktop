@@ -463,6 +463,7 @@ export const CreateOrderPage: React.FC = () => {
   const [prevDueRow, setPrevDueRow] = useState<OrderRow | null>(null);
   const [prevDueAmount, setPrevDueAmount] = useState('');
   const [prevDueError, setPrevDueError] = useState<string | null>(null);
+  const [openingBalances, setOpeningBalances] = useState<Record<string, string>>({});
 
   const handleOpenPrevDueModal = (row: OrderRow) => {
     setPrevDueRow(row);
@@ -656,6 +657,10 @@ export const CreateOrderPage: React.FC = () => {
               customerService.getBalancesForDate(targetDate).catch(() => ({} as Record<string, string>)),
             ]);
 
+        if (historicalBalances) {
+          setOpeningBalances(historicalBalances);
+        }
+
         if (closingRes) {
           const isOpened = Boolean(closingRes.is_opened);
           const isClosed = Boolean(closingRes.is_closed);
@@ -758,10 +763,10 @@ export const CreateOrderPage: React.FC = () => {
 
           // Calculate historical previous due prior to this order so balance carries forward chronologically
           let initialRowBalance = '0.00';
-          if (historicalBalances?.[cust.id] !== undefined && historicalBalances?.[cust.id] !== null) {
-            initialRowBalance = String(historicalBalances[cust.id]);
-          } else if (existingOrder?.previous_balance !== undefined && existingOrder?.previous_balance !== null) {
+          if (existingOrder?.previous_balance !== undefined && existingOrder?.previous_balance !== null) {
             initialRowBalance = String(existingOrder.previous_balance);
+          } else if (historicalBalances?.[cust.id] !== undefined && historicalBalances?.[cust.id] !== null) {
+            initialRowBalance = String(historicalBalances[cust.id]);
           } else if (existingOrder?.total_amount) {
             const oTot = parseFloat(existingOrder.total_amount) || 0;
             const pPaid = (cAmt || 0) + (gAmt || 0);
@@ -1749,8 +1754,9 @@ export const CreateOrderPage: React.FC = () => {
       )
     );
 
-    // 2. Also update in customers state for software display
+    // 2. Also update in customers and openingBalances state for software display
     if (targetRow.customerId) {
+      setOpeningBalances((prev) => ({ ...prev, [targetRow.customerId!]: formattedAmount }));
       setCustomers((prev) =>
         prev.map((c) => (c.id === targetRow.customerId ? { ...c, current_balance: targetTotalBalance } : c))
       );
@@ -1800,7 +1806,7 @@ export const CreateOrderPage: React.FC = () => {
               customerOwner: cust.owner_name || '',
               customerRouteId: custRouteId,
               customerRoute: custRouteName,
-              customerBalance: cust.current_balance,
+              customerBalance: openingBalances[cust.id] ?? cust.current_balance ?? '0.00',
               driverId: routeDriver?.id,
               driverName: routeDriver?.user_details?.first_name
                 ? `${routeDriver.user_details.first_name} ${routeDriver.user_details.last_name || ''}`
@@ -2103,7 +2109,7 @@ export const CreateOrderPage: React.FC = () => {
         customerPhone: fullCust?.phone || '',
         customerRoute: fullCust?.route_details?.name || '',
         customerRouteId: fullCust?.route_details?.id || fullCust?.route,
-        customerBalance: fullCust?.current_balance || '0.00',
+        customerBalance: (fullCust && openingBalances[fullCust.id]) ? openingBalances[fullCust.id] : (fullCust?.current_balance || '0.00'),
         kubbusQty: '',
         romaliQty: '',
         productQuantities: {},
@@ -2200,7 +2206,7 @@ export const CreateOrderPage: React.FC = () => {
         customerOwner: cust.owner_name || '',
         customerRouteId: custRouteId,
         customerRoute: custRouteName,
-        customerBalance: cust.current_balance,
+        customerBalance: openingBalances[cust.id] ?? cust.current_balance ?? '0.00',
         driverId: routeDriver?.id,
         driverName: routeDriver?.user_details?.first_name
           ? `${routeDriver.user_details.first_name} ${routeDriver.user_details.last_name || ''}`
