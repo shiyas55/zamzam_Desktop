@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Database,
   Download,
@@ -206,6 +206,76 @@ export const DatabaseStorageBackupSection: React.FC = () => {
   const [isDateClearing, setIsDateClearing] = useState(false);
   const [dateClearError, setDateClearError] = useState<string | null>(null);
   const [dateClearSuccess, setDateClearSuccess] = useState<DateClearResult | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState<string>('');
+
+  const monthOptions = useMemo(() => {
+    const opts: Array<{ value: string; label: string }> = [];
+    const now = new Date();
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const label = d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+      opts.push({ value: val, label });
+    }
+    return opts;
+  }, []);
+
+  const setDatePreset = (preset: 'today' | 'yesterday' | 'this_month' | 'last_month' | 'all_past') => {
+    const today = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const toYMD = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+    if (preset === 'today') {
+      const dStr = toYMD(today);
+      setClearTargetDate(dStr);
+      setClearEndDate(dStr);
+      setIsDateRangeMode(false);
+      setSelectedMonth('');
+    } else if (preset === 'yesterday') {
+      const yest = new Date(today);
+      yest.setDate(yest.getDate() - 1);
+      const dStr = toYMD(yest);
+      setClearTargetDate(dStr);
+      setClearEndDate(dStr);
+      setIsDateRangeMode(false);
+      setSelectedMonth('');
+    } else if (preset === 'this_month') {
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      setClearTargetDate(toYMD(firstDay));
+      setClearEndDate(toYMD(lastDay));
+      setIsDateRangeMode(true);
+      setSelectedMonth(`${today.getFullYear()}-${pad(today.getMonth() + 1)}`);
+    } else if (preset === 'last_month') {
+      const firstDay = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const lastDay = new Date(today.getFullYear(), today.getMonth(), 0);
+      setClearTargetDate(toYMD(firstDay));
+      setClearEndDate(toYMD(lastDay));
+      setIsDateRangeMode(true);
+      const prevM = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      setSelectedMonth(`${prevM.getFullYear()}-${pad(prevM.getMonth() + 1)}`);
+    } else if (preset === 'all_past') {
+      setClearTargetDate('2020-01-01');
+      setClearEndDate(toYMD(today));
+      setIsDateRangeMode(true);
+      setSelectedMonth('');
+    }
+  };
+
+  const handleSelectMonth = (yearMonthStr: string) => {
+    setSelectedMonth(yearMonthStr);
+    if (!yearMonthStr) return;
+    const [yStr, mStr] = yearMonthStr.split('-');
+    const year = parseInt(yStr, 10);
+    const month = parseInt(mStr, 10);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const firstDay = `${year}-${pad(month)}-01`;
+    const lastDayDate = new Date(year, month, 0);
+    const lastDay = `${year}-${pad(month)}-${pad(lastDayDate.getDate())}`;
+    setClearTargetDate(firstDay);
+    setClearEndDate(lastDay);
+    setIsDateRangeMode(true);
+  };
 
   const fetchDateClearPreview = useCallback(async (startD: string, endD?: string) => {
     try {
@@ -2805,32 +2875,145 @@ export const DatabaseStorageBackupSection: React.FC = () => {
                       ))}
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                    <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.75rem' }}>
                       <button
                         type="button"
-                        className="btn btn-primary"
+                        className="btn btn-secondary"
                         onClick={() => {
                           setIsDateClearModalOpen(false);
                           setDateClearSuccess(null);
                         }}
-                        style={{ padding: '0.55rem 1.5rem' }}
+                        style={{ padding: '0.55rem 1.25rem' }}
                       >
-                        Done
+                        Close
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => window.location.reload()}
+                        style={{
+                          padding: '0.55rem 1.5rem',
+                          background: '#16a34a',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: '8px',
+                          fontWeight: 800,
+                          fontSize: '0.88rem',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.4rem',
+                          boxShadow: '0 2px 4px rgba(22, 163, 74, 0.3)',
+                        }}
+                      >
+                        <RefreshCw size={15} />
+                        <span>🔄 Reload Page & Refresh App</span>
                       </button>
                     </div>
                   </div>
                 ) : (
                   <form onSubmit={handleClearDateSubmit}>
-                    {/* Date Selection */}
+                    {/* Quick Presets Bar */}
+                    <div style={{ marginBottom: '1rem' }}>
+                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#64748b', marginBottom: '0.35rem' }}>
+                        ⚡ Quick Presets:
+                      </label>
+                      <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                        <button
+                          type="button"
+                          onClick={() => setDatePreset('today')}
+                          style={{
+                            padding: '0.25rem 0.55rem',
+                            fontSize: '0.74rem',
+                            fontWeight: 700,
+                            borderRadius: '6px',
+                            border: '1px solid #cbd5e1',
+                            background: !isDateRangeMode && clearTargetDate === new Date().toISOString().split('T')[0] ? '#fef3c7' : '#ffffff',
+                            color: !isDateRangeMode && clearTargetDate === new Date().toISOString().split('T')[0] ? '#b45309' : '#334155',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          📅 Today
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDatePreset('yesterday')}
+                          style={{
+                            padding: '0.25rem 0.55rem',
+                            fontSize: '0.74rem',
+                            fontWeight: 700,
+                            borderRadius: '6px',
+                            border: '1px solid #cbd5e1',
+                            background: '#ffffff',
+                            color: '#334155',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          ⏮️ Yesterday
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDatePreset('this_month')}
+                          style={{
+                            padding: '0.25rem 0.55rem',
+                            fontSize: '0.74rem',
+                            fontWeight: 700,
+                            borderRadius: '6px',
+                            border: '1px solid #cbd5e1',
+                            background: '#ffffff',
+                            color: '#334155',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          🗓️ This Month
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDatePreset('last_month')}
+                          style={{
+                            padding: '0.25rem 0.55rem',
+                            fontSize: '0.74rem',
+                            fontWeight: 700,
+                            borderRadius: '6px',
+                            border: '1px solid #cbd5e1',
+                            background: '#ffffff',
+                            color: '#334155',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          🗓️ Last Month
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDatePreset('all_past')}
+                          style={{
+                            padding: '0.25rem 0.55rem',
+                            fontSize: '0.74rem',
+                            fontWeight: 800,
+                            borderRadius: '6px',
+                            border: '1px solid #fecaca',
+                            background: '#fef2f2',
+                            color: '#dc2626',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          🔥 All Historical Data
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Mode Selector & Month Dropdown */}
                     <div style={{ marginBottom: '1.25rem' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.45rem' }}>
                         <label className="form-label" style={{ margin: 0, fontWeight: 700 }}>
-                          Select Date to Clear
+                          Select Date or Month to Clear
                         </label>
                         <div style={{ display: 'flex', gap: '0.3rem' }}>
                           <button
                             type="button"
-                            onClick={() => setIsDateRangeMode(false)}
+                            onClick={() => {
+                              setIsDateRangeMode(false);
+                              setSelectedMonth('');
+                            }}
                             style={{
                               padding: '0.2rem 0.5rem',
                               fontSize: '0.72rem',
@@ -2858,9 +3041,26 @@ export const DatabaseStorageBackupSection: React.FC = () => {
                               cursor: 'pointer',
                             }}
                           >
-                            Date Range
+                            Start ➔ End Date
                           </button>
                         </div>
+                      </div>
+
+                      {/* Month Quick Selector Dropdown */}
+                      <div style={{ marginBottom: '0.75rem' }}>
+                        <select
+                          className="form-select"
+                          value={selectedMonth}
+                          onChange={(e) => handleSelectMonth(e.target.value)}
+                          style={{ fontSize: '0.8rem', padding: '0.35rem 0.6rem' }}
+                        >
+                          <option value="">🗓️ Or Choose an Entire Month to Clear...</option>
+                          {monthOptions.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              Full Month: {opt.label}
+                            </option>
+                          ))}
+                        </select>
                       </div>
 
                       {!isDateRangeMode ? (
@@ -2868,29 +3068,42 @@ export const DatabaseStorageBackupSection: React.FC = () => {
                           type="date"
                           className="form-input"
                           value={clearTargetDate}
-                          onChange={(e) => setClearTargetDate(e.target.value)}
+                          onChange={(e) => {
+                            setClearTargetDate(e.target.value);
+                            setSelectedMonth('');
+                          }}
                           required
                           style={{ fontWeight: 600 }}
                         />
                       ) : (
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
                           <div>
-                            <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block', marginBottom: '2px' }}>Start Date</span>
+                            <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block', marginBottom: '2px', fontWeight: 700 }}>
+                              Start Date
+                            </span>
                             <input
                               type="date"
                               className="form-input"
                               value={clearTargetDate}
-                              onChange={(e) => setClearTargetDate(e.target.value)}
+                              onChange={(e) => {
+                                setClearTargetDate(e.target.value);
+                                setSelectedMonth('');
+                              }}
                               required
                             />
                           </div>
                           <div>
-                            <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block', marginBottom: '2px' }}>End Date</span>
+                            <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block', marginBottom: '2px', fontWeight: 700 }}>
+                              End Date
+                            </span>
                             <input
                               type="date"
                               className="form-input"
                               value={clearEndDate}
-                              onChange={(e) => setClearEndDate(e.target.value)}
+                              onChange={(e) => {
+                                setClearEndDate(e.target.value);
+                                setSelectedMonth('');
+                              }}
                               required
                             />
                           </div>

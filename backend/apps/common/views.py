@@ -1657,11 +1657,11 @@ class DatabaseClearDateView(APIView):
                 # 1. Orders
                 if clear_all_modules or "orders" in modules:
                     orders_qs = Order.objects.filter(order_date__range=(start_d, end_d))
-                    for o in orders_qs.select_related("customer"):
-                        if o.customer:
-                            affected_customers.add(o.customer_id)
-                            o.customer.current_balance = (o.customer.current_balance - o.total_amount).quantize(Decimal("0.01"))
-                            o.customer.save(update_fields=["current_balance", "updated_at"])
+                    order_deltas = {}
+                    for row in orders_qs.values("customer_id").annotate(sum_amount=models.Sum("total_amount")):
+                        if row["customer_id"]:
+                            order_deltas[row["customer_id"]] = row["sum_amount"] or Decimal("0.00")
+                            affected_customers.add(row["customer_id"])
 
                     deleted_counts["credit_transactions_order"] = CreditTransaction.objects.filter(reference_order__in=orders_qs).delete()[0]
                     deleted_counts["order_activity_logs"] = OrderActivityLog.objects.filter(order__in=orders_qs).delete()[0]
@@ -1669,20 +1669,32 @@ class DatabaseClearDateView(APIView):
                     deleted_counts["order_items"] = OrderItem.objects.filter(order__in=orders_qs).delete()[0]
                     deleted_counts["orders"] = orders_qs.delete()[0]
 
+                    for cust_id, sum_amt in order_deltas.items():
+                        Customer.objects.filter(id=cust_id).update(
+                            current_balance=models.F("current_balance") - sum_amt,
+                            updated_at=timezone.now(),
+                        )
+
                 # 2. Payments
                 if clear_all_modules or "payments" in modules:
                     payments_qs = Payment.objects.filter(
                         models.Q(received_at__date__range=(start_d, end_d)) |
                         models.Q(created_at__date__range=(start_d, end_d))
                     )
-                    for p in payments_qs.select_related("customer"):
-                        if p.customer and p.status == "COMPLETED":
-                            affected_customers.add(p.customer_id)
-                            p.customer.current_balance = (p.customer.current_balance + p.amount).quantize(Decimal("0.01"))
-                            p.customer.save(update_fields=["current_balance", "updated_at"])
+                    payment_deltas = {}
+                    for row in payments_qs.filter(status="COMPLETED").values("customer_id").annotate(sum_amount=models.Sum("amount")):
+                        if row["customer_id"]:
+                            payment_deltas[row["customer_id"]] = row["sum_amount"] or Decimal("0.00")
+                            affected_customers.add(row["customer_id"])
 
                     deleted_counts["credit_transactions_payment"] = CreditTransaction.objects.filter(reference_payment__in=payments_qs).delete()[0]
                     deleted_counts["payments"] = payments_qs.delete()[0]
+
+                    for cust_id, sum_amt in payment_deltas.items():
+                        Customer.objects.filter(id=cust_id).update(
+                            current_balance=models.F("current_balance") + sum_amt,
+                            updated_at=timezone.now(),
+                        )
 
                 # 3. Expenses & Shifts
                 if clear_all_modules or "expenses" in modules:

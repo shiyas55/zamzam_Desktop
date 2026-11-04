@@ -228,23 +228,23 @@ class SystemSettings(TimeStampedUUIDModel):
     @classmethod
     def get_settings(cls):
         """Returns the singleton settings instance, creating default if not exists."""
-        settings_obj, _ = cls.objects.get_or_create(
-            defaults={
-                "business_name": "Zamzam Foods Wholesale",
-                "phone_number": "+91 98470 12345",
-                "gst_number": "",
-                "email": "info@zamzamfoods.com",
-                "address": "Main Road, Pandikkad, Malappuram, Kerala",
-                "is_whatsapp_enabled": True,
-                "is_self_order_enabled": True,
-                "is_maintenance_mode": False,
-                "maintenance_message": "System is currently undergoing scheduled maintenance. Please check back shortly.",
-                "whatsapp_is_locked": False,
-                "whatsapp_plan_name": "WhatsApp Enterprise Pro",
-                "whatsapp_plan_expires_at": None,
-                "whatsapp_license_key": "",
-            }
-        )
+        settings_obj = cls.objects.order_by("-updated_at").first()
+        if not settings_obj:
+            settings_obj = cls.objects.create(
+                business_name="Zamzam Foods Wholesale",
+                phone_number="+91 98470 12345",
+                gst_number="",
+                email="info@zamzamfoods.com",
+                address="Main Road, Pandikkad, Malappuram, Kerala",
+                is_whatsapp_enabled=True,
+                is_self_order_enabled=True,
+                is_maintenance_mode=False,
+                maintenance_message="System is currently undergoing scheduled maintenance. Please check back shortly.",
+                whatsapp_is_locked=False,
+                whatsapp_plan_name="WhatsApp Enterprise Pro",
+                whatsapp_plan_expires_at=None,
+                whatsapp_license_key="",
+            )
         return settings_obj
 
 
