@@ -205,5 +205,13 @@ export const databaseService = {
   async clearAllData(pin: string, confirmation: string): Promise<ClearAllResult> {
     return apiClient.post<ClearAllResult>('/database/clear-all/', { pin, confirmation });
   },
+
+  async testTelegram(botToken?: string, chatId?: string): Promise<{ success: boolean; message: string }> {
+    return apiClient.post('/database/telegram-test/', { bot_token: botToken, chat_id: chatId });
+  },
+
+  async sendTelegramBackup(trigger = 'MANUAL', notes = ''): Promise<{ success: boolean; message: string; filename?: string; total_records?: number }> {
+    return apiClient.post('/database/telegram-backup/', { trigger, notes });
+  },
 };
 

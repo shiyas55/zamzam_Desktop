@@ -49,6 +49,7 @@ import {
   ArrowUpDown,
   BarChart2,
   BellRing,
+  Send,
 } from 'lucide-react';
 
 const RealWhatsAppWebView = React.lazy(() =>
@@ -287,6 +288,24 @@ export const CreateOrderPage: React.FC = () => {
   const [editCustError, setEditCustError] = useState<string | null>(null);
   const [editCustSubmitting, setEditCustSubmitting] = useState(false);
   const [editCustProductPrices, setEditCustProductPrices] = useState<Record<string, string>>({});
+  const [isSendingTelegramBackup, setIsSendingTelegramBackup] = useState<boolean>(false);
+
+  const handleSendTelegramBackupNow = async () => {
+    try {
+      setIsSendingTelegramBackup(true);
+      const res = await databaseService.sendTelegramBackup('MANUAL', `Wholesale Fast Entry Snapshot (${orderDate})`);
+      if (res.success) {
+        setSuccessBanner(`✈️ Telegram Backup: ${res.filename || 'JSON snapshot'} sent to Telegram channel!`);
+        setTimeout(() => setSuccessBanner(null), 4000);
+      } else {
+        setError(res.message || 'Telegram backup failed. Check Bot Token in Settings.');
+      }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to send backup to Telegram. Verify Bot Token in Settings.');
+    } finally {
+      setIsSendingTelegramBackup(false);
+    }
+  };
 
   // Time format helper functions
   const formatOrderTime = (isoString?: string): string => {
@@ -1966,6 +1985,16 @@ export const CreateOrderPage: React.FC = () => {
 
       setSuccessBanner(`Saved order for ${row.customerName} successfully!`);
       setTimeout(() => setSuccessBanner(null), 3500);
+
+      // Trigger Telegram Cloud Backup if enabled (asynchronous background notification)
+      databaseService
+        .sendTelegramBackup('BILL_SAVE', `Saved order for ${row.customerName} on ${orderDate}`)
+        .then((res) => {
+          if (res?.success) {
+            console.log('✅ Telegram Cloud Backup:', res.filename);
+          }
+        })
+        .catch(() => {});
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Order creation failed';
       setError(`Failed to save order for ${row.customerName || 'shop'}: ${msg}`);
@@ -3373,6 +3402,19 @@ export const CreateOrderPage: React.FC = () => {
           autoConfirmDriver ? 'Confirmed & dispatched to route delivery drivers.' : ''
         }`
       );
+
+      // Automatically send full database backup JSON to Telegram (asynchronous background notification)
+      databaseService
+        .sendTelegramBackup('BILL_SAVE', `Saved ${successCount} wholesale order(s) for ${orderDate}`)
+        .then((res) => {
+          if (res?.success) {
+            console.log('✅ Telegram Cloud Backup: Sent backup JSON to Telegram', res.filename);
+          }
+        })
+        .catch((tgErr) => {
+          console.warn('Telegram backup auto-trigger:', tgErr?.message || tgErr);
+        });
+
       // Automatically open Bulk WhatsApp modal so user can dispatch PDF or Image bills to all customers
       setIsBulkWhatsAppModalOpen(true);
     }
@@ -3757,6 +3799,33 @@ export const CreateOrderPage: React.FC = () => {
           >
             <Printer size={14} />
             <span>Print Sheet</span>
+          </button>
+
+          {/* Send Full Backup to Telegram Cloud Button */}
+          <button
+            type="button"
+            onClick={handleSendTelegramBackupNow}
+            disabled={isSendingTelegramBackup}
+            style={{
+              height: '28px',
+              padding: '0 0.65rem',
+              fontWeight: 800,
+              fontSize: '0.76rem',
+              background: '#0284c7',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '6px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              cursor: isSendingTelegramBackup ? 'wait' : 'pointer',
+              opacity: isSendingTelegramBackup ? 0.7 : 1,
+              boxShadow: '0 1px 3px rgba(2, 132, 199, 0.35)',
+            }}
+            title="Send complete database backup JSON to your Telegram Channel/Chat immediately"
+          >
+            <Send size={13} />
+            <span>{isSendingTelegramBackup ? 'Sending...' : '✈️ Telegram Backup'}</span>
           </button>
         </div>
       </div>

@@ -46,6 +46,10 @@ class SystemSettingsSerializer(serializers.ModelSerializer):
             "whatsapp_plan_expires_at",
             "whatsapp_license_key",
             "settings_pin_code",
+            "telegram_bot_token",
+            "telegram_chat_id",
+            "is_telegram_backup_enabled",
+            "telegram_backup_on_bill_save",
             "created_at",
             "updated_at",
         ]

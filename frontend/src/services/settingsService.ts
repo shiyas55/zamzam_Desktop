@@ -20,6 +20,10 @@ export interface SystemSettings {
   whatsapp_plan_expires_at?: string | null;
   whatsapp_license_key?: string;
   settings_pin_code?: string;
+  telegram_bot_token?: string;
+  telegram_chat_id?: string;
+  is_telegram_backup_enabled?: boolean;
+  telegram_backup_on_bill_save?: boolean;
   created_at?: string;
   updated_at?: string;
 }

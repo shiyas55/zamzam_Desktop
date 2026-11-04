@@ -705,6 +705,83 @@ class DatabaseBackupView(APIView):
         return response
 
 
+class TelegramTestView(APIView):
+    """
+    POST /api/v1/database/telegram-test/
+    Tests connection to the Telegram Bot & Channel/Chat.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        if not user.is_authenticated or (user.role not in ["OWNER", "MANAGER"] and not user.is_superuser):
+            return Response({"error": "Unauthorized. Only Owner or Manager can test Telegram connection."}, status=403)
+
+        from apps.common.models import SystemSettings
+        from apps.common.telegram import send_telegram_text
+
+        settings = SystemSettings.objects.first()
+        bot_token = (request.data.get("bot_token") or (settings.telegram_bot_token if settings else "") or "").strip()
+        chat_id = (request.data.get("chat_id") or (settings.telegram_chat_id if settings else "") or "").strip()
+
+        if not bot_token:
+            return Response({"error": "Telegram Bot Token is required."}, status=400)
+        if not chat_id:
+            return Response({"error": "Telegram Chat/Channel ID is required."}, status=400)
+
+        now_str = timezone.now().strftime("%d-%b-%Y %I:%M %p")
+        test_msg = (
+            f"🍞 <b>Zamzam Foods — Telegram Cloud Backup</b>\n"
+            f"━━━━━━━━━━━━━━━━━━━━\n"
+            f"✅ <b>Connection Test Successful!</b>\n"
+            f"📅 <b>Time:</b> {now_str}\n"
+            f"👤 <b>Tested by:</b> {user.username}\n"
+            f"💬 <i>Your Telegram bot is configured and ready to receive automatic database backups.</i>"
+        )
+
+        try:
+            res = send_telegram_text(bot_token=bot_token, chat_id=chat_id, text=test_msg)
+            return Response({
+                "success": True,
+                "message": "Successfully connected! Test message was sent to your Telegram chat/channel.",
+                "details": res,
+            })
+        except Exception as exc:
+            return Response({
+                "success": False,
+                "error": str(exc),
+            }, status=400)
+
+
+class TelegramBackupView(APIView):
+    """
+    POST /api/v1/database/telegram-backup/
+    Generates a full JSON database backup and sends it directly to Telegram.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        if not user.is_authenticated or (user.role not in ["OWNER", "MANAGER"] and not user.is_superuser):
+            return Response({"error": "Unauthorized. Only Owner or Manager can send Telegram backups."}, status=403)
+
+        from apps.common.telegram import dispatch_telegram_backup
+
+        trigger = request.data.get("trigger", "MANUAL")
+        notes = request.data.get("notes", "")
+
+        res = dispatch_telegram_backup(
+            trigger=trigger,
+            notes=notes,
+            user=user,
+            force=True,  # Explicit manual/API call overrides disabled flag
+        )
+
+        if not res.get("success"):
+            return Response(res, status=400)
+        return Response(res, status=200)
+
+
 class DatabaseRestoreView(APIView):
     """
     POST /api/v1/database/restore/

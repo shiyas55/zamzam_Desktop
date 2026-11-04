@@ -12,6 +12,8 @@ from .views import (
     DatabaseRestoreView,
     DatabaseClearAllView,
     DatabaseClearDateView,
+    TelegramTestView,
+    TelegramBackupView,
     BusinessDocumentViewSet,
     BackgroundServicesView,
 )
@@ -33,5 +35,7 @@ urlpatterns = [
     path("database/restore/", DatabaseRestoreView.as_view(), name="database_restore"),
     path("database/clear-all/", DatabaseClearAllView.as_view(), name="database_clear_all"),
     path("database/clear-date/", DatabaseClearDateView.as_view(), name="database_clear_date"),
+    path("database/telegram-test/", TelegramTestView.as_view(), name="telegram_test"),
+    path("database/telegram-backup/", TelegramBackupView.as_view(), name="telegram_backup"),
 ] + router.urls
 

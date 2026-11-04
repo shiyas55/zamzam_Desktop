@@ -45,9 +45,14 @@ import {
   Calendar,
   CalendarDays,
   Filter,
+  Send,
+  Eye,
+  EyeOff,
+  ExternalLink,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { draftOrderStorage } from '../utils/draftOrderStorage';
+import { settingsService } from '../services/settingsService';
 import {
   databaseService,
   DatabaseStats,
@@ -110,6 +115,18 @@ export const DatabaseStorageBackupSection: React.FC = () => {
     DEFAULT_MODULE_LIST.map((m) => m.id)
   );
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // Telegram Cloud Backup & Channel Sync State
+  const [telegramBotToken, setTelegramBotToken] = useState('');
+  const [telegramChatId, setTelegramChatId] = useState('');
+  const [isTelegramEnabled, setIsTelegramEnabled] = useState(false);
+  const [telegramAutoOnBillSave, setTelegramAutoOnBillSave] = useState(true);
+  const [showTelegramToken, setShowTelegramToken] = useState(false);
+  const [isSavingTelegram, setIsSavingTelegram] = useState(false);
+  const [isTestingTelegram, setIsTestingTelegram] = useState(false);
+  const [isSendingTelegramBackup, setIsSendingTelegramBackup] = useState(false);
+  const [telegramFeedback, setTelegramFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [showTelegramHelp, setShowTelegramHelp] = useState(false);
 
   // Aiven PostgreSQL Cloud Database Connection State
   const [pgHost, setPgHost] = useState('pg-65e4170-zamzamfoods.h.aivencloud.com');
@@ -345,6 +362,97 @@ export const DatabaseStorageBackupSection: React.FC = () => {
         .catch((e) => console.warn('[Settings] Native DB config load:', e));
     }
   }, [isDesktop]);
+
+  useEffect(() => {
+    settingsService
+      .getSettings()
+      .then((cfg) => {
+        if (cfg) {
+          setTelegramBotToken(cfg.telegram_bot_token || '');
+          setTelegramChatId(cfg.telegram_chat_id || '');
+          setIsTelegramEnabled(Boolean(cfg.is_telegram_backup_enabled));
+          setTelegramAutoOnBillSave(cfg.telegram_backup_on_bill_save !== false);
+        }
+      })
+      .catch((err) => console.warn('[Settings] Telegram config load:', err));
+  }, []);
+
+  const handleSaveTelegramSettings = async () => {
+    try {
+      setIsSavingTelegram(true);
+      setTelegramFeedback(null);
+      await settingsService.updateSettings({
+        telegram_bot_token: telegramBotToken.trim(),
+        telegram_chat_id: telegramChatId.trim(),
+        is_telegram_backup_enabled: isTelegramEnabled,
+        telegram_backup_on_bill_save: telegramAutoOnBillSave,
+      });
+      setTelegramFeedback({
+        type: 'success',
+        message: 'Telegram settings saved successfully! Auto-backup will trigger on bill saves.',
+      });
+    } catch (err: unknown) {
+      setTelegramFeedback({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Failed to save Telegram settings.',
+      });
+    } finally {
+      setIsSavingTelegram(false);
+    }
+  };
+
+  const handleTestTelegramConnection = async () => {
+    if (!telegramBotToken.trim()) {
+      setTelegramFeedback({ type: 'error', message: 'Please enter a Telegram Bot Token first.' });
+      return;
+    }
+    if (!telegramChatId.trim()) {
+      setTelegramFeedback({ type: 'error', message: 'Please enter a Telegram Chat ID or Channel ID first.' });
+      return;
+    }
+    try {
+      setIsTestingTelegram(true);
+      setTelegramFeedback(null);
+      const res = await databaseService.testTelegram(telegramBotToken.trim(), telegramChatId.trim());
+      setTelegramFeedback({
+        type: 'success',
+        message: res.message || 'Telegram connection test successful! Ping message sent to your chat/channel.',
+      });
+    } catch (err: unknown) {
+      setTelegramFeedback({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Failed to connect to Telegram. Please check token & chat ID.',
+      });
+    } finally {
+      setIsTestingTelegram(false);
+    }
+  };
+
+  const handleSendTelegramBackupNow = async () => {
+    try {
+      setIsSendingTelegramBackup(true);
+      setTelegramFeedback(null);
+      const res = await databaseService.sendTelegramBackup('MANUAL', 'Triggered from Database & Storage Backup settings');
+      if (res.success) {
+        setTelegramFeedback({
+          type: 'success',
+          message: `Backup snapshot (${res.filename || 'JSON'}) was successfully uploaded to your Telegram channel!`,
+        });
+      } else {
+        setTelegramFeedback({
+          type: 'error',
+          message: res.message || 'Failed to dispatch backup to Telegram.',
+        });
+      }
+    } catch (err: unknown) {
+      setTelegramFeedback({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Failed to send backup to Telegram.',
+      });
+    } finally {
+      setIsSendingTelegramBackup(false);
+    }
+  };
 
   const handleCopy = (key: string, value: string) => {
     try {
@@ -1646,6 +1754,343 @@ export const DatabaseStorageBackupSection: React.FC = () => {
                   <span>Download JSON Snapshot (.json)</span>
                 </>
               )}
+            </button>
+          </div>
+        </div>
+
+        {/* ── TELEGRAM CLOUD BACKUP & AUTOMATED CHANNEL SYNC ──────────────── */}
+        <div
+          style={{
+            marginTop: '1.75rem',
+            padding: '1.5rem',
+            borderRadius: '14px',
+            border: isTelegramEnabled && telegramBotToken && telegramChatId ? '1.5px solid #0284c7' : '1.5px solid #cbd5e1',
+            background: '#ffffff',
+            boxShadow: 'var(--shadow-sm)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div
+                style={{
+                  width: '42px',
+                  height: '42px',
+                  borderRadius: '10px',
+                  background: '#e0f2fe',
+                  color: '#0284c7',
+                  border: '1px solid #bae6fd',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.25rem',
+                }}
+              >
+                ✈️
+              </div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                    Telegram Cloud Backup & Channel Sync
+                  </h3>
+                  {isTelegramEnabled && telegramBotToken && telegramChatId ? (
+                    <span
+                      style={{
+                        padding: '0.2rem 0.6rem',
+                        borderRadius: '9999px',
+                        background: '#dcfce7',
+                        color: '#15803d',
+                        fontSize: '0.72rem',
+                        fontWeight: 800,
+                        border: '1px solid #86efac',
+                      }}
+                    >
+                      🟢 ACTIVE & READY
+                    </span>
+                  ) : telegramBotToken && telegramChatId ? (
+                    <span
+                      style={{
+                        padding: '0.2rem 0.6rem',
+                        borderRadius: '9999px',
+                        background: '#fef3c7',
+                        color: '#b45309',
+                        fontSize: '0.72rem',
+                        fontWeight: 800,
+                        border: '1px solid #fde68a',
+                      }}
+                    >
+                      🟡 CONFIGURED (DISABLED)
+                    </span>
+                  ) : (
+                    <span
+                      style={{
+                        padding: '0.2rem 0.6rem',
+                        borderRadius: '9999px',
+                        background: '#f1f5f9',
+                        color: '#64748b',
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
+                        border: '1px solid #cbd5e1',
+                      }}
+                    >
+                      ⚪ NOT CONFIGURED
+                    </span>
+                  )}
+                </div>
+                <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '0.2rem 0 0 0' }}>
+                  Automatically send complete database JSON snapshots to your private Telegram Channel or Chat whenever wholesale bills are saved.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowTelegramHelp((prev) => !prev)}
+              style={{
+                padding: '0.4rem 0.8rem',
+                borderRadius: '6px',
+                border: '1px solid #cbd5e1',
+                background: '#f8fafc',
+                color: '#0284c7',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+              }}
+            >
+              <span>{showTelegramHelp ? 'Hide Setup Guide' : '📖 Setup Guide (2 min)'}</span>
+            </button>
+          </div>
+
+          {/* Quick Setup Help Collapsible */}
+          {showTelegramHelp && (
+            <div
+              style={{
+                marginBottom: '1.25rem',
+                padding: '1rem 1.25rem',
+                background: '#f0f9ff',
+                borderRadius: '8px',
+                border: '1px solid #bae6fd',
+                fontSize: '0.8rem',
+                color: '#0369a1',
+                lineHeight: 1.6,
+              }}
+            >
+              <div style={{ fontWeight: 800, marginBottom: '0.4rem', color: '#0c4a6e' }}>
+                🚀 How to Connect Telegram in 3 Easy Steps:
+              </div>
+              <ol style={{ margin: 0, paddingLeft: '1.25rem' }}>
+                <li>
+                  <strong>Create a Bot:</strong> Open Telegram, search for <code>@BotFather</code>, send <code>/newbot</code>, name your bot (e.g. <em>Zamzam Backup Bot</em>), and copy the <strong>HTTP API Token</strong>.
+                </li>
+                <li>
+                  <strong>Create a Backup Channel:</strong> In Telegram, create a new private channel (e.g. <em>Zamzam Backups</em>) and add your bot as an <strong>Administrator</strong> with message posting permission.
+                </li>
+                <li>
+                  <strong>Get Channel ID:</strong> Forward any message from your channel to <code>@userinfobot</code> or <code>@JsonDumpBot</code> on Telegram to get your Channel ID (looks like <code>-1001234567890</code>). Paste both below and click <strong>Test Connection</strong>!
+                </li>
+              </ol>
+            </div>
+          )}
+
+          {/* Telegram Feedback */}
+          {telegramFeedback && (
+            <div
+              style={{
+                marginBottom: '1rem',
+                padding: '0.65rem 1rem',
+                borderRadius: '8px',
+                fontSize: '0.82rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                background: telegramFeedback.type === 'success' ? '#ecfdf5' : '#fef2f2',
+                color: telegramFeedback.type === 'success' ? '#065f46' : '#991b1b',
+                border: telegramFeedback.type === 'success' ? '1px solid #a7f3d0' : '1px solid #fecaca',
+              }}
+            >
+              {telegramFeedback.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+              <span>{telegramFeedback.message}</span>
+            </div>
+          )}
+
+          {/* Inputs Grid */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: '1rem',
+              marginBottom: '1.25rem',
+            }}
+          >
+            {/* Bot Token Input */}
+            <div>
+              <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                Telegram Bot Token:
+              </label>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <input
+                  type={showTelegramToken ? 'text' : 'password'}
+                  className="form-control"
+                  placeholder="e.g. 7891234567:AAHk1234567890abcdef..."
+                  value={telegramBotToken}
+                  onChange={(e) => setTelegramBotToken(e.target.value)}
+                  style={{
+                    paddingRight: '2.5rem',
+                    fontSize: '0.82rem',
+                    fontFamily: 'monospace',
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowTelegramToken((prev) => !prev)}
+                  style={{
+                    position: 'absolute',
+                    right: '0.5rem',
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#64748b',
+                    padding: '0.25rem',
+                  }}
+                  title={showTelegramToken ? 'Hide token' : 'Show token'}
+                >
+                  {showTelegramToken ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
+              <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.2rem', display: 'block' }}>
+                From @BotFather on Telegram
+              </span>
+            </div>
+
+            {/* Chat / Channel ID Input */}
+            <div>
+              <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                Telegram Chat ID or Channel ID:
+              </label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="e.g. -1001234567890 (Channel) or 123456789 (Chat)"
+                value={telegramChatId}
+                onChange={(e) => setTelegramChatId(e.target.value)}
+                style={{
+                  fontSize: '0.82rem',
+                  fontFamily: 'monospace',
+                }}
+              />
+              <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.2rem', display: 'block' }}>
+                Channel ID (starts with -100...) or Owner user ID
+              </span>
+            </div>
+          </div>
+
+          {/* Toggles */}
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.6rem',
+              padding: '0.85rem 1rem',
+              background: '#f8fafc',
+              borderRadius: '8px',
+              border: '1px solid #e2e8f0',
+              marginBottom: '1.25rem',
+            }}
+          >
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 700, color: '#0f172a' }}>
+              <input
+                type="checkbox"
+                checked={isTelegramEnabled}
+                onChange={(e) => setIsTelegramEnabled(e.target.checked)}
+                style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+              />
+              <span>Enable Telegram Cloud Backups</span>
+            </label>
+
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 700, color: '#0f172a' }}>
+              <input
+                type="checkbox"
+                checked={telegramAutoOnBillSave}
+                onChange={(e) => setTelegramAutoOnBillSave(e.target.checked)}
+                disabled={!isTelegramEnabled}
+                style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+              />
+              <span>Automatically send full backup JSON whenever wholesale bills/orders are saved</span>
+            </label>
+          </div>
+
+          {/* Action Buttons */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={handleSaveTelegramSettings}
+              disabled={isSavingTelegram}
+              style={{
+                padding: '0.55rem 1.15rem',
+                borderRadius: '6px',
+                border: 'none',
+                background: '#0f172a',
+                color: '#ffffff',
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                cursor: isSavingTelegram ? 'wait' : 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                opacity: isSavingTelegram ? 0.7 : 1,
+              }}
+            >
+              <Save size={14} />
+              <span>{isSavingTelegram ? 'Saving...' : 'Save Settings'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleTestTelegramConnection}
+              disabled={isTestingTelegram || !telegramBotToken || !telegramChatId}
+              style={{
+                padding: '0.55rem 1.15rem',
+                borderRadius: '6px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff',
+                color: '#0284c7',
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                cursor: isTestingTelegram ? 'wait' : 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                opacity: isTestingTelegram || !telegramBotToken || !telegramChatId ? 0.6 : 1,
+              }}
+            >
+              <Send size={14} />
+              <span>{isTestingTelegram ? 'Testing Connection...' : '⚡ Test Connection'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSendTelegramBackupNow}
+              disabled={isSendingTelegramBackup || !telegramBotToken || !telegramChatId}
+              style={{
+                padding: '0.55rem 1.15rem',
+                borderRadius: '6px',
+                border: 'none',
+                background: '#0284c7',
+                color: '#ffffff',
+                fontSize: '0.82rem',
+                fontWeight: 800,
+                cursor: isSendingTelegramBackup ? 'wait' : 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                opacity: isSendingTelegramBackup || !telegramBotToken || !telegramChatId ? 0.6 : 1,
+                boxShadow: '0 1px 3px rgba(2, 132, 199, 0.35)',
+              }}
+            >
+              <Download size={14} />
+              <span>{isSendingTelegramBackup ? 'Uploading to Telegram...' : '✈️ Send Full Backup JSON Now'}</span>
             </button>
           </div>
         </div>

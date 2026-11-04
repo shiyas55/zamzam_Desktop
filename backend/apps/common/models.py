@@ -187,6 +187,28 @@ class SystemSettings(TimeStampedUUIDModel):
         help_text="4-digit security PIN to access Business Settings & System Controls (Default: 7667)"
     )
 
+    # Telegram Cloud Backup & Notification Settings
+    telegram_bot_token = models.CharField(
+        max_length=200,
+        blank=True,
+        default="",
+        help_text="Telegram Bot Token from @BotFather"
+    )
+    telegram_chat_id = models.CharField(
+        max_length=100,
+        blank=True,
+        default="",
+        help_text="Telegram Channel or Chat ID (e.g. -100xxxxxxxxxx or your user chat ID)"
+    )
+    is_telegram_backup_enabled = models.BooleanField(
+        default=False,
+        help_text="Master toggle to enable automatic Telegram cloud backups"
+    )
+    telegram_backup_on_bill_save = models.BooleanField(
+        default=True,
+        help_text="Automatically send database backup JSON to Telegram whenever wholesale bills/orders are saved"
+    )
+
     class Meta:
         verbose_name = "System Settings"
         verbose_name_plural = "System Settings"
