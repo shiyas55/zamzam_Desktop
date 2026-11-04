@@ -179,7 +179,7 @@ export const CreateOrderPage: React.FC = () => {
     if (saved === 'CUSTOMER_LINK' || saved === 'MANAGER' || saved === 'ALL') return saved;
     return 'ALL';
   });
-  const [orderSort, setOrderSort] = useState<'SHOP_CREATE_ASC' | 'CUSTOM' | 'STOP_ORDER_ASC' | 'NAME_ASC'>(() => {
+  const [orderSort, setOrderSort] = useState<'SHOP_CREATE_ASC' | 'CUSTOM' | 'ORDERED_LAST' | 'STOP_ORDER_ASC' | 'NAME_ASC'>(() => {
     const saved = localStorage.getItem('zamzam_fast_order_sort');
     const customOrderSaved = localStorage.getItem('zamzam_fast_custom_sort_order');
     let hasCustom = false;
@@ -188,11 +188,11 @@ export const CreateOrderPage: React.FC = () => {
     } catch {}
 
     // If an order is already established on the page (CUSTOM), always preserve it!
-    if (hasCustom && saved !== 'NAME_ASC' && saved !== 'SHOP_CREATE_ASC') {
+    if (hasCustom && saved !== 'NAME_ASC' && saved !== 'SHOP_CREATE_ASC' && saved !== 'ORDERED_LAST') {
       return 'CUSTOM';
     }
-    if (saved === 'SHOP_CREATE_ASC' || saved === 'NAME_ASC' || saved === 'CUSTOM') {
-      return saved as 'SHOP_CREATE_ASC' | 'CUSTOM' | 'STOP_ORDER_ASC' | 'NAME_ASC';
+    if (saved === 'SHOP_CREATE_ASC' || saved === 'NAME_ASC' || saved === 'CUSTOM' || saved === 'ORDERED_LAST' || saved === 'STOP_ORDER_ASC') {
+      return saved as 'SHOP_CREATE_ASC' | 'CUSTOM' | 'ORDERED_LAST' | 'STOP_ORDER_ASC' | 'NAME_ASC';
     }
     // Never auto-force STOP_ORDER_ASC as it changes existing order; default to CUSTOM or original SHOP_CREATE_ASC
     return hasCustom ? 'CUSTOM' : 'SHOP_CREATE_ASC';
@@ -1287,6 +1287,16 @@ export const CreateOrderPage: React.FC = () => {
       return sortByShopRegisteredOldest(a, b);
     };
 
+    // Helper function to check if row has an order entered/saved today
+    const hasOrderPlacedToday = (r: OrderRow): boolean => {
+      if (r.orderId) return true;
+      if (r.status === 'SAVED' || r.status === 'LOCKED') return true;
+      if (r.kubbusQty && r.kubbusQty !== '0') return true;
+      if (r.romaliQty && r.romaliQty !== '0') return true;
+      if (r.productQuantities && Object.values(r.productQuantities).some((v) => v && v !== '0')) return true;
+      return false;
+    };
+
     // Apply custom sort if selected
     if (orderSort === 'CUSTOM' && customSortOrder.length > 0) {
       return [...afterOrderFilter].sort((a, b) => {
@@ -1295,6 +1305,25 @@ export const CreateOrderPage: React.FC = () => {
         if (iA !== -1 && iB !== -1) return iA - iB;
         if (iA !== -1) return -1;
         if (iB !== -1) return 1;
+        return sortByShopRegisteredOldest(a, b);
+      });
+    }
+
+    // Show unbilled shops first, already ordered shops at the last
+    if (orderSort === 'ORDERED_LAST') {
+      return [...afterOrderFilter].sort((a, b) => {
+        const aOrdered = hasOrderPlacedToday(a);
+        const bOrdered = hasOrderPlacedToday(b);
+        if (!aOrdered && bOrdered) return -1;
+        if (aOrdered && !bOrdered) return 1;
+
+        if (customSortOrder.length > 0) {
+          const iA = customSortOrder.indexOf(a.rowId);
+          const iB = customSortOrder.indexOf(b.rowId);
+          if (iA !== -1 && iB !== -1) return iA - iB;
+          if (iA !== -1) return -1;
+          if (iB !== -1) return 1;
+        }
         return sortByShopRegisteredOldest(a, b);
       });
     }
@@ -1329,6 +1358,15 @@ export const CreateOrderPage: React.FC = () => {
       return sortByShopRegisteredOldest(a, b);
     };
 
+    const hasOrderPlacedToday = (r: OrderRow): boolean => {
+      if (r.orderId) return true;
+      if (r.status === 'SAVED' || r.status === 'LOCKED') return true;
+      if (r.kubbusQty && r.kubbusQty !== '0') return true;
+      if (r.romaliQty && r.romaliQty !== '0') return true;
+      if (r.productQuantities && Object.values(r.productQuantities).some((v) => v && v !== '0')) return true;
+      return false;
+    };
+
     if (orderSort === 'CUSTOM' && customSortOrder.length > 0) {
       return [...rows].sort((a, b) => {
         const iA = customSortOrder.indexOf(a.rowId);
@@ -1336,6 +1374,24 @@ export const CreateOrderPage: React.FC = () => {
         if (iA !== -1 && iB !== -1) return iA - iB;
         if (iA !== -1) return -1;
         if (iB !== -1) return 1;
+        return sortByShopRegisteredOldest(a, b);
+      });
+    }
+
+    if (orderSort === 'ORDERED_LAST') {
+      return [...rows].sort((a, b) => {
+        const aOrdered = hasOrderPlacedToday(a);
+        const bOrdered = hasOrderPlacedToday(b);
+        if (!aOrdered && bOrdered) return -1;
+        if (aOrdered && !bOrdered) return 1;
+
+        if (customSortOrder.length > 0) {
+          const iA = customSortOrder.indexOf(a.rowId);
+          const iB = customSortOrder.indexOf(b.rowId);
+          if (iA !== -1 && iB !== -1) return iA - iB;
+          if (iA !== -1) return -1;
+          if (iB !== -1) return 1;
+        }
         return sortByShopRegisteredOldest(a, b);
       });
     }
@@ -2670,9 +2726,27 @@ export const CreateOrderPage: React.FC = () => {
       setLoading(true);
       const visibleRowIds = visibleRows.map((r) => r.rowId);
 
-      // Save customSortOrder merging across routes
-      let updatedOrder = [...customSortOrder].filter((id) => !visibleRowIds.includes(id));
-      updatedOrder.push(...visibleRowIds);
+      // Save customSortOrder maintaining relative positions without pushing to end
+      let updatedOrder: string[];
+      if (routeFilter === 'ALL' || customSortOrder.length === 0) {
+        updatedOrder = [...visibleRowIds];
+        customSortOrder.forEach((id) => {
+          if (!updatedOrder.includes(id)) updatedOrder.push(id);
+        });
+      } else {
+        let vIndex = 0;
+        updatedOrder = customSortOrder.map((id) => {
+          if (visibleRowIds.includes(id) && vIndex < visibleRowIds.length) {
+            const rep = visibleRowIds[vIndex];
+            vIndex++;
+            return rep;
+          }
+          return id;
+        });
+        visibleRowIds.forEach((id) => {
+          if (!updatedOrder.includes(id)) updatedOrder.push(id);
+        });
+      }
       setCustomSortOrder(updatedOrder);
       localStorage.setItem('zamzam_fast_custom_sort_order', JSON.stringify(updatedOrder));
 
@@ -2723,8 +2797,26 @@ export const CreateOrderPage: React.FC = () => {
   // Set & Save Custom Order permanently to localStorage AND database customer notes
   const handleSaveCustomOrder = async () => {
     const visibleRowIds = visibleRows.map((r) => r.rowId);
-    let updatedOrder = [...customSortOrder].filter((id) => !visibleRowIds.includes(id));
-    updatedOrder.push(...visibleRowIds);
+    let updatedOrder: string[];
+    if (routeFilter === 'ALL' || customSortOrder.length === 0) {
+      updatedOrder = [...visibleRowIds];
+      customSortOrder.forEach((id) => {
+        if (!updatedOrder.includes(id)) updatedOrder.push(id);
+      });
+    } else {
+      let vIndex = 0;
+      updatedOrder = customSortOrder.map((id) => {
+        if (visibleRowIds.includes(id) && vIndex < visibleRowIds.length) {
+          const rep = visibleRowIds[vIndex];
+          vIndex++;
+          return rep;
+        }
+        return id;
+      });
+      visibleRowIds.forEach((id) => {
+        if (!updatedOrder.includes(id)) updatedOrder.push(id);
+      });
+    }
 
     setCustomSortOrder(updatedOrder);
     localStorage.setItem('zamzam_fast_custom_sort_order', JSON.stringify(updatedOrder));
@@ -3858,10 +3950,10 @@ export const CreateOrderPage: React.FC = () => {
         {/* Order Sorting Dropdown - Small, side-by-side with Route and Date */}
         <select
           className="form-select"
-          style={{ width: '138px', minWidth: '120px', flex: '0 0 auto', height: '26px', padding: '0 0.3rem', fontSize: '0.72rem', fontWeight: 700 }}
+          style={{ width: '150px', minWidth: '130px', flex: '0 0 auto', height: '26px', padding: '0 0.3rem', fontSize: '0.72rem', fontWeight: 700 }}
           value={orderSort}
           onChange={(e) => {
-            const nextSort = e.target.value as 'SHOP_CREATE_ASC' | 'CUSTOM' | 'STOP_ORDER_ASC' | 'NAME_ASC';
+            const nextSort = e.target.value as 'SHOP_CREATE_ASC' | 'CUSTOM' | 'ORDERED_LAST' | 'STOP_ORDER_ASC' | 'NAME_ASC';
             if (nextSort === 'CUSTOM') {
               if (customSortOrder.length === 0) {
                 const currentOrder = visibleRows.map((r) => r.rowId);
@@ -3874,7 +3966,7 @@ export const CreateOrderPage: React.FC = () => {
             }
             setOrderSort(nextSort);
           }}
-          title="Sort order rows by oldest registered, custom drag order, Stop #, or name"
+          title="Sort order rows by oldest registered, custom drag order, already ordered at the last, Stop #, or name"
         >
           <option value="SHOP_CREATE_ASC">🏪 Registered (Oldest)</option>
           <option value="CUSTOM">
@@ -3882,6 +3974,7 @@ export const CreateOrderPage: React.FC = () => {
               ? '✋ Custom Order'
               : '✋ Custom (Drag)'}
           </option>
+          <option value="ORDERED_LAST">⏳ Already Ordered Last</option>
           <option value="STOP_ORDER_ASC">🔢 Order 1-100 (Stop #)</option>
           <option value="NAME_ASC">🔤 Sort: Name (A-Z)</option>
         </select>
