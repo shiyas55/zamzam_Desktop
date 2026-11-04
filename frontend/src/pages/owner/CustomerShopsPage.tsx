@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { customerService } from '../../services/customerService';
@@ -14,6 +14,17 @@ import {
 import { CustomerStatementModal } from '../../components/CustomerStatementModal';
 import { BulkSendCustomerStatementsModal } from '../../components/BulkSendCustomerStatementsModal';
 
+function updateCustomerStopNote(currentNotes: string | undefined | null, newStop: number | null): string {
+  const notesStr = (currentNotes || '').trim();
+  const stopTagRegex = /\[?(?:Stop|Order)\s*#?\s*\d+\]?/gi;
+  const cleanNotes = notesStr.replace(stopTagRegex, '').replace(/\s{2,}/g, ' ').trim();
+  if (newStop === null || newStop === undefined || isNaN(newStop) || newStop <= 0) {
+    return cleanNotes;
+  }
+  const tag = `[Stop #${newStop}]`;
+  return cleanNotes ? `${tag} ${cleanNotes}` : tag;
+}
+
 export const CustomerShopsPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -22,6 +33,9 @@ export const CustomerShopsPage: React.FC = () => {
   const [selectedRoute, setSelectedRoute] = useState<string>('');
   const [search, setSearch] = useState<string>('');
   const [debouncedSearch, setDebouncedSearch] = useState<string>('');
+  const [customerSort, setCustomerSort] = useState<'STOP_ASC' | 'NAME_ASC' | 'BALANCE_DESC'>(() => {
+    return (localStorage.getItem('zamzam_customer_shops_sort') as any) || 'STOP_ASC';
+  });
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isBulkStatementModalOpen, setIsBulkStatementModalOpen] = useState(false);
@@ -37,6 +51,7 @@ export const CustomerShopsPage: React.FC = () => {
   const [landmark, setLandmark] = useState('');
   const [routeId, setRouteId] = useState('');
   const [creditLimit, setCreditLimit] = useState('5000.00');
+  const [stopNumber, setStopNumber] = useState('');
   const [notes, setNotes] = useState('');
   const [availableProducts, setAvailableProducts] = useState<Product[]>([]);
   const [productPrices, setProductPrices] = useState<Record<string, string>>({});
@@ -55,6 +70,7 @@ export const CustomerShopsPage: React.FC = () => {
   const [editCreditLimit, setEditCreditLimit] = useState('5000.00');
   const [editDueBalance, setEditDueBalance] = useState('0.00');
   const [editIsActive, setEditIsActive] = useState(true);
+  const [editStopNumber, setEditStopNumber] = useState('');
   const [editNotes, setEditNotes] = useState('');
   const [editProductPrices, setEditProductPrices] = useState<Record<string, string>>({});
   const [editPricingLoading, setEditPricingLoading] = useState(false);
@@ -111,6 +127,28 @@ export const CustomerShopsPage: React.FC = () => {
     fetchData();
   }, [selectedRoute, debouncedSearch]);
 
+  const sortedCustomers = useMemo(() => {
+    return [...customers].sort((a, b) => {
+      if (customerSort === 'NAME_ASC') {
+        return a.name.localeCompare(b.name);
+      }
+      if (customerSort === 'BALANCE_DESC') {
+        return parseFloat(b.current_balance || '0') - parseFloat(a.current_balance || '0');
+      }
+      // STOP_ASC: Route name then Stop # then shop name
+      const rA = a.route_details?.name || '';
+      const rB = b.route_details?.name || '';
+      if (rA !== rB) return rA.localeCompare(rB);
+
+      const matchA = a.notes?.match(/(?:\[|\b)(?:Stop|Order)\s*#?\s*(\d+)(?:\]|\b)/i);
+      const matchB = b.notes?.match(/(?:\[|\b)(?:Stop|Order)\s*#?\s*(\d+)(?:\]|\b)/i);
+      const stopA = matchA && matchA[1] ? parseInt(matchA[1], 10) : 999999;
+      const stopB = matchB && matchB[1] ? parseInt(matchB[1], 10) : 999999;
+      if (stopA !== stopB) return stopA - stopB;
+      return a.name.localeCompare(b.name);
+    });
+  }, [customers, customerSort]);
+
   const handleCreateCustomer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !phone.trim() || !address.trim() || !routeId) {
@@ -130,6 +168,9 @@ export const CustomerShopsPage: React.FC = () => {
           price: String(productPrices[p.id]).trim(),
         }));
 
+      const parsedStop = stopNumber.trim() ? parseInt(stopNumber.trim(), 10) : null;
+      const finalNotes = updateCustomerStopNote(notes, parsedStop);
+
       await customerService.createCustomer({
         name: name.trim(),
         owner_name: ownerName.trim() || undefined,
@@ -139,7 +180,7 @@ export const CustomerShopsPage: React.FC = () => {
         landmark: landmark.trim() || undefined,
         route: routeId,
         credit_limit: creditLimit || '5000.00',
-        notes: notes.trim() || undefined,
+        notes: finalNotes || undefined,
         product_prices: product_prices.length > 0 ? product_prices : undefined,
       });
 
@@ -151,6 +192,7 @@ export const CustomerShopsPage: React.FC = () => {
       setAddress('');
       setLandmark('');
       setCreditLimit('5000.00');
+      setStopNumber('');
       setNotes('');
       // Reset product prices to defaults
       const resetPrices: Record<string, string> = {};
@@ -182,6 +224,8 @@ export const CustomerShopsPage: React.FC = () => {
     setEditCreditLimit(c.credit_limit || '5000.00');
     setEditDueBalance(String(c.current_balance || '0.00'));
     setEditIsActive(c.is_active ?? true);
+    const stopMatch = (c.notes || '').match(/(?:\[|\b)(?:Stop|Order)\s*#?\s*(\d+)(?:\]|\b)/i);
+    setEditStopNumber(stopMatch && stopMatch[1] ? stopMatch[1] : '');
     setEditNotes(c.notes || '');
     setEditFormError(null);
 
@@ -231,6 +275,9 @@ export const CustomerShopsPage: React.FC = () => {
           price: String(editProductPrices[p.id]).trim(),
         }));
 
+      const parsedStop = editStopNumber.trim() ? parseInt(editStopNumber.trim(), 10) : null;
+      const finalNotes = updateCustomerStopNote(editNotes, parsedStop);
+
       await customerService.updateCustomer(editingCustomer.id, {
         name: editName.trim(),
         owner_name: editOwnerName.trim(),
@@ -241,7 +288,7 @@ export const CustomerShopsPage: React.FC = () => {
         route: editRouteId,
         credit_limit: editCreditLimit,
         is_active: editIsActive,
-        notes: editNotes.trim(),
+        notes: finalNotes,
         product_prices: product_prices.length > 0 ? product_prices : undefined,
       });
 
@@ -388,7 +435,7 @@ export const CustomerShopsPage: React.FC = () => {
 
         <select
           className="form-select"
-          style={{ width: '260px' }}
+          style={{ width: '220px' }}
           value={selectedRoute}
           onChange={(e) => setSelectedRoute(e.target.value)}
         >
@@ -398,6 +445,22 @@ export const CustomerShopsPage: React.FC = () => {
               {r.name} ({r.code}) {r.customer_count !== undefined ? `• ${r.customer_count} Shops` : ''}
             </option>
           ))}
+        </select>
+
+        <select
+          className="form-select"
+          style={{ width: '180px' }}
+          value={customerSort}
+          onChange={(e) => {
+            const nextSort = e.target.value as 'STOP_ASC' | 'NAME_ASC' | 'BALANCE_DESC';
+            setCustomerSort(nextSort);
+            localStorage.setItem('zamzam_customer_shops_sort', nextSort);
+          }}
+          title="Sort shops by Delivery Stop # (1-100), Name, or Outstanding Balance"
+        >
+          <option value="STOP_ASC">🔢 Sort: Stop # (1-100)</option>
+          <option value="NAME_ASC">🔤 Sort: Shop Name (A-Z)</option>
+          <option value="BALANCE_DESC">💰 Sort: Balance (High-Low)</option>
         </select>
       </div>
 
@@ -421,13 +484,35 @@ export const CustomerShopsPage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {customers.length > 0 ? (
-                customers.map((c) => (
+              {sortedCustomers.length > 0 ? (
+                sortedCustomers.map((c) => (
                   <tr key={c.id}>
                     {/* 1. Shop Name */}
                     <td style={{ minWidth: '150px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
                         <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{c.name}</span>
+                        {(() => {
+                          const stopMatch = c.notes?.match(/(?:\[|\b)(?:Stop|Order)\s*#?\s*(\d+)(?:\]|\b)/i);
+                          if (stopMatch && stopMatch[1]) {
+                            return (
+                              <span
+                                style={{
+                                  fontSize: '0.68rem',
+                                  fontWeight: 800,
+                                  color: '#1e40af',
+                                  background: '#dbeafe',
+                                  padding: '0.1rem 0.35rem',
+                                  borderRadius: '4px',
+                                  border: '1px solid #bfdbfe',
+                                }}
+                                title={`Delivery Stop #${stopMatch[1]}`}
+                              >
+                                #{stopMatch[1]}
+                              </span>
+                            );
+                          }
+                          return null;
+                        })()}
                         {!c.is_active && (
                           <span className="badge badge-neutral" style={{ fontSize: '0.65rem' }}>Inactive</span>
                         )}
@@ -794,15 +879,29 @@ export const CustomerShopsPage: React.FC = () => {
                 </div>
               )}
 
-              <div className="form-group">
-                <label className="form-label">Notes / Delivery Preferences</label>
-                <textarea
-                  className="form-textarea"
-                  rows={2}
-                  placeholder="e.g. Early morning delivery preferred, payment on Saturdays"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '0.75rem' }}>
+                <div className="form-group">
+                  <label className="form-label">Delivery Stop / Order #</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="999"
+                    className="form-input"
+                    placeholder="e.g. 1 to 100"
+                    value={stopNumber}
+                    onChange={(e) => setStopNumber(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Notes / Delivery Preferences</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="e.g. Early morning delivery preferred"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                  />
+                </div>
               </div>
 
               <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
@@ -1023,14 +1122,28 @@ export const CustomerShopsPage: React.FC = () => {
                 </label>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Notes / Preferences</label>
-                <textarea
-                  className="form-textarea"
-                  rows={2}
-                  value={editNotes}
-                  onChange={(e) => setEditNotes(e.target.value)}
-                />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '0.75rem' }}>
+                <div className="form-group">
+                  <label className="form-label">Delivery Stop / Order #</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="999"
+                    className="form-input"
+                    placeholder="e.g. 1 to 100"
+                    value={editStopNumber}
+                    onChange={(e) => setEditStopNumber(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Notes / Preferences</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={editNotes}
+                    onChange={(e) => setEditNotes(e.target.value)}
+                  />
+                </div>
               </div>
 
               <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>

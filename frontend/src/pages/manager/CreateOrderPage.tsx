@@ -104,6 +104,17 @@ export interface OrderRow {
   customerCreatedAt?: string;
 }
 
+export function updateCustomerStopNote(currentNotes: string | undefined | null, newStop: number | null): string {
+  const notesStr = (currentNotes || '').trim();
+  const stopTagRegex = /\[?(?:Stop|Order)\s*#?\s*\d+\]?/gi;
+  const cleanNotes = notesStr.replace(stopTagRegex, '').replace(/\s{2,}/g, ' ').trim();
+  if (newStop === null || newStop === undefined || isNaN(newStop) || newStop <= 0) {
+    return cleanNotes;
+  }
+  const tag = `[Stop #${newStop}]`;
+  return cleanNotes ? `${tag} ${cleanNotes}` : tag;
+}
+
 export const CreateOrderPage: React.FC = () => {
   const navigate = useNavigate();
   const { isWhatsAppEnabled, isSelfOrderEnabled, isOrderDiscountEnabled, isDriverModuleEnabled } = useSettings();
@@ -167,12 +178,12 @@ export const CreateOrderPage: React.FC = () => {
     if (saved === 'CUSTOMER_LINK' || saved === 'MANAGER' || saved === 'ALL') return saved;
     return 'ALL';
   });
-  const [orderSort, setOrderSort] = useState<'SHOP_CREATE_ASC' | 'CUSTOM'>(() => {
+  const [orderSort, setOrderSort] = useState<'STOP_ORDER_ASC' | 'CUSTOM' | 'SHOP_CREATE_ASC' | 'NAME_ASC'>(() => {
     const saved = localStorage.getItem('zamzam_fast_order_sort');
-    if (saved === 'CUSTOM' || saved === 'SHOP_CREATE_ASC') {
-      return saved;
+    if (saved === 'STOP_ORDER_ASC' || saved === 'CUSTOM' || saved === 'SHOP_CREATE_ASC' || saved === 'NAME_ASC') {
+      return saved as 'STOP_ORDER_ASC' | 'CUSTOM' | 'SHOP_CREATE_ASC' | 'NAME_ASC';
     }
-    return 'SHOP_CREATE_ASC';
+    return 'STOP_ORDER_ASC';
   });
 
   // Custom sort order: array of row IDs in user-defined order (drag & drop)
@@ -684,10 +695,10 @@ export const CreateOrderPage: React.FC = () => {
           let gAmt = gpayMap.get(cust.id);
           let dAmt = existingOrder?.shop_expense ? parseFloat(existingOrder.shop_expense) : undefined;
 
-          // Check if customer notes contain a stop number, e.g. [Stop #3]
+          // Check if customer notes contain a stop number, e.g. [Stop #3], Stop #3, [Order #3]
           let parsedStopNumber: number | undefined;
           if (cust.notes) {
-            const stopMatch = cust.notes.match(/\[(?:Stop|Order)\s*#?(\d+)\]/i);
+            const stopMatch = cust.notes.match(/(?:\[|\b)(?:Stop|Order)\s*#?\s*(\d+)(?:\]|\b)/i);
             if (stopMatch && stopMatch[1]) {
               parsedStopNumber = parseInt(stopMatch[1], 10);
             }
@@ -1256,6 +1267,14 @@ export const CreateOrderPage: React.FC = () => {
       return a.customerName.localeCompare(b.customerName);
     };
 
+    // Helper function for stop / delivery order 1 to 100
+    const sortByStopOrder = (a: OrderRow, b: OrderRow) => {
+      const ordA = a.listOrder !== undefined && a.listOrder !== null && a.listOrder > 0 ? a.listOrder : 999999;
+      const ordB = b.listOrder !== undefined && b.listOrder !== null && b.listOrder > 0 ? b.listOrder : 999999;
+      if (ordA !== ordB) return ordA - ordB;
+      return sortByShopRegisteredOldest(a, b);
+    };
+
     // Apply custom sort if selected
     if (orderSort === 'CUSTOM' && customSortOrder.length > 0) {
       return [...afterOrderFilter].sort((a, b) => {
@@ -1264,12 +1283,20 @@ export const CreateOrderPage: React.FC = () => {
         if (iA !== -1 && iB !== -1) return iA - iB;
         if (iA !== -1) return -1;
         if (iB !== -1) return 1;
-        return sortByShopRegisteredOldest(a, b);
+        return sortByStopOrder(a, b);
       });
     }
 
-    // Default & SHOP_CREATE_ASC: sort by Shop Registered (Oldest)
-    return [...afterOrderFilter].sort(sortByShopRegisteredOldest);
+    if (orderSort === 'NAME_ASC') {
+      return [...afterOrderFilter].sort((a, b) => a.customerName.localeCompare(b.customerName));
+    }
+
+    if (orderSort === 'SHOP_CREATE_ASC') {
+      return [...afterOrderFilter].sort(sortByShopRegisteredOldest);
+    }
+
+    // Default & STOP_ORDER_ASC: sort by Order / Stop # (1 to 100)
+    return [...afterOrderFilter].sort(sortByStopOrder);
   }, [rows, routeFilter, sourceFilter, searchQuery, orderSort, routes, customers, customSortOrder, showOrdersOnly, getCustomerSearchScore]);
 
   // Exact on-screen display order of shops in Fast Wholesale Order Entry (passed to RouteOrderSheetModal)
@@ -1283,6 +1310,13 @@ export const CreateOrderPage: React.FC = () => {
       return a.customerName.localeCompare(b.customerName);
     };
 
+    const sortByStopOrder = (a: OrderRow, b: OrderRow) => {
+      const ordA = a.listOrder !== undefined && a.listOrder !== null && a.listOrder > 0 ? a.listOrder : 999999;
+      const ordB = b.listOrder !== undefined && b.listOrder !== null && b.listOrder > 0 ? b.listOrder : 999999;
+      if (ordA !== ordB) return ordA - ordB;
+      return sortByShopRegisteredOldest(a, b);
+    };
+
     if (orderSort === 'CUSTOM' && customSortOrder.length > 0) {
       return [...rows].sort((a, b) => {
         const iA = customSortOrder.indexOf(a.rowId);
@@ -1290,11 +1324,19 @@ export const CreateOrderPage: React.FC = () => {
         if (iA !== -1 && iB !== -1) return iA - iB;
         if (iA !== -1) return -1;
         if (iB !== -1) return 1;
-        return sortByShopRegisteredOldest(a, b);
+        return sortByStopOrder(a, b);
       });
     }
 
-    return [...rows].sort(sortByShopRegisteredOldest);
+    if (orderSort === 'NAME_ASC') {
+      return [...rows].sort((a, b) => a.customerName.localeCompare(b.customerName));
+    }
+
+    if (orderSort === 'SHOP_CREATE_ASC') {
+      return [...rows].sort(sortByShopRegisteredOldest);
+    }
+
+    return [...rows].sort(sortByStopOrder);
   }, [rows, orderSort, customSortOrder]);
 
   // Synchronize single shared search state: auto-highlight matching customer across billing and WhatsApp
@@ -2538,18 +2580,191 @@ export const CreateOrderPage: React.FC = () => {
     setHasUnsavedCustomOrder(true);
   };
 
-  // Set & Save Custom Order permanently and lock/hide edit options
-  const handleSaveCustomOrder = () => {
-    const currentOrder = visibleRows.map((r) => r.rowId);
-    setCustomSortOrder(currentOrder);
-    localStorage.setItem('zamzam_fast_custom_sort_order', JSON.stringify(currentOrder));
+  // Edit or re-assign Stop Order # (1 to 100) for a shop and persist directly to database
+  const handleEditShopStopOrder = async (row: OrderRow) => {
+    if (!row.customerId) {
+      alert('Please select or assign a customer shop before setting order #.');
+      return;
+    }
+
+    const currentVal = row.listOrder !== undefined ? String(row.listOrder) : '';
+    const input = window.prompt(
+      `Set Delivery Order / Stop # (1 - 100) for "${row.customerName}":\n\n(Enter a number between 1 and 100, or leave blank to clear)`,
+      currentVal
+    );
+
+    if (input === null) return; // User cancelled
+
+    const trimmed = input.trim();
+    let newStop: number | undefined = undefined;
+    if (trimmed !== '') {
+      const parsed = parseInt(trimmed, 10);
+      if (isNaN(parsed) || parsed < 1 || parsed > 999) {
+        alert('Please enter a valid stop number (e.g. 1 to 100).');
+        return;
+      }
+      newStop = parsed;
+    }
+
+    // 1. Update row state immediately
+    setRows((prev) =>
+      prev.map((r) => (r.rowId === row.rowId ? { ...r, listOrder: newStop } : r))
+    );
+
+    // 2. Persist to customer's notes in database
+    try {
+      const targetCust = customers.find((c) => c.id === row.customerId);
+      const updatedNotes = updateCustomerStopNote(targetCust?.notes, newStop ?? null);
+
+      await customerService.updateCustomer(row.customerId, { notes: updatedNotes });
+
+      // Update customers in state
+      setCustomers((prev) =>
+        prev.map((c) => (c.id === row.customerId ? { ...c, notes: updatedNotes } : c))
+      );
+
+      // If custom sort order is active, re-sync order
+      if (newStop !== undefined) {
+        setCustomSortOrder((prev) => {
+          const fresh = prev.filter((id) => id !== row.rowId);
+          const insertIdx = Math.min(newStop! - 1, fresh.length);
+          fresh.splice(insertIdx, 0, row.rowId);
+          localStorage.setItem('zamzam_fast_custom_sort_order', JSON.stringify(fresh));
+          return fresh;
+        });
+      }
+
+      setSuccessBanner(
+        newStop !== undefined
+          ? `✓ Stop #${newStop} saved in database for "${row.customerName}"! Position locked permanently.`
+          : `✓ Cleared stop order for "${row.customerName}".`
+      );
+      setTimeout(() => setSuccessBanner(null), 4000);
+    } catch (err) {
+      console.error('Failed to save stop order to customer notes:', err);
+      alert('Failed to save stop order to database. Please check connection.');
+    }
+  };
+
+  // Sequentially number visible shops 1 to N and save to database
+  const handleAutoNumberVisibleShops = async () => {
+    if (!window.confirm(`Assign Stop #1 to #${visibleRows.length} to all shops in this view and save permanently to database?`)) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const visibleRowIds = visibleRows.map((r) => r.rowId);
+
+      // Save customSortOrder merging across routes
+      let updatedOrder = [...customSortOrder].filter((id) => !visibleRowIds.includes(id));
+      updatedOrder.push(...visibleRowIds);
+      setCustomSortOrder(updatedOrder);
+      localStorage.setItem('zamzam_fast_custom_sort_order', JSON.stringify(updatedOrder));
+
+      // Update rows in state
+      setRows((prev) =>
+        prev.map((r) => {
+          const vIdx = visibleRowIds.indexOf(r.rowId);
+          if (vIdx !== -1) {
+            return { ...r, listOrder: vIdx + 1 };
+          }
+          return r;
+        })
+      );
+
+      // Update customers in state
+      setCustomers((prev) =>
+        prev.map((c) => {
+          const vRow = visibleRows.find((r) => r.customerId === c.id);
+          if (vRow) {
+            const vIdx = visibleRowIds.indexOf(vRow.rowId);
+            return { ...c, notes: updateCustomerStopNote(c.notes, vIdx + 1) };
+          }
+          return c;
+        })
+      );
+
+      // Update in DB
+      const updatePromises = visibleRows.map((row, idx) => {
+        if (!row.customerId) return Promise.resolve();
+        const stopNum = idx + 1;
+        const cust = customers.find((c) => c.id === row.customerId);
+        const updatedNotes = updateCustomerStopNote(cust?.notes, stopNum);
+        return customerService.updateCustomer(row.customerId, { notes: updatedNotes });
+      });
+
+      setOrderSort('STOP_ORDER_ASC');
+      setSuccessBanner(`✓ Stop #1 to #${visibleRows.length} successfully saved to database for ${visibleRows.length} shops!`);
+      setTimeout(() => setSuccessBanner(null), 4000);
+
+      await Promise.allSettled(updatePromises);
+    } catch (err) {
+      console.error('Failed to auto-number shops:', err);
+      alert('Error updating stop numbers in database.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Set & Save Custom Order permanently to localStorage AND database customer notes
+  const handleSaveCustomOrder = async () => {
+    const visibleRowIds = visibleRows.map((r) => r.rowId);
+    let updatedOrder = [...customSortOrder].filter((id) => !visibleRowIds.includes(id));
+    updatedOrder.push(...visibleRowIds);
+
+    setCustomSortOrder(updatedOrder);
+    localStorage.setItem('zamzam_fast_custom_sort_order', JSON.stringify(updatedOrder));
     setHasUnsavedCustomOrder(false);
     setSaveCustomOrderSuccess(true);
     setIsCustomEditing(false); // Hides edit options and remove buttons on save
-    setSuccessBanner(`Custom shop order saved and locked successfully (${currentOrder.length} shops)! Edit options hidden.`);
-    setTimeout(() => {
-      setSaveCustomOrderSuccess(false);
-    }, 2500);
+
+    // Persist sequential Stop #1 to #N in database customer notes
+    try {
+      const updatePromises = visibleRows.map((row, idx) => {
+        if (!row.customerId) return Promise.resolve();
+        const stopNum = idx + 1;
+        const cust = customers.find((c) => c.id === row.customerId);
+        const updatedNotes = updateCustomerStopNote(cust?.notes, stopNum);
+        return customerService.updateCustomer(row.customerId, { notes: updatedNotes });
+      });
+
+      setRows((prev) =>
+        prev.map((r) => {
+          const vIdx = visibleRowIds.indexOf(r.rowId);
+          if (vIdx !== -1) {
+            return { ...r, listOrder: vIdx + 1 };
+          }
+          return r;
+        })
+      );
+
+      setCustomers((prev) =>
+        prev.map((c) => {
+          const vRow = visibleRows.find((r) => r.customerId === c.id);
+          if (vRow) {
+            const vIdx = visibleRowIds.indexOf(vRow.rowId);
+            return { ...c, notes: updateCustomerStopNote(c.notes, vIdx + 1) };
+          }
+          return c;
+        })
+      );
+
+      setSuccessBanner(`✓ Custom shop order saved! Stop #1 to #${visibleRows.length} permanently saved to database.`);
+      setTimeout(() => {
+        setSaveCustomOrderSuccess(false);
+        setSuccessBanner(null);
+      }, 3500);
+
+      await Promise.allSettled(updatePromises);
+    } catch (err) {
+      console.error('Failed to save stop numbers to database:', err);
+      setSuccessBanner(`Custom order saved to browser!`);
+      setTimeout(() => {
+        setSaveCustomOrderSuccess(false);
+        setSuccessBanner(null);
+      }, 2500);
+    }
   };
 
   // Reset Custom Order back to Shop Registered (Oldest)
@@ -2564,8 +2779,11 @@ export const CreateOrderPage: React.FC = () => {
     }).map((r) => r.rowId);
     setCustomSortOrder(resetOrder);
     localStorage.setItem('zamzam_fast_custom_sort_order', JSON.stringify(resetOrder));
+    setOrderSort('SHOP_CREATE_ASC');
     setHasUnsavedCustomOrder(false);
+    setIsCustomEditing(false);
     setSuccessBanner('Reset custom order back to Shop Registered (Oldest).');
+    setTimeout(() => setSuccessBanner(null), 3000);
   };
 
   // Add 1 Custom Row
@@ -3594,43 +3812,32 @@ export const CreateOrderPage: React.FC = () => {
         {/* Order Sorting Dropdown - Small, side-by-side with Route and Date */}
         <select
           className="form-select"
-          style={{ width: '118px', minWidth: '100px', flex: '0 0 auto', height: '26px', padding: '0 0.3rem', fontSize: '0.72rem' }}
+          style={{ width: '138px', minWidth: '120px', flex: '0 0 auto', height: '26px', padding: '0 0.3rem', fontSize: '0.72rem', fontWeight: 700 }}
           value={orderSort}
-          onClick={() => {
-            if (orderSort === 'CUSTOM' && !isCustomEditing) {
-              setIsCustomEditing(true);
-            }
-          }}
           onChange={(e) => {
-            const nextSort = e.target.value as 'SHOP_CREATE_ASC' | 'CUSTOM';
+            const nextSort = e.target.value as 'STOP_ORDER_ASC' | 'CUSTOM' | 'SHOP_CREATE_ASC' | 'NAME_ASC';
             if (nextSort === 'CUSTOM') {
               if (customSortOrder.length === 0) {
-                // When custom is clicked, initialize custom order same as shop registered oldest
-                const oldestOrder = [...visibleRows].sort((a, b) => {
-                  const tA = new Date(a.customerCreatedAt || 0).getTime();
-                  const tB = new Date(b.customerCreatedAt || 0).getTime();
-                  if (tA !== 0 && tB !== 0 && tA !== tB) return tA - tB;
-                  if (tA !== 0 && tB === 0) return -1;
-                  if (tA === 0 && tB !== 0) return 1;
-                  return a.customerName.localeCompare(b.customerName);
-                }).map((r) => r.rowId);
-                setCustomSortOrder(oldestOrder);
-                localStorage.setItem('zamzam_fast_custom_sort_order', JSON.stringify(oldestOrder));
+                const currentOrder = visibleRows.map((r) => r.rowId);
+                setCustomSortOrder(currentOrder);
+                localStorage.setItem('zamzam_fast_custom_sort_order', JSON.stringify(currentOrder));
               }
-              setIsCustomEditing(true); // When custom clicked, that time come!
+              setIsCustomEditing(true);
             } else {
               setIsCustomEditing(false);
             }
             setOrderSort(nextSort);
           }}
-          title="Sort order rows by shop registered date (oldest) or drag custom order"
+          title="Sort order rows by Stop/Order # (1-100), oldest registered, name, or custom drag order"
         >
-          <option value="SHOP_CREATE_ASC">Sort: Oldest</option>
+          <option value="STOP_ORDER_ASC">🔢 Sort: Order # (1-100)</option>
           <option value="CUSTOM">
             {orderSort === 'CUSTOM' && !isCustomEditing
               ? '✋ Custom Order'
               : '✋ Custom (Drag)'}
           </option>
+          <option value="SHOP_CREATE_ASC">⏳ Sort: Oldest</option>
+          <option value="NAME_ASC">🔤 Sort: Name (A-Z)</option>
         </select>
         {orderSort === 'CUSTOM' && isCustomEditing && (
           <div style={{ display: 'inline-flex', gap: '0.2rem', alignItems: 'center', flexShrink: 0 }}>
@@ -3653,10 +3860,32 @@ export const CreateOrderPage: React.FC = () => {
                 whiteSpace: 'nowrap',
                 boxShadow: '0 1px 3px rgba(21, 128, 61, 0.4)',
               }}
-              title="Save custom order and hide all edit & remove options"
+              title="Save custom order permanently to database customer notes and lock order"
             >
               <Save size={11} />
-              <span>{saveCustomOrderSuccess ? '✓ Saved' : '💾 Save'}</span>
+              <span>{saveCustomOrderSuccess ? '✓ Saved' : '💾 Save to DB'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleAutoNumberVisibleShops}
+              style={{
+                height: '26px',
+                padding: '0 0.4rem',
+                background: '#2563eb',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 'var(--radius)',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.2rem',
+                whiteSpace: 'nowrap',
+              }}
+              title="Sequentially assign Stop #1 to #N to these shops and save to database"
+            >
+              <span>🔢 1-{visibleRows.length}</span>
             </button>
             <button
               type="button"
@@ -4216,7 +4445,7 @@ export const CreateOrderPage: React.FC = () => {
                 {orderSort === 'CUSTOM' && isCustomEditing && (
                   <th style={{ width: '42px', minWidth: '42px', padding: '0.35rem 0.2rem', textAlign: 'center' }} title="Drag or click ▲/▼ to reorder shops">Order</th>
                 )}
-                <th style={{ width: '38px', minWidth: '36px', textAlign: 'center', padding: '0.35rem 0.25rem' }}>#</th>
+                <th style={{ width: '44px', minWidth: '40px', textAlign: 'center', padding: '0.35rem 0.25rem' }} title="Stop / Delivery Order # (1-100). Click any shop's # to change its order"># / Stop</th>
                 <th style={{ minWidth: '180px', maxWidth: '240px', padding: '0.35rem 0.55rem' }}>Shop Name</th>
                 <th style={{ width: '68px', minWidth: '60px', textAlign: 'center', padding: '0.35rem 0.35rem', whiteSpace: 'nowrap' }} title="Route">Route</th>
                 <th style={{ minWidth: '80px', textAlign: 'right', padding: '0.35rem 0.55rem', whiteSpace: 'nowrap' }}>Prev. Due</th>
@@ -4494,35 +4723,70 @@ export const CreateOrderPage: React.FC = () => {
                         </td>
                       )}
                       {/* Index / List Order */}
-                      <td style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.74rem', padding: '0.25rem 0.2rem' }}>
-                        {orderSort === 'CUSTOM' ? (
+                      <td
+                        style={{
+                          textAlign: 'center',
+                          color: 'var(--text-muted)',
+                          fontSize: '0.74rem',
+                          padding: '0.25rem 0.2rem',
+                          cursor: 'pointer',
+                        }}
+                        onClick={() => handleEditShopStopOrder(row)}
+                        title={`Click to set/change Order # (1 - 100) for "${row.customerName || 'this shop'}"`}
+                      >
+                        {row.listOrder !== undefined ? (
                           <span
-                            title={`Custom Stop #${index + 1}`}
+                            title={`Delivery Stop #${row.listOrder} (Click to change 1-100)`}
+                            style={{
+                              fontWeight: 800,
+                              color: '#1e40af',
+                              background: '#dbeafe',
+                              padding: '0.12rem 0.38rem',
+                              borderRadius: '4px',
+                              border: '1px solid #bfdbfe',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.15rem',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <span>#{row.listOrder}</span>
+                            <span style={{ fontSize: '0.62rem', opacity: 0.65 }}>✎</span>
+                          </span>
+                        ) : orderSort === 'CUSTOM' ? (
+                          <span
+                            title={`Custom Stop #${index + 1} (Click to set permanent Stop # 1-100)`}
                             style={{
                               fontWeight: 800,
                               color: '#4f46e5',
                               background: '#eef2ff',
-                              padding: '0.1rem 0.35rem',
+                              padding: '0.12rem 0.38rem',
                               borderRadius: '4px',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.15rem',
+                              cursor: 'pointer',
                             }}
                           >
-                            #{index + 1}
-                          </span>
-                        ) : row.listOrder !== undefined ? (
-                          <span
-                            title={`Delivery Stop #${row.listOrder}`}
-                            style={{
-                              fontWeight: 800,
-                              color: 'var(--primary)',
-                              background: '#eff6ff',
-                              padding: '0.1rem 0.35rem',
-                              borderRadius: '4px',
-                            }}
-                          >
-                            #{row.listOrder}
+                            <span>#{index + 1}</span>
+                            <span style={{ fontSize: '0.62rem', opacity: 0.65 }}>✎</span>
                           </span>
                         ) : (
-                          index + 1
+                          <span
+                            title={`Position #${index + 1} (Click to set permanent Stop # 1-100)`}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.15rem',
+                              padding: '0.1rem 0.3rem',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                            }}
+                            className="hover-badge"
+                          >
+                            <span>{index + 1}</span>
+                            <span style={{ fontSize: '0.62rem', color: '#94a3b8' }}>✎</span>
+                          </span>
                         )}
                       </td>
 
@@ -4657,7 +4921,7 @@ export const CreateOrderPage: React.FC = () => {
                               {!row.orderNumber && (
                                 <button type="button" onClick={() => { const v = window.prompt(`Custom Order # / Token for ${row.customerName || 'shop'} (optional, leave blank to auto-generate):`, ''); if (v !== null) handleSetRowOrderDetails(row.rowId, v.trim() || undefined); }} style={{ fontSize: '0.58rem', padding: '0.03rem 0.22rem', background: 'transparent', color: 'var(--text-muted)', border: '1px dashed var(--border)', borderRadius: '3px', cursor: 'pointer', flexShrink: 0 }} title="Add custom order # / token for this order">+Ord#</button>
                               )}
-                              {(orderSort === 'SHOP_CREATE_ASC' || orderSort === 'CUSTOM') && row.customerCreatedAt && (
+                              {(orderSort === 'STOP_ORDER_ASC' || orderSort === 'SHOP_CREATE_ASC' || orderSort === 'CUSTOM') && row.customerCreatedAt && (
                                 <span
                                   title={`Customer shop registered in database on ${new Date(row.customerCreatedAt).toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' })}`}
                                   style={{ fontSize: '0.59rem', color: '#475569', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '3px', padding: '0.03rem 0.25rem', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}
