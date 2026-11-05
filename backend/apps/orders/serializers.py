@@ -148,11 +148,7 @@ class OrderSerializer(serializers.ModelSerializer):
                         return str((tx.balance_after - tx.amount).quantize(Decimal("0.01")))
         except Exception:
             pass
-        try:
-            from apps.customers.services import calculate_opening_balance_for_date
-            return str(calculate_opening_balance_for_date(obj.customer, obj.order_date))
-        except Exception:
-            return "0.00"
+        return "0.00"
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_balance_after(self, obj):
@@ -167,11 +163,7 @@ class OrderSerializer(serializers.ModelSerializer):
                 return str(tx.balance_after)
         except Exception:
             pass
-        try:
-            from apps.customers.services import calculate_opening_balance_for_date
-            return str(calculate_opening_balance_for_date(obj.customer, obj.order_date))
-        except Exception:
-            return "0.00"
+        return "0.00"
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_paid_amount(self, obj):
@@ -186,11 +178,7 @@ class OrderSerializer(serializers.ModelSerializer):
             return str(total_p.quantize(Decimal("0.01")))
         except Exception:
             pass
-        try:
-            from apps.customers.services import calculate_opening_balance_for_date
-            return str(calculate_opening_balance_for_date(obj.customer, obj.order_date))
-        except Exception:
-            return "0.00"
+        return "0.00"
 
 
 class OrderItemCreateInputSerializer(serializers.Serializer):

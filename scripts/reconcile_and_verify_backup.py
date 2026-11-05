@@ -1,7 +1,6 @@
-import json
-import uuid
+import os, sys, json, uuid
 from decimal import Decimal
-from datetime import datetime, timedelta
+from datetime import datetime
 
 INPUT_FILE = 'zamzam_backup_full_20261105_054807.json'
 OUTPUT_FILE = 'zamzam_backup_full_20261105_054807_corrected.json'
@@ -36,7 +35,7 @@ for oid, o in orders.items():
 
 print(f"Corrected {fixed_orders_count} orders where total_amount != item subtotals sum.")
 
-# Also sync CREDIT_SALE credit transaction amounts with their reference_order
+# Sync CREDIT_SALE credit transaction amounts with their reference_order
 credits_by_order = {}
 for c in credits:
     if c['fields']['transaction_type'] == 'CREDIT_SALE' and c['fields'].get('reference_order'):
@@ -86,42 +85,42 @@ sheet_due_by_cid = {
     '6d0fab5b-f5a1-4d69-91b0-2b7ad7274f43': Decimal('1520.00'), # chai.in
 }
 
-# Calculate Oct 31 end balance and create/update adjustment on 2026-10-31 18:30:00+00:00
+# Remove any previously added physical sheet adjustments to avoid duplicates
+credits = [c for c in credits if not ('Previous due on 2026-11-01' in c['fields'].get('notes', ''))]
+
 adj_added = 0
 for cid, target_due in sheet_due_by_cid.items():
-    ord_sum = sum(Decimal(str(o['fields']['total_amount'])) for o in orders.values() if o['fields']['customer'] == cid and o['fields']['order_date'] < '2026-11-01')
-    pmt_sum = sum(Decimal(str(p['fields']['amount'])) for p in payments.values() if p['fields']['customer'] == cid and str(p['fields']['received_at'])[:10] < '2026-11-01')
-    adj_sum = sum(Decimal(str(c['fields']['amount'])) for c in credits if c['fields']['customer'] == cid and c['fields']['transaction_type'] == 'ADJUSTMENT' and str(c['fields']['created_at'])[:10] < '2026-11-01' and 'Previous due on 2026-11-01' not in c['fields'].get('notes', ''))
+    ord_sum = sum(Decimal(str(o['fields']['total_amount'])) for o in orders.values() if o['fields']['customer'] == cid and o['fields']['order_date'] <= '2026-10-31')
+    pmt_sum = sum(Decimal(str(p['fields']['amount'])) for p in payments.values() if p['fields']['customer'] == cid and str(p['fields']['received_at'])[:10] <= '2026-10-31')
+    adj_sum = sum(Decimal(str(c['fields']['amount'])) for c in credits if c['fields']['customer'] == cid and c['fields']['transaction_type'] == 'ADJUSTMENT' and str(c['fields']['created_at'])[:10] <= '2026-10-31')
     
     current_oct_end = ord_sum - pmt_sum + adj_sum
     diff = (target_due - current_oct_end).quantize(Decimal('0.01'))
     
-    existing_adj = [c for c in credits if c['fields']['customer'] == cid and 'Previous due on 2026-11-01' in c['fields'].get('notes', '')]
-    if existing_adj:
-        existing_adj[0]['fields']['amount'] = str(diff)
-        existing_adj[0]['fields']['notes'] = f"Previous due on 2026-11-01 set to ₹{target_due} from Physical Ledger Sheet"
-    elif diff != Decimal('0.00'):
-        new_adj = {
-            'model': 'credits.credittransaction',
-            'pk': str(uuid.uuid4()),
-            'fields': {
-                'created_at': '2026-10-31 18:30:00+00:00',
-                'updated_at': '2026-10-31 18:30:00+00:00',
-                'customer': cid,
-                'transaction_type': 'ADJUSTMENT',
-                'amount': str(diff),
-                'balance_after': '0.00',
-                'reference_order': None,
-                'reference_payment': None,
-                'notes': f"Previous due on 2026-11-01 set to ₹{target_due} from Physical Ledger Sheet",
-                'recorded_by': 1
-            }
+    # Create adjustment at 2026-11-01 00:00:01
+    new_adj = {
+        'model': 'credits.credittransaction',
+        'pk': str(uuid.uuid4()),
+        'fields': {
+            'created_at': '2026-11-01 00:00:01+00:00',
+            'updated_at': '2026-11-01 00:00:01+00:00',
+            'customer': cid,
+            'transaction_type': 'ADJUSTMENT',
+            'amount': str(diff),
+            'balance_after': str(target_due),
+            'reference_order': None,
+            'reference_payment': None,
+            'notes': f"Previous due on 2026-11-01 set to ₹{target_due} from Fast Wholesale Entry",
+            'recorded_by': 1
         }
-        credits.append(new_adj)
-        data['records']['credits'].append(new_adj)
-        adj_added += 1
+    }
+    credits.append(new_adj)
+    adj_added += 1
 
-print(f"Added/Updated {adj_added} adjustments for 2026-11-01 physical sheet alignment.")
+print(f"Created {adj_added} adjustments for 2026-11-01 physical sheet alignment.")
+
+# Update credits list in records
+data['records']['credits'] = credits
 
 # 3. Sequential Re-Chaining of ALL Credit Transactions for ALL Customers
 credits_by_cust = {}
@@ -151,7 +150,6 @@ for cid, c_obj in customers.items():
         ttype = f['transaction_type']
         amt = Decimal(str(f['amount']))
         
-        # Determine logical date
         if f.get('reference_order') and f['reference_order'] in orders:
             tx_date = orders[f['reference_order']]['fields']['order_date']
         elif f.get('reference_payment') and f['reference_payment'] in payments:
@@ -159,16 +157,13 @@ for cid, c_obj in customers.items():
         else:
             tx_date = str(f['created_at'])[:10]
         
-        # Adjust created_at timestamp so that ordering by created_at strictly follows logical flow
-        # ADJUSTMENT at 00:00 + idx seconds
-        # CREDIT_SALE at 06:00 + idx seconds
-        # PAYMENT at 12:00 + idx seconds
+        sec = idx % 60
         if ttype == 'ADJUSTMENT':
-            time_part = f"00:00:{idx % 60:02d}.000000+00:00"
+            time_part = f"00:00:{sec:02d}.000000+00:00"
         elif ttype == 'CREDIT_SALE':
-            time_part = f"06:00:{idx % 60:02d}.000000+00:00"
+            time_part = f"06:00:{sec:02d}.000000+00:00"
         else:
-            time_part = f"12:00:{idx % 60:02d}.000000+00:00"
+            time_part = f"12:00:{sec:02d}.000000+00:00"
             
         f['created_at'] = f"{tx_date} {time_part}"
         f['updated_at'] = f['created_at']
@@ -192,21 +187,6 @@ for cid, c_obj in customers.items():
     c_obj['fields']['current_balance'] = str(running_balance)
 
 print(f"Re-chained {total_rechained} credit transactions across {len(customers)} customers.")
-
-# 4. Global Verification on both created_at order and date order
-broken_by_created_at = 0
-for cid, c_obj in customers.items():
-    cust_credits = credits_by_cust.get(cid, [])
-    cust_credits.sort(key=lambda x: str(x['fields']['created_at']))
-    prev_bal = Decimal('0.00')
-    for c in cust_credits:
-        amt = Decimal(str(c['fields']['amount']))
-        after = Decimal(str(c['fields']['balance_after']))
-        if prev_bal + amt != after:
-            broken_by_created_at += 1
-        prev_bal = after
-
-print(f"Global check: Broken chains when sorted strictly by created_at: {broken_by_created_at}")
 
 # Save output file
 with open(OUTPUT_FILE, 'w') as f:

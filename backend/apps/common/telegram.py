@@ -36,35 +36,49 @@ MODULE_MODELS_MAP = {
 }
 
 
-def normalize_telegram_chat_id(chat_id: str) -> str:
-    """Ensure Telegram channel / supergroup IDs have leading '-'."""
-    cid = str(chat_id or "").strip()
-    if cid.startswith("100") and len(cid) >= 12 and not cid.startswith("-"):
-        cid = f"-{cid}"
-    return cid
+def get_chat_id_candidates(chat_id: str) -> list[str]:
+    """
+    Returns plausible Telegram chat/channel ID variants.
+    Telegram channels and supergroups require a leading '-' or '-100'.
+    Often users enter '1003405118666' instead of '-1003405118666'.
+    """
+    raw = str(chat_id or "").strip()
+    if not raw:
+        return []
+    candidates = [raw]
+    if not raw.startswith("-"):
+        candidates.insert(0, f"-{raw}")
+        if not raw.startswith("100"):
+            candidates.append(f"-100{raw}")
+    return candidates
 
 
 def send_telegram_text(bot_token: str, chat_id: str, text: str, parse_mode: str = "HTML") -> dict:
     """Send a plain or HTML formatted message to a Telegram chat/channel."""
-    cleaned_chat_id = normalize_telegram_chat_id(chat_id)
     url = f"https://api.telegram.org/bot{bot_token.strip()}/sendMessage"
-    payload = {
-        "chat_id": cleaned_chat_id,
-        "text": text,
-        "parse_mode": parse_mode,
-        "disable_web_page_preview": True,
-    }
-    response = requests.post(url, json=payload, timeout=20)
-    data = response.json()
-    if not response.ok or not data.get("ok"):
-        error_desc = data.get("description", response.text)
-        hint = ""
-        if "chat not found" in error_desc.lower():
-            hint = " (Tip: Telegram Channel IDs must start with -100, e.g. -1003405118666, and the Bot MUST be added as an Administrator in your Telegram Channel)"
-        elif "not a member" in error_desc.lower() or "administrator" in error_desc.lower():
-            hint = " (Tip: Please add your Telegram Bot as an Administrator to the Channel with permission to post messages)"
-        raise ValueError(f"Telegram API Error ({response.status_code}): {error_desc}{hint}")
-    return data
+    candidates = get_chat_id_candidates(chat_id)
+    last_error = None
+
+    for target_id in candidates:
+        payload = {
+            "chat_id": target_id,
+            "text": text,
+            "parse_mode": parse_mode,
+            "disable_web_page_preview": True,
+        }
+        try:
+            response = requests.post(url, json=payload, timeout=20)
+            data = response.json()
+            if response.ok and data.get("ok"):
+                return data
+            error_desc = data.get("description", response.text)
+            last_error = f"Telegram API Error ({response.status_code}): {error_desc}"
+            if "chat not found" not in error_desc.lower():
+                break
+        except Exception as exc:
+            last_error = str(exc)
+
+    raise ValueError(last_error or "Failed to send Telegram message.")
 
 
 def send_telegram_document(
@@ -76,27 +90,32 @@ def send_telegram_document(
     parse_mode: str = "HTML",
 ) -> dict:
     """Upload and send a document (JSON backup, file) to a Telegram chat/channel."""
-    cleaned_chat_id = normalize_telegram_chat_id(chat_id)
     url = f"https://api.telegram.org/bot{bot_token.strip()}/sendDocument"
-    data = {
-        "chat_id": cleaned_chat_id,
-        "caption": caption[:1024],  # Telegram max caption length
-        "parse_mode": parse_mode,
-    }
-    files = {
-        "document": (filename, io.BytesIO(file_bytes), "application/json"),
-    }
-    response = requests.post(url, data=data, files=files, timeout=45)
-    resp_data = response.json()
-    if not response.ok or not resp_data.get("ok"):
-        error_desc = resp_data.get("description", response.text)
-        hint = ""
-        if "chat not found" in error_desc.lower():
-            hint = " (Tip: Telegram Channel IDs must start with -100, e.g. -1003405118666, and the Bot MUST be added as an Administrator in your Telegram Channel)"
-        elif "not a member" in error_desc.lower() or "administrator" in error_desc.lower():
-            hint = " (Tip: Please add your Telegram Bot as an Administrator to the Channel with permission to post messages)"
-        raise ValueError(f"Telegram API Upload Error ({response.status_code}): {error_desc}{hint}")
-    return resp_data
+    candidates = get_chat_id_candidates(chat_id)
+    last_error = None
+
+    for target_id in candidates:
+        data = {
+            "chat_id": target_id,
+            "caption": caption[:1024],  # Telegram max caption length
+            "parse_mode": parse_mode,
+        }
+        files = {
+            "document": (filename, io.BytesIO(file_bytes), "application/json"),
+        }
+        try:
+            response = requests.post(url, data=data, files=files, timeout=45)
+            resp_data = response.json()
+            if response.ok and resp_data.get("ok"):
+                return resp_data
+            error_desc = resp_data.get("description", response.text)
+            last_error = f"Telegram API Upload Error ({response.status_code}): {error_desc}"
+            if "chat not found" not in error_desc.lower():
+                break
+        except Exception as exc:
+            last_error = str(exc)
+
+    raise ValueError(last_error or "Failed to send Telegram document.")
 
 
 def generate_full_backup_json(target_modules: list = None, created_by: str = "system") -> tuple[bytes, str, int, dict]:

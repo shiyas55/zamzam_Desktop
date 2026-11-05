@@ -1,0 +1,2430 @@
+{
+  "staff": [
+    {
+      "name": "AJNAS",
+      "username": "driver_a",
+      "role": "STAFF",
+      "phone": "7902431435",
+      "designation": "Staff Driver",
+      "daily_wage": "700.00",
+      "is_active": true
+    },
+    {
+      "name": "ajwad",
+      "username": "",
+      "role": "STAFF",
+      "phone": "",
+      "designation": "Staff Driver",
+      "daily_wage": "700.00",
+      "is_active": true
+    },
+    {
+      "name": "ameer",
+      "username": "",
+      "role": "STAFF",
+      "phone": "9954209736",
+      "designation": "Staff Driver",
+      "daily_wage": "566.00",
+      "is_active": true
+    },
+    {
+      "name": "anas",
+      "username": "",
+      "role": "MEMBER",
+      "phone": "8848224366",
+      "designation": "Share Member",
+      "daily_wage": "1000.00",
+      "is_active": true
+    },
+    {
+      "name": "azimul",
+      "username": "",
+      "role": "STAFF",
+      "phone": "",
+      "designation": "Helper",
+      "daily_wage": "500.00",
+      "is_active": true
+    },
+    {
+      "name": "chottu",
+      "username": "",
+      "role": "STAFF",
+      "phone": "8129855412",
+      "designation": "Helper",
+      "daily_wage": "566.00",
+      "is_active": true
+    },
+    {
+      "name": "faris",
+      "username": "",
+      "role": "MEMBER",
+      "phone": "9846135384",
+      "designation": "Partner / Owner",
+      "daily_wage": "1000.00",
+      "is_active": true
+    },
+    {
+      "name": "FARZIN",
+      "username": "driver_f",
+      "role": "STAFF",
+      "phone": "7510196121",
+      "designation": "Staff Driver",
+      "daily_wage": "500.00",
+      "is_active": true
+    },
+    {
+      "name": "mariful",
+      "username": "",
+      "role": "STAFF",
+      "phone": "",
+      "designation": "Staff Driver",
+      "daily_wage": "500.00",
+      "is_active": true
+    },
+    {
+      "name": "mechanic",
+      "username": "",
+      "role": "STAFF",
+      "phone": "",
+      "designation": "Helper",
+      "daily_wage": "0.00",
+      "is_active": true
+    },
+    {
+      "name": "monu",
+      "username": "",
+      "role": "STAFF",
+      "phone": "9745106726",
+      "designation": "Staff Driver",
+      "daily_wage": "700.00",
+      "is_active": true
+    },
+    {
+      "name": "muhsin opt",
+      "username": "",
+      "role": "STAFF",
+      "phone": "8086967576",
+      "designation": "Staff Driver",
+      "daily_wage": "650.00",
+      "is_active": true
+    },
+    {
+      "name": "muzakkir",
+      "username": "",
+      "role": "STAFF",
+      "phone": "",
+      "designation": "Staff Driver",
+      "daily_wage": "500.00",
+      "is_active": true
+    },
+    {
+      "name": "rasheedul",
+      "username": "",
+      "role": "STAFF",
+      "phone": "",
+      "designation": "Staff Driver",
+      "daily_wage": "500.00",
+      "is_active": true
+    },
+    {
+      "name": "sadham",
+      "username": "",
+      "role": "STAFF",
+      "phone": "8638126476",
+      "designation": "Staff Driver",
+      "daily_wage": "600.00",
+      "is_active": true
+    },
+    {
+      "name": "sanoob",
+      "username": "",
+      "role": "STAFF",
+      "phone": "9995298138",
+      "designation": "Staff Driver",
+      "daily_wage": "633.00",
+      "is_active": true
+    },
+    {
+      "name": "shanid",
+      "username": "",
+      "role": "MEMBER",
+      "phone": "9961232014",
+      "designation": "Partner / Owner",
+      "daily_wage": "1000.00",
+      "is_active": true
+    },
+    {
+      "name": "shanid th",
+      "username": "",
+      "role": "MEMBER",
+      "phone": "9961232014",
+      "designation": "Partner / Owner",
+      "daily_wage": "1000.00",
+      "is_active": true
+    },
+    {
+      "name": "sharook khan",
+      "username": "",
+      "role": "STAFF",
+      "phone": "",
+      "designation": "Staff Driver",
+      "daily_wage": "566.00",
+      "is_active": true
+    },
+    {
+      "name": "shiyas ahmad",
+      "username": "shiyas",
+      "role": "OWNER",
+      "phone": "7012587705",
+      "designation": "System OWNER",
+      "daily_wage": "0.00",
+      "is_active": true
+    },
+    {
+      "name": "shukoor",
+      "username": "",
+      "role": "STAFF",
+      "phone": "9395231518",
+      "designation": "Helper",
+      "daily_wage": "633.00",
+      "is_active": true
+    },
+    {
+      "name": "sinan duke",
+      "username": "",
+      "role": "STAFF",
+      "phone": "",
+      "designation": "Staff Driver",
+      "daily_wage": "500.00",
+      "is_active": true
+    },
+    {
+      "name": "SINAN zamzam",
+      "username": "driver_s",
+      "role": "STAFF",
+      "phone": "9037951312",
+      "designation": "Staff Driver",
+      "daily_wage": "550.00",
+      "is_active": true
+    },
+    {
+      "name": "sudu",
+      "username": "",
+      "role": "STAFF",
+      "phone": "",
+      "designation": "Staff Driver",
+      "daily_wage": "400.00",
+      "is_active": true
+    },
+    {
+      "name": "zamzam foods",
+      "username": "admin",
+      "role": "OWNER",
+      "phone": "",
+      "designation": "System OWNER",
+      "daily_wage": "0.00",
+      "is_active": true
+    }
+  ],
+  "customers": [
+    {
+      "shop_name": "6o clock karanthur",
+      "owner_name": "thajudheen",
+      "phone": "7356017667",
+      "alternative_phone": "",
+      "route": "KUNNAMANGALAM,MUNDIKKALTHAZAHM ,KANNADIKKAL",
+      "address": "kunnamangalam karanthur",
+      "current_balance": "2470.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "6o clock karanthur"
+    },
+    {
+      "shop_name": "6th clock koduvally",
+      "owner_name": "Faris Zamzam",
+      "phone": "9645431110",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "thamarasseri road",
+      "current_balance": "-200.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "6th clock koduvally"
+    },
+    {
+      "shop_name": "adam golden chick",
+      "owner_name": "Faris Zamzam",
+      "phone": "9633232769",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "nallalam",
+      "current_balance": "1000.00",
+      "custom_prices": {
+        "Romali": "8.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "adam golden chick"
+    },
+    {
+      "shop_name": "ajwa karanthur",
+      "owner_name": "rafeeque",
+      "phone": "9061117522",
+      "alternative_phone": "",
+      "route": "KUNNAMANGALAM,MUNDIKKALTHAZAHM ,KANNADIKKAL",
+      "address": "near markez",
+      "current_balance": "90.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "ajwa karanthur"
+    },
+    {
+      "shop_name": "al aroosh mandi",
+      "owner_name": "Faris Zamzam",
+      "phone": "9207215117",
+      "alternative_phone": "",
+      "route": "KUNNAMANGALAM,MUNDIKKALTHAZAHM ,KANNADIKKAL",
+      "address": "kunnamangalam",
+      "current_balance": "270.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "al aroosh mandi"
+    },
+    {
+      "shop_name": "alankar nadakkav",
+      "owner_name": "alankar",
+      "phone": "9995874916",
+      "alternative_phone": "",
+      "route": "anas company",
+      "address": "nadakkav",
+      "current_balance": "5050.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "alankar nadakkav"
+    },
+    {
+      "shop_name": "alfain koduvally",
+      "owner_name": "Faris Zamzam",
+      "phone": "9142210346",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "kunnamgalam road",
+      "current_balance": "4164.50",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.25"
+      },
+      "is_active": true,
+      "name": "alfain koduvally"
+    },
+    {
+      "shop_name": "alka bekery",
+      "owner_name": "sugar bekery boss",
+      "phone": "7306453619",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "nanmanda to 8 km",
+      "current_balance": "363.00",
+      "custom_prices": {
+        "Bun": "37.00",
+        "Romali": "8.50",
+        "club": "95.00",
+        "hotdog": "37.00",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "alka bekery"
+    },
+    {
+      "shop_name": "alshai shawarma shop",
+      "owner_name": "shahad",
+      "phone": "8714420728",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "media one side",
+      "current_balance": "2040.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "alshai shawarma shop"
+    },
+    {
+      "shop_name": "anshif kubbooos",
+      "owner_name": "anshif",
+      "phone": "7306136324",
+      "alternative_phone": "",
+      "route": "zamzam foods",
+      "address": "poovattuparampa",
+      "current_balance": "4640.00",
+      "custom_prices": {
+        "Romali": "8.00",
+        "kubbus": "4.00"
+      },
+      "is_active": true,
+      "name": "anshif kubbooos"
+    },
+    {
+      "shop_name": "AR bekery",
+      "owner_name": "muhammed",
+      "phone": "111111111",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "panchayath building opposit",
+      "current_balance": "0.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "AR bekery"
+    },
+    {
+      "shop_name": "area 51 muhsin",
+      "owner_name": "muhsin",
+      "phone": "9037805941",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "pushpa beach road",
+      "current_balance": "-430.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "area 51 muhsin"
+    },
+    {
+      "shop_name": "aroosh balusseri",
+      "owner_name": "Faris Zamzam",
+      "phone": "9020337788",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "bbb",
+      "current_balance": "810.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "aroosh balusseri"
+    },
+    {
+      "shop_name": "bakery kmlm",
+      "owner_name": "",
+      "phone": "888888888",
+      "alternative_phone": "",
+      "route": "KUNNAMANGALAM,MUNDIKKALTHAZAHM ,KANNADIKKAL",
+      "address": "ppp",
+      "current_balance": "100.00",
+      "custom_prices": {
+        "Bun": "37.00",
+        "Romali": "9.00",
+        "club": "95.00",
+        "hotdog": "37.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "bakery kmlm"
+    },
+    {
+      "shop_name": "beach mansoor",
+      "owner_name": "mansoor",
+      "phone": "9961399123",
+      "alternative_phone": "",
+      "route": "anas company",
+      "address": "beach side",
+      "current_balance": "10825.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "beach mansoor"
+    },
+    {
+      "shop_name": "beach rumali",
+      "owner_name": "Faris Zamzam",
+      "phone": "9778435326",
+      "alternative_phone": "",
+      "route": "anas company",
+      "address": "beach",
+      "current_balance": "7340.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "beach rumali"
+    },
+    {
+      "shop_name": "berrys koduvally",
+      "owner_name": "aachikka",
+      "phone": "9946153877",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "222",
+      "current_balance": "27130.00",
+      "custom_prices": {
+        "Romali": "8.00",
+        "kubbus": "4.00"
+      },
+      "is_active": true,
+      "name": "berrys koduvally"
+    },
+    {
+      "shop_name": "berrys pottammal kozhikode",
+      "owner_name": "musair vk",
+      "phone": "7510264182",
+      "alternative_phone": "",
+      "route": "KUNNAMANGALAM,MUNDIKKALTHAZAHM ,KANNADIKKAL",
+      "address": "pottammal",
+      "current_balance": "55200.00",
+      "custom_prices": {
+        "Romali": "7.00",
+        "kubbus": "4.00"
+      },
+      "is_active": true,
+      "name": "berrys pottammal kozhikode"
+    },
+    {
+      "shop_name": "big verity hotel",
+      "owner_name": "Faris Zamzam",
+      "phone": "8357840634",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "poovattuparmba",
+      "current_balance": "165.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "big verity hotel"
+    },
+    {
+      "shop_name": "bismi",
+      "owner_name": "mubassir,anas",
+      "phone": "8157976310",
+      "alternative_phone": "",
+      "route": "anas company",
+      "address": "1111",
+      "current_balance": "77453.00",
+      "custom_prices": {
+        "Romali": "7.00",
+        "kubbus": "3.50"
+      },
+      "is_active": true,
+      "name": "bismi"
+    },
+    {
+      "shop_name": "broast",
+      "owner_name": "shafeeque",
+      "phone": "8943398497",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "famous kattangal opposit",
+      "current_balance": "3825.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.25"
+      },
+      "is_active": true,
+      "name": "broast"
+    },
+    {
+      "shop_name": "brothers mukkam",
+      "owner_name": "Faris Zamzam",
+      "phone": "7559957461",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "agasthimuzhi,thamarasseri road left side",
+      "current_balance": "390.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "brothers mukkam"
+    },
+    {
+      "shop_name": "bun ayalu",
+      "owner_name": "",
+      "phone": "8876677777",
+      "alternative_phone": "",
+      "route": "zamzam foods",
+      "address": "gf",
+      "current_balance": "100.00",
+      "custom_prices": {
+        "Bun": "37.00",
+        "Romali": "9.00",
+        "club": "95.00",
+        "hotdog": "37.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "bun ayalu"
+    },
+    {
+      "shop_name": "bun basket",
+      "owner_name": "muneer",
+      "phone": "9400213293",
+      "alternative_phone": "",
+      "route": "zamzam foods",
+      "address": "cwrdm opposit",
+      "current_balance": "6040.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.00"
+      },
+      "is_active": true,
+      "name": "bun basket"
+    },
+    {
+      "shop_name": "burnight medical college",
+      "owner_name": "Faris Zamzam",
+      "phone": "7902330166",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "medical college",
+      "current_balance": "650.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "burnight medical college"
+    },
+    {
+      "shop_name": "cafe 19",
+      "owner_name": "Faris Zamzam",
+      "phone": "9539919943",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "11",
+      "current_balance": "100.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "cafe 19"
+    },
+    {
+      "shop_name": "chai bea",
+      "owner_name": "Faris Zamzam",
+      "phone": "7994525578",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "near chicko",
+      "current_balance": "2820.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "chai bea"
+    },
+    {
+      "shop_name": "chai kattangal",
+      "owner_name": "Faris Zamzam",
+      "phone": "8592892373",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "nearest thurkish kattangal",
+      "current_balance": "1290.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "chai kattangal"
+    },
+    {
+      "shop_name": "chai.in",
+      "owner_name": "Faris Zamzam",
+      "phone": "9562025850",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "kunnamangalam road",
+      "current_balance": "1660.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "chai.in"
+    },
+    {
+      "shop_name": "chakkara panthal",
+      "owner_name": "anas kkr",
+      "phone": "8075716246",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "kovoor",
+      "current_balance": "340.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "chakkara panthal"
+    },
+    {
+      "shop_name": "chappathi kakka",
+      "owner_name": "Faris Zamzam",
+      "phone": "9567544041",
+      "alternative_phone": "",
+      "route": "zamzam foods",
+      "address": "chappathi company kkr",
+      "current_balance": "0.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "chappathi kakka"
+    },
+    {
+      "shop_name": "chick co",
+      "owner_name": "Faris Zamzam",
+      "phone": "9037670428",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "near live alfahm",
+      "current_balance": "7525.00",
+      "custom_prices": {
+        "Romali": "8.00",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "chick co"
+    },
+    {
+      "shop_name": "chopstick palazhi",
+      "owner_name": "Faris Zamzam",
+      "phone": "9567299344",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "opposit hilitmall",
+      "current_balance": "4760.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "chopstick palazhi"
+    },
+    {
+      "shop_name": "cm momos",
+      "owner_name": "Faris Zamzam",
+      "phone": "9567967769",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "puthoormadam",
+      "current_balance": "140.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "cm momos"
+    },
+    {
+      "shop_name": "corner narikkuni stand",
+      "owner_name": "Faris Zamzam",
+      "phone": "8547145662",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "narikkuni bustand",
+      "current_balance": "1920.00",
+      "custom_prices": {
+        "Romali": "8.50",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "corner narikkuni stand"
+    },
+    {
+      "shop_name": "corner pullaloor",
+      "owner_name": "Faris Zamzam",
+      "phone": "7034931144",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "111",
+      "current_balance": "7610.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "corner pullaloor"
+    },
+    {
+      "shop_name": "cross road nadakkav",
+      "owner_name": "Faris Zamzam",
+      "phone": "9048132285",
+      "alternative_phone": "",
+      "route": "anas company",
+      "address": "nadakkav",
+      "current_balance": "6585.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "cross road nadakkav"
+    },
+    {
+      "shop_name": "crunch bun puthiyangadi",
+      "owner_name": "Faris Zamzam",
+      "phone": "9605333391",
+      "alternative_phone": "",
+      "route": "anas company",
+      "address": "puthiyangadi",
+      "current_balance": "1270.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "crunch bun puthiyangadi"
+    },
+    {
+      "shop_name": "dahban mandi",
+      "owner_name": "Faris Zamzam",
+      "phone": "8714561099",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "1111",
+      "current_balance": "140.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "dahban mandi"
+    },
+    {
+      "shop_name": "dana arakkinar",
+      "owner_name": "Faris Zamzam",
+      "phone": "111111111",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "near ninja",
+      "current_balance": "90.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "dana arakkinar"
+    },
+    {
+      "shop_name": "dana areekad",
+      "owner_name": "Faris Zamzam",
+      "phone": "8921395548",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "areekaad",
+      "current_balance": "1530.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "dana areekad"
+    },
+    {
+      "shop_name": "dfc perumanna",
+      "owner_name": "",
+      "phone": "6235292411",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "near dahban mandi perumanna",
+      "current_balance": "255.00",
+      "custom_prices": {
+        "Bun": "37.00",
+        "Romali": "9.00",
+        "club": "95.00",
+        "hotdog": "37.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "dfc perumanna"
+    },
+    {
+      "shop_name": "donor mukkam",
+      "owner_name": "Faris Zamzam",
+      "phone": "8139031975",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "agasthimuzhi,koodaranji road",
+      "current_balance": "3655.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "donor mukkam"
+    },
+    {
+      "shop_name": "easy foods kkr",
+      "owner_name": "ismayil",
+      "phone": "6238406994",
+      "alternative_phone": "",
+      "route": "zamzam foods",
+      "address": "kuttikattoor",
+      "current_balance": "3300.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "easy foods kkr"
+    },
+    {
+      "shop_name": "FAMOUS KATTANGAL",
+      "owner_name": "rafeeque",
+      "phone": "9447787188",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "riyas 9656719155",
+      "current_balance": "2185.00",
+      "custom_prices": {
+        "Bun": "37.00",
+        "Romali": "9.00",
+        "club": "95.00",
+        "hotdog": "37.00",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "FAMOUS KATTANGAL"
+    },
+    {
+      "shop_name": "famous mundikkal thazham",
+      "owner_name": "shafi",
+      "phone": "8086100817",
+      "alternative_phone": "",
+      "route": "KUNNAMANGALAM,MUNDIKKALTHAZAHM ,KANNADIKKAL",
+      "address": "mundikkal thazham",
+      "current_balance": "535.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "famous mundikkal thazham"
+    },
+    {
+      "shop_name": "famous padanilam",
+      "owner_name": "Faris Zamzam",
+      "phone": "11111111",
+      "alternative_phone": "",
+      "route": "KUNNAMANGALAM,MUNDIKKALTHAZAHM ,KANNADIKKAL",
+      "address": "padanilam",
+      "current_balance": "90.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "famous padanilam"
+    },
+    {
+      "shop_name": "felafil karuvanpoyil",
+      "owner_name": "Faris Zamzam",
+      "phone": "9447704365",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "111",
+      "current_balance": "0.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "felafil karuvanpoyil"
+    },
+    {
+      "shop_name": "food keys koduvally",
+      "owner_name": "Faris Zamzam",
+      "phone": "9188129560",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "11",
+      "current_balance": "300.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "food keys koduvally"
+    },
+    {
+      "shop_name": "food qissa",
+      "owner_name": "arsalan",
+      "phone": "9544664487",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "kovoor",
+      "current_balance": "751.00",
+      "custom_prices": {
+        "Bun": "55.00",
+        "Romali": "9.00",
+        "club": "95.00",
+        "hotdog": "37.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "food qissa"
+    },
+    {
+      "shop_name": "fresca",
+      "owner_name": "yettan",
+      "phone": "9037983354",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "chethkadav,kunnamangalm  kattangal road",
+      "current_balance": "0.00",
+      "custom_prices": {},
+      "is_active": true,
+      "name": "fresca"
+    },
+    {
+      "shop_name": "friends bekery",
+      "owner_name": "ashik",
+      "phone": "9498807837",
+      "alternative_phone": "",
+      "route": "KUNNAMANGALAM,MUNDIKKALTHAZAHM ,KANNADIKKAL",
+      "address": "near jisha",
+      "current_balance": "1045.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "friends bekery"
+    },
+    {
+      "shop_name": "G dine ulliyeri",
+      "owner_name": "Faris Zamzam",
+      "phone": "8111897222",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "ulliyeri",
+      "current_balance": "5560.00",
+      "custom_prices": {
+        "Romali": "8.00",
+        "kubbus": "4.00"
+      },
+      "is_active": true,
+      "name": "G dine ulliyeri"
+    },
+    {
+      "shop_name": "galaxy",
+      "owner_name": "Faris Zamzam",
+      "phone": "8921174002",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "nearest chai kattangal",
+      "current_balance": "100.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "galaxy"
+    },
+    {
+      "shop_name": "grill cafe",
+      "owner_name": "raaib",
+      "phone": "8606991612",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "kovoor",
+      "current_balance": "1945.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "grill cafe"
+    },
+    {
+      "shop_name": "grill chouk treat",
+      "owner_name": "niyas",
+      "phone": "9895600757",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "chakkumkadav",
+      "current_balance": "3970.00",
+      "custom_prices": {
+        "Bun": "37.00",
+        "Romali": "9.00",
+        "club": "95.00",
+        "hotdog": "37.00",
+        "kubbus": "4.00"
+      },
+      "is_active": true,
+      "name": "grill chouk treat"
+    },
+    {
+      "shop_name": "happy kiyakkoth koduvally",
+      "owner_name": "Faris Zamzam",
+      "phone": "9746868190",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "kiyakkoth",
+      "current_balance": "1480.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.00"
+      },
+      "is_active": true,
+      "name": "happy kiyakkoth koduvally"
+    },
+    {
+      "shop_name": "happy koduvally",
+      "owner_name": "Faris Zamzam",
+      "phone": "9400238257",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "koduvalli kattangal route",
+      "current_balance": "3290.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.00"
+      },
+      "is_active": true,
+      "name": "happy koduvally"
+    },
+    {
+      "shop_name": "happy narikkuni",
+      "owner_name": "Faris Zamzam",
+      "phone": "9946112300",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "narikkuni padanilam road",
+      "current_balance": "-40.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.00"
+      },
+      "is_active": true,
+      "name": "happy narikkuni"
+    },
+    {
+      "shop_name": "jisha bekery",
+      "owner_name": "jisha",
+      "phone": "9544411062",
+      "alternative_phone": "",
+      "route": "KUNNAMANGALAM,MUNDIKKALTHAZAHM ,KANNADIKKAL",
+      "address": "kuttikattoor",
+      "current_balance": "240.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "jisha bekery"
+    },
+    {
+      "shop_name": "jucify kkr",
+      "owner_name": "Faris Zamzam",
+      "phone": "9745822839",
+      "alternative_phone": "",
+      "route": "KUNNAMANGALAM,MUNDIKKALTHAZAHM ,KANNADIKKAL",
+      "address": "kuttikattooor",
+      "current_balance": "360.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "jucify kkr"
+    },
+    {
+      "shop_name": "kakkodi bekery",
+      "owner_name": "Faris Zamzam",
+      "phone": "8086571194",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "after alka",
+      "current_balance": "411.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "kakkodi bekery"
+    },
+    {
+      "shop_name": "kannadikkal 2",
+      "owner_name": "Faris Zamzam",
+      "phone": "9656775234",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "kannadikkal",
+      "current_balance": "1770.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.50"
+      },
+      "is_active": true,
+      "name": "kannadikkal 2"
+    },
+    {
+      "shop_name": "karthika bakes kannadkkal 1",
+      "owner_name": "Faris Zamzam",
+      "phone": "9745530417",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "kannadikkal",
+      "current_balance": "0.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "karthika bakes kannadkkal 1"
+    },
+    {
+      "shop_name": "khaleej restaurent",
+      "owner_name": "mansoor",
+      "phone": "9961399123",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "11",
+      "current_balance": "1504.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "khaleej restaurent"
+    },
+    {
+      "shop_name": "king felafil koduvally",
+      "owner_name": "",
+      "phone": "7306701446",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "00",
+      "current_balance": "3200.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.00"
+      },
+      "is_active": true,
+      "name": "king felafil koduvally"
+    },
+    {
+      "shop_name": "koyakka",
+      "owner_name": "",
+      "phone": "6282898579",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "kovoor food street",
+      "current_balance": "50.00",
+      "custom_prices": {
+        "Bun": "37.00",
+        "Romali": "9.00",
+        "club": "95.00",
+        "hotdog": "37.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "koyakka"
+    },
+    {
+      "shop_name": "le shawaya",
+      "owner_name": "bhai",
+      "phone": "8943907415",
+      "alternative_phone": "",
+      "route": "KUNNAMANGALAM,MUNDIKKALTHAZAHM ,KANNADIKKAL",
+      "address": "karanthur",
+      "current_balance": "1650.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "le shawaya"
+    },
+    {
+      "shop_name": "live alfahm mangav",
+      "owner_name": "noushad",
+      "phone": "7306081595",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "kaloor road mangav",
+      "current_balance": "32535.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "live alfahm mangav"
+    },
+    {
+      "shop_name": "malabar bakes",
+      "owner_name": "Faris Zamzam",
+      "phone": "9072460015",
+      "alternative_phone": "",
+      "route": "anas company",
+      "address": "111111",
+      "current_balance": "290.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "malabar bakes"
+    },
+    {
+      "shop_name": "mandi pokkunnu",
+      "owner_name": "Faris Zamzam",
+      "phone": "1111111",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "pokkunnu",
+      "current_balance": "240.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "mandi pokkunnu"
+    },
+    {
+      "shop_name": "mandi shop",
+      "owner_name": "00000000",
+      "phone": "00000000",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "kallanthode side",
+      "current_balance": "200.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "mandi shop"
+    },
+    {
+      "shop_name": "mart kattangal",
+      "owner_name": "Faris Zamzam",
+      "phone": "1111111",
+      "alternative_phone": "11111",
+      "route": "jeeto route",
+      "address": "kattangal",
+      "current_balance": "100.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "mart kattangal"
+    },
+    {
+      "shop_name": "maruthadans bekery",
+      "owner_name": "Faris Zamzam",
+      "phone": "8547873514",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "balusseri mukk junction",
+      "current_balance": "1235.00",
+      "custom_prices": {
+        "Romali": "20.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "maruthadans bekery"
+    },
+    {
+      "shop_name": "mims cool",
+      "owner_name": "Faris Zamzam",
+      "phone": "9947656755",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "opposit mims hospital",
+      "current_balance": "3780.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "mims cool"
+    },
+    {
+      "shop_name": "miya miya",
+      "owner_name": "thatha",
+      "phone": "9562597490",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "peringalom,chethkadav road miyamiya tea shop",
+      "current_balance": "150.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.00"
+      },
+      "is_active": true,
+      "name": "miya miya"
+    },
+    {
+      "shop_name": "morris kovoor",
+      "owner_name": "9562399009",
+      "phone": "9562399009",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "kovoor",
+      "current_balance": "2540.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "morris kovoor"
+    },
+    {
+      "shop_name": "MR  supermarket muriyanal",
+      "owner_name": "Faris Zamzam",
+      "phone": "9946854641",
+      "alternative_phone": "",
+      "route": "KUNNAMANGALAM,MUNDIKKALTHAZAHM ,KANNADIKKAL",
+      "address": "muriyanal jio pumb side",
+      "current_balance": "-100.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "MR  supermarket muriyanal"
+    },
+    {
+      "shop_name": "MR hypermarket",
+      "owner_name": "afsal",
+      "phone": "9061566155",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "opposit kuthiravattam memtal hospital",
+      "current_balance": "210.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "MR hypermarket"
+    },
+    {
+      "shop_name": "mr hypermartket",
+      "owner_name": "Faris Zamzam",
+      "phone": "8714415798",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "perumanna poovattuparamba",
+      "current_balance": "120.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "mr hypermartket"
+    },
+    {
+      "shop_name": "mr mandi velliparamba",
+      "owner_name": "sinan",
+      "phone": "9207972309",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "sd",
+      "current_balance": "9520.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "mr mandi velliparamba"
+    },
+    {
+      "shop_name": "msr corner",
+      "owner_name": "00000",
+      "phone": "6282954046",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "manasseri pumb side",
+      "current_balance": "360.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "msr corner"
+    },
+    {
+      "shop_name": "mukkam rumali",
+      "owner_name": "Faris Zamzam",
+      "phone": "8129353397",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "mukkam",
+      "current_balance": "0.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "mukkam rumali"
+    },
+    {
+      "shop_name": "mundikkal tea shop",
+      "owner_name": "Faris Zamzam",
+      "phone": "9961321783",
+      "alternative_phone": "",
+      "route": "KUNNAMANGALAM,MUNDIKKALTHAZAHM ,KANNADIKKAL",
+      "address": "near cwrdm",
+      "current_balance": "700.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "mundikkal tea shop"
+    },
+    {
+      "shop_name": "nanmanda teashop",
+      "owner_name": "Faris Zamzam",
+      "phone": "8547157778",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "nayara pumb oppositt nanmanda",
+      "current_balance": "370.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "nanmanda teashop"
+    },
+    {
+      "shop_name": "ngo crunchy tales",
+      "owner_name": "Faris Zamzam",
+      "phone": "7356644560",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "near ngo qurters",
+      "current_balance": "1370.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "ngo crunchy tales"
+    },
+    {
+      "shop_name": "ninja arakkinar",
+      "owner_name": "Faris Zamzam",
+      "phone": "9847119900",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "arakkinar",
+      "current_balance": "2655.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "ninja arakkinar"
+    },
+    {
+      "shop_name": "ninja mugadar beach",
+      "owner_name": "saheer",
+      "phone": "9946223342",
+      "alternative_phone": "",
+      "route": "anas company",
+      "address": "beach",
+      "current_balance": "182.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "ninja mugadar beach"
+    },
+    {
+      "shop_name": "nit kattangal",
+      "owner_name": "Faris Zamzam",
+      "phone": "82818292292",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "near galaxy",
+      "current_balance": "0.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "nit kattangal"
+    },
+    {
+      "shop_name": "nkg",
+      "owner_name": "Faris Zamzam",
+      "phone": "9072720282",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "44444",
+      "current_balance": "190.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "nkg"
+    },
+    {
+      "shop_name": "nook manasseri",
+      "owner_name": "00000",
+      "phone": "9544229422",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "manasseri junction",
+      "current_balance": "4110.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "nook manasseri"
+    },
+    {
+      "shop_name": "orkid bekery velliparmba",
+      "owner_name": "Faris Zamzam",
+      "phone": "1111111",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "rr",
+      "current_balance": "200.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "orkid bekery velliparmba"
+    },
+    {
+      "shop_name": "ossobocco",
+      "owner_name": "Faris Zamzam",
+      "phone": "7012148560",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "kovoor",
+      "current_balance": "957.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "ossobocco"
+    },
+    {
+      "shop_name": "pachu bakery",
+      "owner_name": "",
+      "phone": "1111111111",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "aaa",
+      "current_balance": "0.00",
+      "custom_prices": {
+        "Bun": "37.00",
+        "Romali": "9.00",
+        "club": "95.00",
+        "hotdog": "37.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "pachu bakery"
+    },
+    {
+      "shop_name": "pappaya pullaloor",
+      "owner_name": "Faris Zamzam",
+      "phone": "7598917675",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "111",
+      "current_balance": "150.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "pappaya pullaloor"
+    },
+    {
+      "shop_name": "parambil;",
+      "owner_name": "ratheesh",
+      "phone": "7736102358",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "near chopstick",
+      "current_balance": "2415.00",
+      "custom_prices": {
+        "Bun": "37.00",
+        "Romali": "9.00",
+        "club": "95.00",
+        "hotdog": "37.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "parambil;"
+    },
+    {
+      "shop_name": "periyangad bekery",
+      "owner_name": "Faris Zamzam",
+      "phone": "7356119556",
+      "alternative_phone": "",
+      "route": "KUNNAMANGALAM,MUNDIKKALTHAZAHM ,KANNADIKKAL",
+      "address": "periyangad",
+      "current_balance": "100.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "periyangad bekery"
+    },
+    {
+      "shop_name": "raheem",
+      "owner_name": "raheem",
+      "phone": "9995938074",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "perumanna",
+      "current_balance": "0.00",
+      "custom_prices": {
+        "Bun": "37.00",
+        "Romali": "7.50",
+        "club": "95.00",
+        "hotdog": "37.00",
+        "kubbus": "3.50"
+      },
+      "is_active": true,
+      "name": "raheem"
+    },
+    {
+      "shop_name": "raheem shop mediaone",
+      "owner_name": "Faris Zamzam",
+      "phone": "9605502064",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "media one side",
+      "current_balance": "6730.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "10.00"
+      },
+      "is_active": true,
+      "name": "raheem shop mediaone"
+    },
+    {
+      "shop_name": "raheem shop mundikkal",
+      "owner_name": "Faris Zamzam",
+      "phone": "111111",
+      "alternative_phone": "",
+      "route": "KUNNAMANGALAM,MUNDIKKALTHAZAHM ,KANNADIKKAL",
+      "address": "mundikkal junction",
+      "current_balance": "0.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.00"
+      },
+      "is_active": true,
+      "name": "raheem shop mundikkal"
+    },
+    {
+      "shop_name": "raidan kallanthode",
+      "owner_name": "raidan",
+      "phone": "9633616145",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "raidan mandi  house",
+      "current_balance": "360.00",
+      "custom_prices": {
+        "Bun": "37.00",
+        "Romali": "9.00",
+        "club": "95.00",
+        "hotdog": "37.00",
+        "kubbus": "6.00"
+      },
+      "is_active": true,
+      "name": "raidan kallanthode"
+    },
+    {
+      "shop_name": "raidan mandi",
+      "owner_name": "Faris Zamzam",
+      "phone": "11111111",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "mathottam",
+      "current_balance": "100.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "raidan mandi"
+    },
+    {
+      "shop_name": "rajitha chappathi company",
+      "owner_name": "Faris Zamzam",
+      "phone": "8089170587",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "kuttikattoor simla oppsit",
+      "current_balance": "99.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "rajitha chappathi company"
+    },
+    {
+      "shop_name": "razak shop narikkuni",
+      "owner_name": "razak",
+      "phone": "8281423703",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "narikkuni stand road",
+      "current_balance": "420.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "razak shop narikkuni"
+    },
+    {
+      "shop_name": "red salad",
+      "owner_name": "Faris Zamzam",
+      "phone": "9645993994",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "tt",
+      "current_balance": "9990.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "red salad"
+    },
+    {
+      "shop_name": "royal feast padanilam",
+      "owner_name": "Faris Zamzam",
+      "phone": "9746440450",
+      "alternative_phone": "",
+      "route": "KUNNAMANGALAM,MUNDIKKALTHAZAHM ,KANNADIKKAL",
+      "address": "padanilam",
+      "current_balance": "280.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "royal feast padanilam"
+    },
+    {
+      "shop_name": "royal koduvally",
+      "owner_name": "Faris Zamzam",
+      "phone": "9645377135",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "narikkuni road",
+      "current_balance": "80.00",
+      "custom_prices": {
+        "Romali": "8.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "royal koduvally"
+    },
+    {
+      "shop_name": "saps mundikkal thazham",
+      "owner_name": "Faris Zamzam",
+      "phone": "7736553020",
+      "alternative_phone": "",
+      "route": "KUNNAMANGALAM,MUNDIKKALTHAZAHM ,KANNADIKKAL",
+      "address": "mundikkal thazham",
+      "current_balance": "2460.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "saps mundikkal thazham"
+    },
+    {
+      "shop_name": "shawaya spot",
+      "owner_name": "Faris Zamzam",
+      "phone": "7594856240",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "foodkeys opposit",
+      "current_balance": "4720.00",
+      "custom_prices": {
+        "Bun": "37.00",
+        "Romali": "8.00",
+        "club": "95.00",
+        "hotdog": "37.00",
+        "kubbus": "4.00"
+      },
+      "is_active": true,
+      "name": "shawaya spot"
+    },
+    {
+      "shop_name": "shaz live alfahm",
+      "owner_name": "noushad",
+      "phone": "7012008262",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "chevayoor",
+      "current_balance": "4585.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "shaz live alfahm"
+    },
+    {
+      "shop_name": "smokies",
+      "owner_name": "shakir",
+      "phone": "9605404991",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "nearest tasty bekery",
+      "current_balance": "2275.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "smokies"
+    },
+    {
+      "shop_name": "sp",
+      "owner_name": "",
+      "phone": "11111111",
+      "alternative_phone": "",
+      "route": "KUNNAMANGALAM,MUNDIKKALTHAZAHM ,KANNADIKKAL",
+      "address": "kovoor food street",
+      "current_balance": "50.00",
+      "custom_prices": {
+        "Bun": "37.00",
+        "Romali": "9.00",
+        "club": "95.00",
+        "hotdog": "37.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "sp"
+    },
+    {
+      "shop_name": "sp",
+      "owner_name": "",
+      "phone": "00000",
+      "alternative_phone": "",
+      "route": "KUNNAMANGALAM,MUNDIKKALTHAZAHM ,KANNADIKKAL",
+      "address": "0000",
+      "current_balance": "-34595.00",
+      "custom_prices": {
+        "Bun": "37.00",
+        "Romali": "9.00",
+        "club": "95.00",
+        "hotdog": "37.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "sp"
+    },
+    {
+      "shop_name": "sp",
+      "owner_name": "",
+      "phone": "111111111",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "mart",
+      "current_balance": "0.00",
+      "custom_prices": {
+        "Bun": "37.00",
+        "Romali": "9.00",
+        "club": "95.00",
+        "hotdog": "37.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "sp"
+    },
+    {
+      "shop_name": "sp",
+      "owner_name": "",
+      "phone": "11111111",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "thondayad  junction",
+      "current_balance": "0.00",
+      "custom_prices": {
+        "Bun": "37.00",
+        "Romali": "9.00",
+        "club": "95.00",
+        "hotdog": "37.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "sp"
+    },
+    {
+      "shop_name": "sp",
+      "owner_name": "111111",
+      "phone": "1111111",
+      "alternative_phone": "",
+      "route": "zamzam foods",
+      "address": "cmpany",
+      "current_balance": "270.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "sp"
+    },
+    {
+      "shop_name": "sp",
+      "owner_name": "",
+      "phone": "1234567890",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "qwertyuiop",
+      "current_balance": "3500.00",
+      "custom_prices": {
+        "Bun": "37.00",
+        "Romali": "9.00",
+        "club": "95.00",
+        "hotdog": "37.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "sp"
+    },
+    {
+      "shop_name": "sp",
+      "owner_name": "",
+      "phone": "7777777777",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "dds",
+      "current_balance": "5.00",
+      "custom_prices": {
+        "Bun": "37.00",
+        "Romali": "9.00",
+        "club": "95.00",
+        "hotdog": "37.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "sp"
+    },
+    {
+      "shop_name": "sp",
+      "owner_name": "",
+      "phone": "77880099",
+      "alternative_phone": "",
+      "route": "zamzam foods",
+      "address": "gg",
+      "current_balance": "-380.00",
+      "custom_prices": {
+        "Bun": "37.00",
+        "Romali": "9.00",
+        "club": "95.00",
+        "hotdog": "37.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "sp"
+    },
+    {
+      "shop_name": "sugar bekery",
+      "owner_name": "Faris Zamzam",
+      "phone": "7306453619",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "fff",
+      "current_balance": "265.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "sugar bekery"
+    },
+    {
+      "shop_name": "sulthan mandi",
+      "owner_name": "Faris Zamzam",
+      "phone": "8075904637",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "nearest media one",
+      "current_balance": "2115.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "sulthan mandi"
+    },
+    {
+      "shop_name": "sweet valley",
+      "owner_name": "muhammed",
+      "phone": "000000000",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "kattangal junction",
+      "current_balance": "0.00",
+      "custom_prices": {
+        "Romali": "20.00",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "sweet valley"
+    },
+    {
+      "shop_name": "tasty bekery",
+      "owner_name": "Faris Zamzam",
+      "phone": "8172017158",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "frr",
+      "current_balance": "303.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "tasty bekery"
+    },
+    {
+      "shop_name": "tasty bekery",
+      "owner_name": "riyas",
+      "phone": "9656719155",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "nearest smokies",
+      "current_balance": "2430.00",
+      "custom_prices": {
+        "Bun": "37.00",
+        "Romali": "9.00",
+        "club": "95.00",
+        "hotdog": "37.00",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "tasty bekery"
+    },
+    {
+      "shop_name": "tasty hut restaurent",
+      "owner_name": "11111",
+      "phone": "11111111",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "medical college",
+      "current_balance": "80.00",
+      "custom_prices": {
+        "Romali": "8.00",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "tasty hut restaurent"
+    },
+    {
+      "shop_name": "tea topia kunnamangalam",
+      "owner_name": "jinas",
+      "phone": "9633494101",
+      "alternative_phone": "",
+      "route": "KUNNAMANGALAM,MUNDIKKALTHAZAHM ,KANNADIKKAL",
+      "address": "kunnamangalam",
+      "current_balance": "3850.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "tea topia kunnamangalam"
+    },
+    {
+      "shop_name": "test",
+      "owner_name": "shiyas",
+      "phone": "7012587705",
+      "alternative_phone": "",
+      "route": "KUNNAMANGALAM,MUNDIKKALTHAZAHM ,KANNADIKKAL",
+      "address": "efrg",
+      "current_balance": "5.00",
+      "custom_prices": {
+        "Bun": "37.00",
+        "Romali": "9.00",
+        "club": "95.00",
+        "hotdog": "37.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "test"
+    },
+    {
+      "shop_name": "thatha peringalom",
+      "owner_name": "",
+      "phone": "111111",
+      "alternative_phone": "",
+      "route": "KUNNAMANGALAM,MUNDIKKALTHAZAHM ,KANNADIKKAL",
+      "address": "peringlom petrol pumb opposit",
+      "current_balance": "50.00",
+      "custom_prices": {
+        "Bun": "37.00",
+        "Romali": "9.00",
+        "club": "95.00",
+        "hotdog": "37.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "thatha peringalom"
+    },
+    {
+      "shop_name": "thondayad",
+      "owner_name": "",
+      "phone": "00000",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "thondayad",
+      "current_balance": "0.00",
+      "custom_prices": {
+        "Bun": "37.00",
+        "Romali": "9.00",
+        "club": "95.00",
+        "hotdog": "37.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "thondayad"
+    },
+    {
+      "shop_name": "thuba bakery",
+      "owner_name": "mansoor",
+      "phone": "9101392278",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "poovattuparmba",
+      "current_balance": "790.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "thuba bakery"
+    },
+    {
+      "shop_name": "thuba kuttikattoor",
+      "owner_name": "Faris Zamzam",
+      "phone": "11111111",
+      "alternative_phone": "",
+      "route": "KUNNAMANGALAM,MUNDIKKALTHAZAHM ,KANNADIKKAL",
+      "address": "near thurkish",
+      "current_balance": "200.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "thuba kuttikattoor"
+    },
+    {
+      "shop_name": "thukish kunnamgalam",
+      "owner_name": "fayas",
+      "phone": "8822788162",
+      "alternative_phone": "",
+      "route": "KUNNAMANGALAM,MUNDIKKALTHAZAHM ,KANNADIKKAL",
+      "address": "kunnamangalam",
+      "current_balance": "14380.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "thukish kunnamgalam"
+    },
+    {
+      "shop_name": "thurkish kattangal",
+      "owner_name": "fayas",
+      "phone": "9539594296",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "nearest nit",
+      "current_balance": "31120.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "thurkish kattangal"
+    },
+    {
+      "shop_name": "thurkish kuttikattoor",
+      "owner_name": "fasil,fays",
+      "phone": "6238734002",
+      "alternative_phone": "",
+      "route": "KUNNAMANGALAM,MUNDIKKALTHAZAHM ,KANNADIKKAL",
+      "address": "kuttikattoor,town",
+      "current_balance": "1765.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "thurkish kuttikattoor"
+    },
+    {
+      "shop_name": "top in balusseri",
+      "owner_name": "Faris Zamzam",
+      "phone": "9847612407",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "balusseri stand opposit",
+      "current_balance": "85.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "4.50"
+      },
+      "is_active": true,
+      "name": "top in balusseri"
+    },
+    {
+      "shop_name": "usna bakes",
+      "owner_name": "usna",
+      "phone": "9846163311",
+      "alternative_phone": "",
+      "route": "KUNNAMANGALAM,MUNDIKKALTHAZAHM ,KANNADIKKAL",
+      "address": "anakkuzhikkara",
+      "current_balance": "300.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "usna bakes"
+    },
+    {
+      "shop_name": "vavad felafil",
+      "owner_name": "Faris Zamzam",
+      "phone": "9447704365",
+      "alternative_phone": "",
+      "route": "jeeto route",
+      "address": "11111",
+      "current_balance": "0.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "vavad felafil"
+    },
+    {
+      "shop_name": "velliparamba chappathi yettan",
+      "owner_name": "Faris Zamzam",
+      "phone": "11111111",
+      "alternative_phone": "",
+      "route": "zamzam foods",
+      "address": "111111",
+      "current_balance": "4275.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "velliparamba chappathi yettan"
+    },
+    {
+      "shop_name": "vinod bekery peruvayal",
+      "owner_name": "Faris Zamzam",
+      "phone": "8907557069",
+      "alternative_phone": "",
+      "route": "KUNNAMANGALAM,MUNDIKKALTHAZAHM ,KANNADIKKAL",
+      "address": "peruvayal",
+      "current_balance": "920.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "vinod bekery peruvayal"
+    },
+    {
+      "shop_name": "xylem kitchen pvt ltd",
+      "owner_name": "Faris Zamzam",
+      "phone": "8714606785",
+      "alternative_phone": "",
+      "route": "zamzam foods",
+      "address": "poovattuparamba",
+      "current_balance": "81525.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "xylem kitchen pvt ltd"
+    },
+    {
+      "shop_name": "zain kubboos",
+      "owner_name": "usman",
+      "phone": "9349032555",
+      "alternative_phone": "",
+      "route": "zamzam foods",
+      "address": "peruvayal",
+      "current_balance": "4050.00",
+      "custom_prices": {
+        "Romali": "7.50",
+        "kubbus": "4.00"
+      },
+      "is_active": true,
+      "name": "zain kubboos"
+    },
+    {
+      "shop_name": "zeezo mims",
+      "owner_name": "Faris Zamzam",
+      "phone": "7907144023",
+      "alternative_phone": "",
+      "route": "kozhikode town",
+      "address": "nearest mims",
+      "current_balance": "1900.00",
+      "custom_prices": {
+        "Romali": "9.00",
+        "kubbus": "5.00"
+      },
+      "is_active": true,
+      "name": "zeezo mims"
+    }
+  ]
+}

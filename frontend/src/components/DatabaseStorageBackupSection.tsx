@@ -451,14 +451,9 @@ export const DatabaseStorageBackupSection: React.FC = () => {
     try {
       setIsSavingTelegram(true);
       setTelegramFeedback(null);
-      let cleanedChatId = telegramChatId.trim();
-      if (cleanedChatId.startsWith('100') && cleanedChatId.length >= 12 && !cleanedChatId.startsWith('-')) {
-        cleanedChatId = `-${cleanedChatId}`;
-        setTelegramChatId(cleanedChatId);
-      }
       await settingsService.updateSettings({
         telegram_bot_token: telegramBotToken.trim(),
-        telegram_chat_id: cleanedChatId,
+        telegram_chat_id: telegramChatId.trim(),
         is_telegram_backup_enabled: isTelegramEnabled,
         telegram_backup_on_bill_save: telegramAutoOnBillSave,
       });
@@ -467,10 +462,9 @@ export const DatabaseStorageBackupSection: React.FC = () => {
         message: 'Telegram settings saved successfully! Auto-backup will trigger on bill saves.',
       });
     } catch (err: unknown) {
-      const errMsg = (err as any)?.response?.data?.error || (err as any)?.response?.data?.message || (err instanceof Error ? err.message : 'Failed to save Telegram settings.');
       setTelegramFeedback({
         type: 'error',
-        message: errMsg,
+        message: err instanceof Error ? err.message : 'Failed to save Telegram settings.',
       });
     } finally {
       setIsSavingTelegram(false);
@@ -486,24 +480,18 @@ export const DatabaseStorageBackupSection: React.FC = () => {
       setTelegramFeedback({ type: 'error', message: 'Please enter a Telegram Chat ID or Channel ID first.' });
       return;
     }
-    let cleanedChatId = telegramChatId.trim();
-    if (cleanedChatId.startsWith('100') && cleanedChatId.length >= 12 && !cleanedChatId.startsWith('-')) {
-      cleanedChatId = `-${cleanedChatId}`;
-      setTelegramChatId(cleanedChatId);
-    }
     try {
       setIsTestingTelegram(true);
       setTelegramFeedback(null);
-      const res = await databaseService.testTelegram(telegramBotToken.trim(), cleanedChatId);
+      const res = await databaseService.testTelegram(telegramBotToken.trim(), telegramChatId.trim());
       setTelegramFeedback({
         type: 'success',
         message: res.message || 'Telegram connection test successful! Ping message sent to your chat/channel.',
       });
     } catch (err: unknown) {
-      const errMsg = (err as any)?.response?.data?.error || (err as any)?.response?.data?.message || (err instanceof Error ? err.message : 'Failed to connect to Telegram. Please check token & chat ID.');
       setTelegramFeedback({
         type: 'error',
-        message: errMsg,
+        message: err instanceof Error ? err.message : 'Failed to connect to Telegram. Please check token & chat ID.',
       });
     } finally {
       setIsTestingTelegram(false);
@@ -527,10 +515,9 @@ export const DatabaseStorageBackupSection: React.FC = () => {
         });
       }
     } catch (err: unknown) {
-      const errMsg = (err as any)?.response?.data?.error || (err as any)?.response?.data?.message || (err instanceof Error ? err.message : 'Failed to send backup to Telegram.');
       setTelegramFeedback({
         type: 'error',
-        message: errMsg,
+        message: err instanceof Error ? err.message : 'Failed to send backup to Telegram.',
       });
     } finally {
       setIsSendingTelegramBackup(false);
@@ -2058,12 +2045,6 @@ export const DatabaseStorageBackupSection: React.FC = () => {
                 placeholder="e.g. -1001234567890 (Channel) or 123456789 (Chat)"
                 value={telegramChatId}
                 onChange={(e) => setTelegramChatId(e.target.value)}
-                onBlur={(e) => {
-                  const val = e.target.value.trim();
-                  if (val.startsWith('100') && val.length >= 12 && !val.startsWith('-')) {
-                    setTelegramChatId(`-${val}`);
-                  }
-                }}
                 style={{
                   fontSize: '0.82rem',
                   fontFamily: 'monospace',

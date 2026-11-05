@@ -837,6 +837,106 @@ class DatabaseRestoreView(APIView):
             except Exception as e:
                 return Response({"error": f"Invalid JSON format: {str(e)}"}, status=400)
 
+            # Check if this is a simplified custom JSON (e.g. {"staff": [...], "customers": [...]})
+            # where items are plain dictionaries rather than Django-serialized entities with "model" & "fields".
+            has_simple_entities = (
+                isinstance(parsed_json, dict)
+                and any(k in parsed_json for k in ["customers", "staff", "shops"])
+                and not any(isinstance(x, dict) and "model" in x for x in parsed_json.get("customers", [])[:5])
+                and not any(isinstance(x, dict) and "model" in x for x in parsed_json.get("shops", [])[:5])
+            )
+
+            if has_simple_entities:
+                from apps.routes.models import Route
+                from apps.customers.models import Customer, CustomerProductPrice
+                from apps.products.models import Product
+                from apps.accounts.models import StaffMember
+
+                simple_restored_count = 0
+                with transaction.atomic():
+                    # 1. Restore Staff
+                    for s_item in parsed_json.get("staff", []):
+                        if not isinstance(s_item, dict):
+                            continue
+                        s_name = (s_item.get("name") or s_item.get("full_name") or "").strip()
+                        if not s_name:
+                            continue
+                        wage = s_item.get("daily_wage") or s_item.get("custom_daily_wage") or "0.00"
+                        StaffMember.objects.update_or_create(
+                            full_name=s_name,
+                            defaults={
+                                "role_type": s_item.get("role") or s_item.get("role_type") or "STAFF",
+                                "designation": s_item.get("designation") or "",
+                                "phone_number": s_item.get("phone") or s_item.get("phone_number") or "",
+                                "custom_daily_wage": wage,
+                                "is_active": s_item.get("is_active", True),
+                            }
+                        )
+                        simple_restored_count += 1
+
+                    # 2. Restore Customers / Shops
+                    cust_list = parsed_json.get("customers") or parsed_json.get("shops") or []
+                    for c_item in cust_list:
+                        if not isinstance(c_item, dict):
+                            continue
+                        c_name = (c_item.get("shop_name") or c_item.get("name") or "").strip()
+                        if not c_name:
+                            continue
+
+                        # Resolve Route
+                        route_obj = None
+                        r_name = (c_item.get("route") or "").strip()
+                        if r_name:
+                            route_obj, _ = Route.objects.get_or_create(
+                                name=r_name,
+                                defaults={"is_active": True}
+                            )
+
+                        bal = c_item.get("balance") or c_item.get("current_balance") or "0.00"
+
+                        customer_obj = Customer.objects.filter(name__iexact=c_name).first()
+                        if not customer_obj:
+                            customer_obj = Customer.objects.create(
+                                name=c_name,
+                                owner_name=c_item.get("owner") or c_item.get("owner_name") or "",
+                                phone=c_item.get("phone") or "",
+                                alternative_phone=c_item.get("alternative_phone") or "",
+                                route=route_obj,
+                                address=c_item.get("address") or "",
+                                current_balance=bal,
+                                is_active=c_item.get("is_active", True),
+                            )
+                        else:
+                            if c_item.get("phone"):
+                                customer_obj.phone = c_item.get("phone")
+                            if route_obj:
+                                customer_obj.route = route_obj
+                            if "current_balance" in c_item or "balance" in c_item:
+                                customer_obj.current_balance = bal
+                            customer_obj.save()
+                        simple_restored_count += 1
+
+                        # Custom prices
+                        prices = c_item.get("prices") or c_item.get("custom_prices") or {}
+                        if isinstance(prices, dict):
+                            for prod_name, price_val in prices.items():
+                                prod = Product.objects.filter(name__iexact=prod_name.strip()).first()
+                                if prod:
+                                    CustomerProductPrice.objects.update_or_create(
+                                        customer=customer_obj,
+                                        product=prod,
+                                        defaults={"price": str(price_val), "is_active": True}
+                                    )
+
+                return Response({
+                    "success": True,
+                    "message": f"Successfully restored {simple_restored_count} staff and customer shop records from JSON.",
+                    "format": "json",
+                    "records_restored": simple_restored_count,
+                    "filename": filename,
+                    "restored_at": timezone.now().isoformat(),
+                })
+
             # Extract objects list
             objects_to_deserialize = []
             if isinstance(parsed_json, dict) and "records" in parsed_json:
