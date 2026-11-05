@@ -763,15 +763,10 @@ export const CreateOrderPage: React.FC = () => {
 
           // Calculate historical previous due prior to this order so balance carries forward chronologically
           let initialRowBalance = '0.00';
-          if (existingOrder?.previous_balance !== undefined && existingOrder?.previous_balance !== null) {
-            initialRowBalance = String(existingOrder.previous_balance);
-          } else if (historicalBalances?.[cust.id] !== undefined && historicalBalances?.[cust.id] !== null) {
+          if (historicalBalances?.[cust.id] !== undefined && historicalBalances?.[cust.id] !== null) {
             initialRowBalance = String(historicalBalances[cust.id]);
-          } else if (existingOrder?.total_amount) {
-            const oTot = parseFloat(existingOrder.total_amount) || 0;
-            const pPaid = (cAmt || 0) + (gAmt || 0);
-            const currentTotalBal = parseFloat(cust.current_balance || '0');
-            initialRowBalance = (currentTotalBal - oTot + pPaid).toFixed(2);
+          } else if (existingOrder?.previous_balance !== undefined && existingOrder?.previous_balance !== null) {
+            initialRowBalance = String(existingOrder.previous_balance);
           } else {
             // Never leak live current_balance backwards onto empty or historical dates
             initialRowBalance = '0.00';
