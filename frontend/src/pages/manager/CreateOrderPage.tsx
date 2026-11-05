@@ -773,7 +773,8 @@ export const CreateOrderPage: React.FC = () => {
             const currentTotalBal = parseFloat(cust.current_balance || '0');
             initialRowBalance = (currentTotalBal - oTot + pPaid).toFixed(2);
           } else {
-            initialRowBalance = cust.current_balance || '0.00';
+            // Never leak live current_balance backwards onto empty or historical dates
+            initialRowBalance = '0.00';
           }
 
           return {
@@ -1806,7 +1807,7 @@ export const CreateOrderPage: React.FC = () => {
               customerOwner: cust.owner_name || '',
               customerRouteId: custRouteId,
               customerRoute: custRouteName,
-              customerBalance: openingBalances[cust.id] ?? cust.current_balance ?? '0.00',
+              customerBalance: openingBalances[cust.id] ?? '0.00',
               driverId: routeDriver?.id,
               driverName: routeDriver?.user_details?.first_name
                 ? `${routeDriver.user_details.first_name} ${routeDriver.user_details.last_name || ''}`
@@ -2109,7 +2110,7 @@ export const CreateOrderPage: React.FC = () => {
         customerPhone: fullCust?.phone || '',
         customerRoute: fullCust?.route_details?.name || '',
         customerRouteId: fullCust?.route_details?.id || fullCust?.route,
-        customerBalance: (fullCust && openingBalances[fullCust.id]) ? openingBalances[fullCust.id] : (fullCust?.current_balance || '0.00'),
+        customerBalance: (fullCust && openingBalances[fullCust.id]) ? openingBalances[fullCust.id] : '0.00',
         kubbusQty: '',
         romaliQty: '',
         productQuantities: {},
@@ -2206,7 +2207,7 @@ export const CreateOrderPage: React.FC = () => {
         customerOwner: cust.owner_name || '',
         customerRouteId: custRouteId,
         customerRoute: custRouteName,
-        customerBalance: openingBalances[cust.id] ?? cust.current_balance ?? '0.00',
+        customerBalance: openingBalances[cust.id] ?? '0.00',
         driverId: routeDriver?.id,
         driverName: routeDriver?.user_details?.first_name
           ? `${routeDriver.user_details.first_name} ${routeDriver.user_details.last_name || ''}`

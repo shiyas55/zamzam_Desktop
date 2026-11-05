@@ -467,8 +467,12 @@ class ApiClient {
     return data as T;
   }
 
-  public get<T>(endpoint: string, params?: Record<string, string | number | boolean | undefined>) {
-    return this.request<T>(endpoint, { method: 'GET', params });
+  public get<T>(
+    endpoint: string,
+    params?: Record<string, string | number | boolean | undefined>,
+    options?: Partial<RequestOptions>
+  ) {
+    return this.request<T>(endpoint, { method: 'GET', params, ...options });
   }
 
   public post<T>(endpoint: string, body?: unknown) {

@@ -82,6 +82,6 @@ export const customerService = {
   },
 
   async getBalancesForDate(date: string): Promise<Record<string, string>> {
-    return apiClient.get<Record<string, string>>('/customers/balances-for-date/', { date });
+    return apiClient.get<Record<string, string>>('/customers/balances-for-date/', { date }, { bypassCache: true });
   },
 };

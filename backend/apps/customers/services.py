@@ -116,6 +116,7 @@ def get_customers_opening_balances_for_date(target_date, customer_ids=None):
     Returns: dict { str(customer_id): str(opening_balance_decimal_formatted) }
     """
     import datetime
+    import re
     from decimal import Decimal
     from django.db.models import Q, Sum
     from django.utils import timezone
@@ -184,13 +185,34 @@ def get_customers_opening_balances_for_date(target_date, customer_ids=None):
         for row in adjustments_agg.values("customer_id").annotate(total=Sum("amount"))
     }
 
+    # Check for explicit Fast Wholesale Entry adjustment set for target_date
+    explicit_fwe = {}
+    fwe_on_target = CreditTransaction.objects.filter(
+        transaction_type=CreditTransaction.TransactionType.ADJUSTMENT,
+        reference_order__isnull=True,
+        created_at__date=target_date,
+        notes__icontains="Fast Wholesale Entry",
+    )
+    if customer_ids:
+        fwe_on_target = fwe_on_target.filter(customer_id__in=customer_ids)
+    for ct in fwe_on_target:
+        m = re.search(r"set to ₹?([\d\.]+)", ct.notes or "")
+        if m:
+            explicit_fwe[str(ct.customer_id)] = m.group(1)
+
     results = {}
     for cid, cur_bal in cust_map.items():
+        if cid in explicit_fwe:
+            results[cid] = str(Decimal(explicit_fwe[cid]).quantize(Decimal("0.01")))
+            continue
+
         subsequent_orders = orders_by_cust.get(cid, Decimal("0.00"))
         subsequent_payments = payments_by_cust.get(cid, Decimal("0.00"))
         subsequent_adjs = adjustments_by_cust.get(cid, Decimal("0.00"))
 
         opening_due = cur_bal - subsequent_orders + subsequent_payments - subsequent_adjs
+        if opening_due < Decimal("0.00"):
+            opening_due = Decimal("0.00")
         results[cid] = str(opening_due.quantize(Decimal("0.01")))
 
     return results
