@@ -146,7 +146,9 @@ def get_customers_opening_balances_for_date(target_date, customer_ids=None):
         created_at__date=target_date,
     ).order_by("created_at")
     for adj in target_adj_qs:
-        target_adjs[adj.customer_id] = adj
+        # Prioritize explicit "set to ₹" previous due adjustments
+        if adj.customer_id not in target_adjs or "set to" in (adj.notes or "").lower():
+            target_adjs[adj.customer_id] = adj
 
     # 2. Find earliest order for each customer to determine initial starting balance
     earliest_orders = {}
